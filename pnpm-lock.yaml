@@ -45,6 +45,21 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.19.3)
 
+  dev/editor-test:
+    devDependencies:
+      '@typescript-eslint/parser':
+        specifier: ^8.0.0
+        version: 8.52.0(eslint@9.39.2)(typescript@5.9.3)
+      eslint:
+        specifier: ^9.0.0
+        version: 9.39.2
+      eslint-plugin-sanity:
+        specifier: workspace:*
+        version: link:../../packages/eslint-plugin
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+
   dev/playground:
     dependencies:
       '@sanity/groq-lint':

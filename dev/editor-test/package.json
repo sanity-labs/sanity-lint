@@ -1,0 +1,17 @@
+{
+  "name": "groq-lint-editor-test",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Test files for validating GROQ linting in VS Code, Cursor, and other editors",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-sanity": "workspace:*",
+    "typescript": "^5.5.0"
+  }
+}
