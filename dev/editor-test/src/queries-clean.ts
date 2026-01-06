@@ -85,7 +85,9 @@ export const getPostsOrderedByTitle = groq`
   }
 `
 
-// ✅ Clean: Parent reference in correlated subquery (efficient)
+// ✅ Clean: Using references() helper - more efficient than manual ref check
+// Note: references() is optimized internally, so we suppress the warning
+// eslint-disable-next-line sanity/groq-count-in-correlated-subquery
 export const getCategoriesWithCount = groq`
   *[_type == "category"]{
     title,

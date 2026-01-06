@@ -48,7 +48,7 @@ importers:
   dev/editor-test:
     devDependencies:
       '@typescript-eslint/parser':
-        specifier: ^8.0.0
+        specifier: ^8.18.0
         version: 8.52.0(eslint@9.39.2)(typescript@5.9.3)
       eslint:
         specifier: ^9.0.0
@@ -113,6 +113,9 @@ importers:
       '@types/eslint':
         specifier: ^9.6.1
         version: 9.6.1
+      '@typescript-eslint/types':
+        specifier: ^8.0.0
+        version: 8.52.0
       eslint:
         specifier: ^9.17.0
         version: 9.39.2
