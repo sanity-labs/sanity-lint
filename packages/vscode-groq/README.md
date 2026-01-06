@@ -197,12 +197,45 @@ The easiest way to test the extension during development:
 - **Schema not loading?** Ensure `schema.json` is in the workspace root
 - **No errors shown?** Check that the LSP server started (see output channel)
 
-### Launch Configurations
+### Launch Configuration
 
-The `.vscode/launch.json` provides two configurations:
+Create `.vscode/launch.json` in the monorepo root:
 
-- **Run GROQ Extension**: Builds before launching (recommended)
-- **Run GROQ Extension (No Build)**: Skips build (faster iteration)
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run GROQ Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/vscode-groq",
+        "${workspaceFolder}/dev/editor-test"
+      ],
+      "outFiles": ["${workspaceFolder}/packages/vscode-groq/dist/**/*.js"],
+      "preLaunchTask": "build-extension"
+    }
+  ]
+}
+```
+
+And `.vscode/tasks.json`:
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-extension",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["--filter", "vscode-groq", "build"],
+      "group": "build"
+    }
+  ]
+}
+```
 
 ## Related Packages
 
