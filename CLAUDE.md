@@ -14,11 +14,12 @@ Sanity Developer Experience Suite - linting, formatting, and static analysis for
 
 ### Packages
 
-| Package                  | npm Name               | Purpose                             |
-| ------------------------ | ---------------------- | ----------------------------------- |
-| `packages/core`          | `@sanity/lint-core`    | Shared types, RuleTester, reporters |
-| `packages/groq-lint`     | `@sanity/groq-lint`    | GROQ query linting rules            |
-| `packages/eslint-plugin` | `eslint-plugin-sanity` | ESLint integration                  |
+| Package                         | npm Name               | Purpose                             |
+| ------------------------------- | ---------------------- | ----------------------------------- |
+| `packages/core`                 | `@sanity/lint-core`    | Shared types, RuleTester, reporters |
+| `packages/groq-lint`            | `@sanity/groq-lint`    | GROQ query linting rules            |
+| `packages/eslint-plugin`        | `eslint-plugin-sanity` | ESLint integration                  |
+| `packages/prettier-plugin-groq` | `prettier-plugin-groq` | Prettier plugin for GROQ formatting |
 
 ### Dependency Graph
 
@@ -113,6 +114,12 @@ fix(core): handle empty query input
 test(groq-lint): add edge cases for deep-pagination
 docs: update README with usage examples
 ```
+
+### Workflow
+
+- **Commit incrementally**: Commit working code as features are completed, not at the end
+- **Build before commit**: Run `pnpm build && pnpm test && pnpm lint` to verify
+- **Feature branches**: Use feature branches for larger changes
 
 ## Key References
 
