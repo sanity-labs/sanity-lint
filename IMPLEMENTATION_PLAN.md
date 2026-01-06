@@ -549,57 +549,108 @@ oxlint --config oxlint.config.json src/
 
 ---
 
-## Stage 6: Biome Preparation
+## Stage 6: Biome Integration
 
-**Goal**: Prepare for future Biome integration when their plugin system ships.
+**Goal**: Enable GROQ linting in Biome when/if possible.
 
 ### 6.1 Background
 
-Biome currently has NO custom plugin system:
+Biome has evolved significantly in 2025:
 
-- Tracking: [biomejs/biome#231](https://github.com/biomejs/biome/discussions/231)
-- RFC: [biomejs/biome#1762](https://github.com/biomejs/biome/discussions/1762)
-
-Until plugins ship, we cannot integrate with Biome.
+- [Roadmap 2025](https://biomejs.dev/blog/roadmap-2025/) - Embedded languages on wishlist
+- [Plugin RFC](https://github.com/biomejs/biome/discussions/1649) - Community discussion
+- [Embedded Language Formatting](https://github.com/biomejs/biome/issues/3334) - Technical design
 
 ### 6.2 Research Findings (January 2026)
 
-Biome has added a plugin system, but it uses **GritQL** (a pattern matching language), NOT JavaScript or WASM:
+#### ESLint Migration Path
 
-**Key Limitations:**
+Biome provides `biome migrate eslint --write` which can:
 
-1. **GritQL-based**: Plugins use pattern matching syntax, not general-purpose code
-2. **JavaScript/CSS only**: Only supports linting JavaScript and CSS - cannot lint custom language syntax
-3. **No WASM plugins**: "Not a focus right now" per Biome team
-4. **Cannot detect GROQ**: GritQL cannot understand or extract GROQ from `groq\`...\`` template literals
+- Migrate ESLint flat and legacy configs
+- Convert rules from 23+ ESLint plugins (React, TypeScript, Unicorn, etc.)
+- Handle `.eslintignore` files
 
-**What Would Be Needed:**
+**However**: It only migrates rules that Biome has reimplemented natively. Custom plugins like `eslint-plugin-sanity` cannot be migrated.
 
-- Either WASM plugin support (to call our Rust/WASM linter)
-- Or full language support for GROQ as a first-class language in Biome
+#### GritQL Plugin System (Biome 2.0)
 
-**References:**
+Biome 2.0 introduced GritQL plugins:
 
-- [Biome Plugins Guide](https://biomejs.dev/linter/plugins/) - GritQL-based plugins
-- [Biome Editor Extensions](https://biomejs.dev/guides/editors/create-an-extension/) - Editor integration only
-
-### 6.3 Tasks
-
-- [x] Research Biome plugin system
-- [ ] Monitor for WASM plugin support
-- [ ] When available: design Biome plugin using @sanity/groq-wasm
-- [ ] Create biome-plugin-sanity package
-
-### 6.4 Architecture (Speculative)
-
-```
-packages/biome-plugin-sanity/
-├── package.json
-├── src/
-│   └── index.ts           # Biome plugin (API TBD)
+```grit
+`groq\`$query\`` where {
+  register_diagnostic(
+    span = $query,
+    message = "Found GROQ query"
+  )
+}
 ```
 
-**Status**: Blocked (Biome plugins use GritQL, cannot lint GROQ syntax)
+**What GritQL CAN do:**
+
+- Match JavaScript AST patterns including tagged template literals
+- Report diagnostics at specific source locations
+- Pattern match with metavariables (`$query` captures content)
+
+**What GritQL CANNOT do:**
+
+- Parse the content inside template literals as GROQ
+- Call external functions or WASM modules
+- Understand GROQ syntax or semantics
+
+#### Embedded Language Support
+
+Biome is working on embedded language formatting ([#3334](https://github.com/biomejs/biome/issues/3334)):
+
+- Currently supports CSS in template literals
+- GraphQL support planned
+- Architecture uses `JsForeignLanguageFormatter` trait
+
+**Key limitation**: This is NOT a plugin API. Adding new languages requires modifying Biome's Rust source code.
+
+#### WASM Plugins
+
+Community poll showed 79% want TypeScript plugins, only 12% want WASM. Biome team says WASM plugins are "not a focus right now."
+
+### 6.3 Integration Options Analysis
+
+| Approach              | Feasibility      | Notes                                       |
+| --------------------- | ---------------- | ------------------------------------------- |
+| GritQL pattern        | ❌ Cannot lint   | Can detect `groq\`...\`` but can't validate |
+| Embedded language API | ❌ No plugin API | Requires Biome core changes                 |
+| WASM plugin           | ❌ Not available | Not being prioritized                       |
+| Contribute GROQ       | ⚠️ Possible      | Would need to add GROQ to Biome core        |
+
+### 6.4 Recommendation
+
+**Short term**: Continue using OxLint with `eslint-plugin-sanity` (works today, 77ms performance).
+
+**Medium term**: Monitor these Biome developments:
+
+- WASM plugin support (would let us call `@sanity/groq-wasm`)
+- Embedded language plugin API (would let us register GROQ parser)
+- TypeScript plugins with external call capability
+
+**Long term option**: Contribute GROQ as a first-class language to Biome (significant commitment).
+
+### 6.5 Tasks
+
+- [x] Research Biome plugin system (GritQL)
+- [x] Research ESLint migration path
+- [x] Research embedded language architecture
+- [x] Evaluate WASM plugin timeline
+- [ ] Monitor Biome roadmap for plugin extensibility
+- [ ] Consider contributing GROQ parser to Biome (if community interest)
+
+### 6.6 References
+
+- [Biome Linter Plugins](https://biomejs.dev/linter/plugins/) - GritQL syntax
+- [Biome 2025 Roadmap](https://biomejs.dev/blog/roadmap-2025/) - Embedded languages
+- [Plugin RFC Discussion](https://github.com/biomejs/biome/discussions/1649) - WASM/TS discussion
+- [Embedded Formatting Design](https://github.com/biomejs/biome/issues/3334) - Architecture
+- [ESLint Migration Guide](https://biomejs.dev/guides/migrate-eslint-prettier/) - Migration path
+
+**Status**: Blocked (no viable integration path currently exists)
 
 ---
 
