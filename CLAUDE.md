@@ -17,8 +17,11 @@ Sanity Developer Experience Suite - linting, formatting, and static analysis for
 | Package                         | npm Name               | Purpose                             |
 | ------------------------------- | ---------------------- | ----------------------------------- |
 | `packages/core`                 | `@sanity/lint-core`    | Shared types, RuleTester, reporters |
-| `packages/groq-lint`            | `@sanity/groq-lint`    | GROQ query linting rules            |
+| `packages/groq-lint`            | `@sanity/groq-lint`    | GROQ query linting rules + CLI      |
+| `packages/schema-lint`          | `@sanity/schema-lint`  | Sanity schema linting rules         |
+| `packages/groq-lsp`             | `@sanity/groq-lsp`     | Language Server Protocol for GROQ   |
 | `packages/eslint-plugin`        | `eslint-plugin-sanity` | ESLint integration                  |
+| `packages/vscode-groq`          | `vscode-groq`          | VS Code/Cursor extension            |
 | `packages/prettier-plugin-groq` | `prettier-plugin-groq` | Prettier plugin for GROQ formatting |
 
 ### Dependency Graph
@@ -27,6 +30,8 @@ Sanity Developer Experience Suite - linting, formatting, and static analysis for
 @sanity/lint-core
        ↓
 @sanity/groq-lint  →  eslint-plugin-sanity
+       ↓
+@sanity/groq-lsp   →  vscode-groq
 ```
 
 ## Development
@@ -168,3 +173,25 @@ When porting rules from groq-lint:
 - Must produce identical findings for the same query
 - Run `pnpm test:rust-parity` to verify
 - Document any intentional differences
+
+## Documentation Requirements
+
+When adding new features or packages:
+
+1. **Package README**: Every package must have a README.md with:
+   - What it does
+   - Installation instructions
+   - Usage examples
+   - API reference (if applicable)
+
+2. **Main README**: Update the root README.md to include:
+   - New packages in the packages table
+   - Update architecture diagram if needed
+
+3. **CLAUDE.md**: Update this file with:
+   - New packages in the packages table
+   - Dependency graph changes
+
+4. **IMPLEMENTATION_PLAN.md**: If working from a plan:
+   - Update status as stages complete
+   - Add implementation notes with files created
