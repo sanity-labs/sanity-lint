@@ -4,6 +4,8 @@
 
 Catch performance issues and best practice violations in your Sanity code before they hit production.
 
+**[Try the Playground](https://sanity-lint.sanity.dev)** - Test GROQ queries against lint rules in your browser
+
 ## What's Inside
 
 This monorepo contains linting tools for Sanity, with integrations for different development environments:
@@ -129,23 +131,25 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on adding new lint rules.
 ## Architecture
 
 ```
-┌───────────────────────────────────────────────────────────────┐
-│                        Integrations                            │
-├─────────────────┬─────────────────┬─────────────────┬─────────┤
-│  eslint-plugin  │   vscode-groq   │   CLI (groq)    │ prettier│
-├─────────────────┴────────┬────────┴─────────────────┴─────────┤
-│                          │                                     │
-│                   @sanity/groq-lsp                             │
-│                          │                                     │
-├──────────────────────────┴─────────────────────────────────────┤
-│                       Core Libraries                            │
-├────────────────────────────┬───────────────────────────────────┤
-│     @sanity/groq-lint      │       @sanity/schema-lint         │
-├────────────────────────────┼───────────────────────────────────┤
-│                   @sanity/groq-wasm (WASM)                      │
-├────────────────────────────┴───────────────────────────────────┤
-│                      @sanity/lint-core                          │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                         Integrations                             │
+├─────────────────┬──────────────────┬─────────────────┬──────────┤
+│  eslint-plugin  │    vscode-groq   │   CLI (groq)    │ prettier │
+├─────────────────┴────────┬─────────┴─────────────────┴──────────┤
+│                          │                                       │
+│                   @sanity/groq-lsp                               │
+│                          │                                       │
+├──────────────────────────┴───────────────────────────────────────┤
+│                        Core Libraries                             │
+├─────────────────────────────┬────────────────────────────────────┤
+│      @sanity/groq-lint      │        @sanity/schema-lint         │
+├─────────────────────────────┴────────────────────────────────────┤
+│                       @sanity/lint-core                           │
+├──────────────────────────────────────────────────────────────────┤
+│                       @sanity/groq-wasm                           │
+├──────────────────────────────────────────────────────────────────┤
+│            groq-lint (Rust)    │    groq-format (Rust)            │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 The core libraries are decoupled from integrations. The LSP server provides IDE features (diagnostics, hover, completion) for any editor that supports the Language Server Protocol.

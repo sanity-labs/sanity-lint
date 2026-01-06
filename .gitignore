@@ -34,3 +34,4 @@ pnpm-debug.log*
 
 # Local Claude settings (keep project settings)
 .claude/settings.local.json
+.vercel
