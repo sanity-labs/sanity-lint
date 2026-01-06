@@ -1,0 +1,57 @@
+{
+  "name": "@sanity/groq-wasm",
+  "version": "0.0.1",
+  "description": "WASM bindings for GROQ linting and formatting (groq-lint + groq-format)",
+  "keywords": [
+    "sanity",
+    "groq",
+    "lint",
+    "format",
+    "wasm",
+    "webassembly"
+  ],
+  "license": "MIT",
+  "author": "Sanity.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sanity-io/sanity-lint.git",
+    "directory": "packages/groq-wasm"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "wasm"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:wasm": "./scripts/build-wasm.sh",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@sanity/lint-core": "workspace:*",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

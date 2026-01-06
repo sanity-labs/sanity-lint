@@ -32,6 +32,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@sanity/groq-wasm": "workspace:*",
     "groq-js": "^1.14.0"
   },
   "peerDependencies": {

@@ -1,6 +1,9 @@
 // Main linting API
-export { lint, lintMany } from './linter'
+export { initLinter, lint, lintMany } from './linter'
 export type { LintResult, LintOptions } from './linter'
+
+// WASM utilities
+export { isWasmAvailable, WASM_RULES } from './wasm-linter'
 
 // Rules
 export { rules, rulesById } from './rules'

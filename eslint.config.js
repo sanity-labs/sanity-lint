@@ -6,7 +6,15 @@ export default tseslint.config(
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', 'dev/**', 'release.config.cjs'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/coverage/**',
+      'dev/**',
+      'release.config.cjs',
+      // Auto-generated WASM bindings
+      '**/wasm/**',
+    ],
   },
   {
     rules: {

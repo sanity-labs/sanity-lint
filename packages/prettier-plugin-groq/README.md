@@ -80,6 +80,23 @@ The formatter follows GROQ syntax rules:
 - **Projections after dereference** use shorthand: `author->{ name }`
 - **Array traversals** use implicit dereference: `categories[]->{ title }`
 
+## WASM Acceleration
+
+For better performance, this plugin can use WASM-compiled Rust for formatting. Initialize WASM at application startup:
+
+```typescript
+import { initWasmFormatter, isWasmFormatterAvailable } from 'prettier-plugin-groq'
+
+// Optional: Initialize WASM for better performance
+await initWasmFormatter()
+
+if (isWasmFormatterAvailable()) {
+  console.log('Using WASM formatter')
+}
+```
+
+When WASM is available, formatting is ~5-10x faster. The plugin automatically falls back to TypeScript formatting if WASM is not available.
+
 ## Options
 
 This plugin respects standard Prettier options:

@@ -3,6 +3,12 @@ dist/
 node_modules/
 *.vsix
 
+# Rust build artifacts
+packages/groq-wasm/rust/target/
+
+# WASM build output (auto-generated)
+packages/groq-wasm/wasm/
+
 # Test fixtures that are intentionally unformatted
 dev/prettier-test/queries/unformatted.groq
 

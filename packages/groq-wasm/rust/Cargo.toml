@@ -1,0 +1,30 @@
+[package]
+name = "groq-wasm"
+version = "0.1.0"
+edition = "2021"
+description = "WASM bindings for GROQ linting and formatting"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# GROQ tools from atombender
+groq-lint = { git = "https://github.com/atombender/groq-lint.git" }
+groq-format = { git = "https://github.com/atombender/groq-format.git" }
+
+# WASM bindings
+wasm-bindgen = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# For better error messages in WASM
+console_error_panic_hook = { version = "0.1", optional = true }
+
+[features]
+default = ["console_error_panic_hook"]
+
+[profile.release]
+# Optimize for size
+opt-level = "s"
+lto = true

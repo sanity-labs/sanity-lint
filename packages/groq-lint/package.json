@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@sanity/codegen": "^5.1.0",
+    "@sanity/groq-wasm": "workspace:*",
     "@sanity/lint-core": "workspace:*",
     "groq-js": "^1.14.0"
   },

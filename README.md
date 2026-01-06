@@ -18,13 +18,14 @@ This monorepo contains linting tools for Sanity, with integrations for different
 
 ### Core Libraries
 
-| Package                                                 | Description                         |
-| ------------------------------------------------------- | ----------------------------------- |
-| [@sanity/groq-lint](./packages/groq-lint)               | GROQ linting engine and rules       |
-| [@sanity/schema-lint](./packages/schema-lint)           | Schema linting engine and rules     |
-| [@sanity/groq-lsp](./packages/groq-lsp)                 | Language Server Protocol for GROQ   |
-| [@sanity/lint-core](./packages/core)                    | Shared types and utilities          |
-| [prettier-plugin-groq](./packages/prettier-plugin-groq) | Prettier plugin for GROQ formatting |
+| Package                                                 | Description                             |
+| ------------------------------------------------------- | --------------------------------------- |
+| [@sanity/groq-lint](./packages/groq-lint)               | GROQ linting engine and rules           |
+| [@sanity/schema-lint](./packages/schema-lint)           | Schema linting engine and rules         |
+| [@sanity/groq-lsp](./packages/groq-lsp)                 | Language Server Protocol for GROQ       |
+| [@sanity/lint-core](./packages/core)                    | Shared types and utilities              |
+| [prettier-plugin-groq](./packages/prettier-plugin-groq) | Prettier plugin for GROQ formatting     |
+| [@sanity/groq-wasm](./packages/groq-wasm)               | WASM bindings for high-performance GROQ |
 
 ## Quick Start
 
@@ -140,12 +141,24 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on adding new lint rules.
 │                       Core Libraries                            │
 ├────────────────────────────┬───────────────────────────────────┤
 │     @sanity/groq-lint      │       @sanity/schema-lint         │
+├────────────────────────────┼───────────────────────────────────┤
+│                   @sanity/groq-wasm (WASM)                      │
 ├────────────────────────────┴───────────────────────────────────┤
 │                      @sanity/lint-core                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 The core libraries are decoupled from integrations. The LSP server provides IDE features (diagnostics, hover, completion) for any editor that supports the Language Server Protocol.
+
+### WASM Acceleration
+
+For maximum performance, `@sanity/groq-lint` and `prettier-plugin-groq` use WASM-compiled Rust for core operations:
+
+- **Linting**: Pure GROQ rules run via Rust/WASM (~5-10x faster)
+- **Formatting**: GROQ formatting via Rust/WASM
+- **Fallback**: Automatic fallback to TypeScript if WASM unavailable
+
+The WASM bindings wrap [groq-lint](https://github.com/atombender/groq-lint) and [groq-format](https://github.com/atombender/groq-format) without requiring users to install Rust.
 
 ## License
 
