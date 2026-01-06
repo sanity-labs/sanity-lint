@@ -120,11 +120,74 @@ test(groq-lint): add edge cases for deep-pagination
 docs: update README with usage examples
 ```
 
-### Workflow
+### Git Workflow
 
-- **Commit incrementally**: Commit working code as features are completed, not at the end
-- **Build before commit**: Run `pnpm build && pnpm test && pnpm lint` to verify
-- **Feature branches**: Use feature branches for larger changes
+#### Feature Branch Development
+
+All non-trivial changes must go through feature branches and PRs:
+
+1. **Create a feature branch** from `main`:
+
+   ```bash
+   git checkout -b feat/my-feature    # New feature
+   git checkout -b fix/bug-name       # Bug fix
+   git checkout -b docs/update-readme # Documentation
+   ```
+
+2. **Develop incrementally** - commit working code as features complete, not at the end
+
+3. **Push and create PR** when ready:
+
+   ```bash
+   git push -u origin feat/my-feature
+   gh pr create --fill  # Or use GitHub web UI
+   ```
+
+4. **PR must pass all CI checks** before merge (see CI section below)
+
+5. **Squash merge** to main with a clean commit message
+
+#### Branch Naming
+
+| Prefix      | Purpose           | Example                     |
+| ----------- | ----------------- | --------------------------- |
+| `feat/`     | New features      | `feat/deep-pagination-rule` |
+| `fix/`      | Bug fixes         | `fix/ast-traversal-error`   |
+| `docs/`     | Documentation     | `docs/api-reference`        |
+| `refactor/` | Code refactoring  | `refactor/rule-tester`      |
+| `test/`     | Test improvements | `test/coverage-edge-cases`  |
+| `chore/`    | Maintenance       | `chore/update-deps`         |
+
+#### Before Creating a PR
+
+```bash
+pnpm build          # Build all packages
+pnpm test           # Run tests
+pnpm lint           # Check linting
+pnpm format:check   # Check formatting
+pnpm typecheck      # Type check
+```
+
+### CI/CD Pipeline
+
+GitHub Actions runs on every push to `main` and on all PRs:
+
+| Job                 | What it checks                    |
+| ------------------- | --------------------------------- |
+| **Lint & Format**   | ESLint rules, Prettier formatting |
+| **Type Check**      | TypeScript compilation            |
+| **Test**            | Unit tests on Node 20 & 22        |
+| **Commit Messages** | Conventional Commits (PRs only)   |
+
+All jobs must pass before merging. CI configuration: `.github/workflows/ci.yml`
+
+#### Required Status Checks
+
+PRs require:
+
+- All CI jobs passing
+- At least one approval (when collaborators are added)
+- Up-to-date with main branch
 
 ## Key References
 
@@ -159,12 +222,14 @@ The `groq-js` package exports AST types:
 
 ### CI Checks
 
-All PRs must pass:
+All PRs must pass these automated checks (see `.github/workflows/ci.yml`):
 
-- [ ] Type check (`pnpm typecheck`)
+- [ ] Format check (`pnpm format:check`)
 - [ ] Lint (`pnpm lint`)
-- [ ] Tests (`pnpm test`)
+- [ ] Type check (`pnpm typecheck`)
+- [ ] Tests (`pnpm test`) - runs on Node 20 & 22
 - [ ] Build (`pnpm build`)
+- [ ] Commit message validation (Conventional Commits)
 
 ### Rust Parity
 
