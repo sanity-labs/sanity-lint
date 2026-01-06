@@ -3,12 +3,17 @@ import type { ExprNode } from 'groq-js'
 import type { GroqAst } from './parser.js'
 
 type Builders = typeof doc.builders
-type PrintFn = (path: AstPath<ExprNode>) => Doc
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PrintFn = (path: AstPath<any>) => Doc
 
+// Note: groq-js TypeScript types are incomplete - many node types exist at runtime
+// but aren't in the type definitions (ObjectSplat, Range, SelectAlternative, etc.)
+// We use 'any' here to handle all runtime node types correctly.
 function createPrintNode(builders: Builders) {
   const { group, indent, join, line, softline } = builders
 
-  return function printNode(node: ExprNode, print: PrintFn, path: AstPath<ExprNode>): Doc {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return function printNode(node: any, print: PrintFn, path: AstPath<any>): Doc {
     switch (node.type) {
       case 'Everything':
         return '*'
@@ -243,29 +248,22 @@ function createPrintNode(builders: Builders) {
         return group(['select(', indent([softline, join([',', line], allArgs)]), softline, ')'])
       }
 
-      // @ts-expect-error - SelectAlternative exists at runtime but not in groq-js types
       case 'SelectAlternative':
         return [
-          // @ts-expect-error - condition property exists at runtime
           path.call((p) => printNode(p.node, print, p), 'condition'),
           ' => ',
           path.call((p) => printNode(p.node, print, p), 'value'),
         ]
 
-      // @ts-expect-error - InRange exists at runtime but not in groq-js types
       case 'InRange':
         return [
-          // @ts-expect-error - base property exists at runtime
           path.call((p) => printNode(p.node, print, p), 'base'),
           ' in ',
-          // @ts-expect-error - range property exists at runtime
           path.call((p) => printNode(p.node, print, p), 'range'),
         ]
 
-      // @ts-expect-error - Context exists at runtime but not in groq-js types
       case 'Context':
         // Internal node, shouldn't appear in user queries
-        // @ts-expect-error - base property exists at runtime
         return path.call((p) => printNode(p.node, print, p), 'base')
 
       default:
