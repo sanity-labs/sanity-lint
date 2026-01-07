@@ -1,5 +1,21 @@
 # eslint-plugin-sanity
 
+## 0.1.0
+
+### Minor Changes
+
+- [#13](https://github.com/sanity-io/sanity-lint/pull/13) [`7b96e0c`](https://github.com/sanity-io/sanity-lint/commit/7b96e0cdfdfd54fabcb94ff46a56fb17e92a7f62) Thanks [@kmelve](https://github.com/kmelve)! - Add support for `defineQuery()` function calls
+
+  The ESLint plugin now detects and lints GROQ queries in `defineQuery()` calls,
+  which is used by `next-sanity` and other Sanity packages.
+
+  Supported patterns:
+  - `defineQuery(\`\*[_type == "post"]\`)` - template literal argument
+  - `defineQuery("*[_type == 'post']")` - string literal argument
+  - `groq(\`...\`)` - groq function call (in addition to tagged templates)
+
+  This is in addition to the existing `groq\`...\`` tagged template support.
+
 ## 0.0.3
 
 ### Patch Changes
