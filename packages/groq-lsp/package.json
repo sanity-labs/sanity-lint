@@ -52,5 +52,8 @@
     "groq",
     "lsp",
     "language-server"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
