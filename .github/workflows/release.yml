@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false # Don't cancel releases in progress
+
+jobs:
+  build-wasm:
+    name: Build WASM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            packages/groq-wasm/rust/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('packages/groq-wasm/rust/Cargo.lock', 'packages/groq-wasm/rust/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: |
+          if ! command -v wasm-pack &> /dev/null; then
+            cargo install wasm-pack
+          fi
+
+      - name: Build WASM
+        run: ./scripts/build-wasm.sh
+        working-directory: packages/groq-wasm
+
+      - name: Upload WASM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-build
+          path: packages/groq-wasm/wasm/
+          retention-days: 1
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: build-wasm
+    permissions:
+      contents: write # For creating releases and tags
+      issues: write # For commenting on issues
+      pull-requests: write # For commenting on PRs
+      id-token: write # For npm provenance
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for semantic-release
+          persist-credentials: false
+
+      - name: Download WASM artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-build
+          path: packages/groq-wasm/wasm/
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+        run: npx semantic-release
