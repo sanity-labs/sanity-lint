@@ -214,7 +214,8 @@
   },
   "scripts": {
     "vscode:prepublish": "pnpm run build",
-    "build": "tsup",
+    "build": "tsup && pnpm run build:server",
+    "build:server": "tsup --config tsup.server.config.ts",
     "watch": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
