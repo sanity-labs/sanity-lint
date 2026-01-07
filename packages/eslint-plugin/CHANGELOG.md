@@ -1,5 +1,23 @@
 # eslint-plugin-sanity
 
+## 0.1.2
+
+### Patch Changes
+
+- [#17](https://github.com/sanity-io/sanity-lint/pull/17) [`1202aea`](https://github.com/sanity-io/sanity-lint/commit/1202aea418a5ba352c935ba945ddfeccea8f4cd3) Thanks [@kmelve](https://github.com/kmelve)! - Export configs as arrays for easier spreading
+
+  `sanity.configs.recommended` and `sanity.configs.strict` are now arrays,
+  allowing users to use either syntax:
+
+  ```js
+  // Both of these now work:
+  export default [...sanity.configs.recommended]
+  export default [sanity.configs.recommended]  // ESLint flattens nested arrays
+  ```
+
+  This follows the convention used by other ESLint plugins and prevents the
+  "is not iterable" error when users spread the config.
+
 ## 0.1.1
 
 ### Patch Changes
