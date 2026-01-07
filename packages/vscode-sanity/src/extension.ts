@@ -11,7 +11,11 @@ import { initializeLspClient, stopLspClient } from './lsp/client'
 
 export async function activate(context: vscode.ExtensionContext) {
   // needed to load sanity.cli.ts
-  registerTsNode()
+  try {
+    registerTsNode()
+  } catch {
+    // ts-node registration may fail in packaged extension, which is fine
+  }
 
   // Assigned by `readConfig()`
   let codelens: vscode.Disposable | undefined
@@ -112,8 +116,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Initialize LSP client for linting, completion, and formatting
   // This runs in parallel with query execution setup and doesn't block activation
-  initializeLspClient(context).catch((err) => {
-    console.error('Failed to initialize GROQ LSP client:', err)
+  initializeLspClient(context).catch(() => {
+    // LSP initialization failed silently - query execution still works
   })
 }
 

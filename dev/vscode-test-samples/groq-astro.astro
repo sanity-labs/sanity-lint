@@ -1,0 +1,43 @@
+---
+// Test: GROQ in Astro frontmatter
+import { groq } from 'next-sanity'
+
+const postsQuery = groq`
+  *[_type == "post"] | order(publishedAt desc) [0...10] {
+    _id,
+    title,
+    slug,
+    publishedAt,
+    "author": author->name
+  }
+`
+
+const settingsQuery = /* groq */ `
+  *[_type == "siteSettings"][0]{
+    title,
+    description,
+    "logo": logo.asset->url
+  }
+`
+
+// Fetch data
+const posts = await sanityClient.fetch(postsQuery)
+const settings = await sanityClient.fetch(settingsQuery)
+---
+
+<html>
+  <head>
+    <title>{settings.title}</title>
+  </head>
+  <body>
+    <h1>{settings.title}</h1>
+    <ul>
+      {posts.map((post) => (
+        <li>
+          <a href={`/posts/${post.slug.current}`}>{post.title}</a>
+          <span>by {post.author}</span>
+        </li>
+      ))}
+    </ul>
+  </body>
+</html>

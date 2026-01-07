@@ -1,0 +1,8 @@
+// Single valid GROQ query for testing
+*[_type == "post" && author->name == "Bob"] | order(publishedAt desc) [0...10] {
+  _id,
+  title,
+  slug,
+  "author": author->name,
+  "excerpt": pt::text(body)[0...100]
+}

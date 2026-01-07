@@ -19,6 +19,7 @@ export default defineConfig({
     'react-dom',
     'react-jason',
     'ts-node',
+    'vscode-languageclient',
     'xdg-basedir',
   ],
   platform: 'node',

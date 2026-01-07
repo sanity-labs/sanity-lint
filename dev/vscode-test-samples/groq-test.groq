@@ -1,0 +1,66 @@
+// Test: Syntax highlighting in .groq files
+
+// Basic query
+*[_type == "post"]
+
+// Query with projection
+*[_type == "post"]{
+  _id,
+  _type,
+  _createdAt,
+  _updatedAt,
+  title,
+  slug,
+  "author": author->name
+}
+
+// Query with filter and ordering
+*[_type == "post" && published == true] | order(publishedAt desc) [0...10]
+
+// Query with dereference (should trigger lint warning: join-in-filter)
+*[author->name == "Bob"]
+
+// Query with functions and namespaces
+*[_type == "post"]{
+  title,
+  "wordCount": length(string::split(body, " ")),
+  "excerpt": pt::text(body)[0...100],
+  "coords": geo::latLng(location),
+  "total": math::sum(scores),
+  "items": array::unique(tags)
+}
+
+// Query with parameters
+*[_type == $type && category == $category] | order($orderField desc)
+
+// Query with count (should work)
+count(*[_type == "post"])
+
+// Deep pagination (should trigger lint warning)
+*[_type == "post"][100...110]
+
+// Large page (should trigger lint warning)
+*[_type == "post"][0...1000]
+
+// Match on _id (should trigger lint warning)
+*[_id match "post-*"]
+
+// Coalesce and defined
+*[_type == "post"]{
+  title,
+  "description": coalesce(description, excerpt, "No description"),
+  "hasImage": defined(image)
+}
+
+// References
+*[_type == "post" && references("author-123")]
+
+// Select
+*[_type == "post"]{
+  title,
+  "status": select(
+    published == true => "Published",
+    draft == true => "Draft",
+    "Unknown"
+  )
+}

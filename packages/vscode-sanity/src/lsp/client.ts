@@ -169,7 +169,6 @@ async function findServerModule(context: vscode.ExtensionContext): Promise<strin
 
   // 1. For development: try sibling package in monorepo FIRST
   const devServer = context.asAbsolutePath(path.join('..', 'groq-lsp', 'dist', 'server.js'))
-  outputChannel?.appendLine(`Checking dev server: ${devServer}`)
   if (await fileExists(devServer)) {
     outputChannel?.appendLine('Found dev server in monorepo')
     return devServer
@@ -177,7 +176,6 @@ async function findServerModule(context: vscode.ExtensionContext): Promise<strin
 
   // 2. Try bundled server (when extension is packaged)
   const bundledServer = context.asAbsolutePath(path.join('server', 'dist', 'server.js'))
-  outputChannel?.appendLine(`Checking bundled server: ${bundledServer}`)
   if (await fileExists(bundledServer)) {
     outputChannel?.appendLine('Found bundled server')
     return bundledServer
