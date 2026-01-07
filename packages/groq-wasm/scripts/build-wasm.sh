@@ -18,11 +18,16 @@ fi
 
 # Build WASM
 cd "$RUST_DIR"
-wasm-pack build --target bundler --out-dir "$WASM_DIR" --release
+wasm-pack build --target nodejs --out-dir "$WASM_DIR" --release
 
 # Clean up unnecessary files
 rm -f "$WASM_DIR/.gitignore"
 rm -f "$WASM_DIR/package.json"  # We use our own package.json
 rm -f "$WASM_DIR/README.md"
+
+# Rename .js to .cjs for ESM compatibility
+# The --target nodejs generates CJS files, but our package uses "type": "module"
+mv "$WASM_DIR/groq_wasm.js" "$WASM_DIR/groq_wasm.cjs"
+mv "$WASM_DIR/groq_wasm_bg.js" "$WASM_DIR/groq_wasm_bg.cjs"
 
 echo "WASM build complete! Output in $WASM_DIR"
