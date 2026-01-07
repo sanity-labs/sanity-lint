@@ -190,12 +190,25 @@ documents.onDidClose((e) => {
 })
 
 /**
+ * Check if a URI points to a file in node_modules
+ */
+function isNodeModulesPath(uri: string): boolean {
+  return uri.includes('/node_modules/') || uri.includes('\\node_modules\\')
+}
+
+/**
  * Validate a document and send diagnostics
  */
 function validateDocument(document: TextDocument): void {
   const content = document.getText()
   const languageId = document.languageId
   const uri = document.uri
+
+  // Skip files in node_modules - they're external dependencies
+  if (isNodeModulesPath(uri)) {
+    connection.sendDiagnostics({ uri, diagnostics: [] })
+    return
+  }
 
   // Extract queries from document
   const { queries } = extractQueries(content, languageId)
