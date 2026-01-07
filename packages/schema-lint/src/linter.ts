@@ -60,19 +60,10 @@ export function lint(
   options: LintOptions = {}
 ): LintResult {
   const { rules = allRules, config, filePath = '' } = options
-  const findings: Finding[] = []
 
-  // Track which rules have reported findings (for supersedes logic)
-  const supersededRules = new Set<string>()
-
-  // Build supersedes map
-  for (const rule of rules) {
-    if (rule.supersedes) {
-      for (const supersededId of rule.supersedes) {
-        supersededRules.add(supersededId)
-      }
-    }
-  }
+  // Track which rules have fired (for supersedes logic)
+  const firedRules = new Set<string>()
+  const allFindings: Finding[] = []
 
   for (const rule of rules) {
     const severity = getEffectiveSeverity(rule, config)
@@ -82,15 +73,11 @@ export function lint(
       continue
     }
 
-    // Skip superseded rules
-    if (supersededRules.has(rule.id)) {
-      continue
-    }
-
+    const ruleFindings: Finding[] = []
     const context: SchemaRuleContext = {
       filePath,
       report: (finding) => {
-        findings.push({
+        ruleFindings.push({
           ...finding,
           ruleId: rule.id,
           severity: finding.severity ?? severity,
@@ -104,7 +91,22 @@ export function lint(
       // Don't let one rule crash the whole linter
       console.error(`Rule ${rule.id} threw an error:`, error)
     }
+
+    if (ruleFindings.length > 0) {
+      firedRules.add(rule.id)
+      allFindings.push(...ruleFindings)
+    }
   }
+
+  // Apply supersedes logic AFTER running all rules
+  // Only filter out findings if a superseding rule actually fired
+  const findings = allFindings.filter((finding) => {
+    // Check if any rule that supersedes this finding's rule has fired
+    const isSuperseded = rules.some(
+      (r) => r.supersedes?.includes(finding.ruleId) && firedRules.has(r.id)
+    )
+    return !isSuperseded
+  })
 
   return { findings }
 }

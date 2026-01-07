@@ -2,9 +2,13 @@
 
 import { readFileSync, existsSync } from 'node:fs'
 import { glob } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import { lint, initLinter } from './linter'
 import { formatFindings, summarizeFindings } from '@sanity/lint-core'
 import type { SchemaType } from 'groq-js'
+
+const require = createRequire(import.meta.url)
+const { version } = require('../package.json') as { version: string }
 
 interface CliOptions {
   format: 'pretty' | 'json'
@@ -39,7 +43,7 @@ function parseArgs(args: string[]): CliOptions {
       printHelp()
       process.exit(0)
     } else if (arg === '--version' || arg === '-v') {
-      console.log('0.0.1')
+      console.log(version)
       process.exit(0)
     } else if (!arg.startsWith('-')) {
       options.files.push(arg)
@@ -195,8 +199,8 @@ async function main(): Promise<void> {
           // Treat as raw GROQ file
           queries.push({ source: file, query: content })
         }
-      } catch {
-        console.error(`Error reading file: ${file}`)
+      } catch (e) {
+        console.error(`Error reading file ${file}: ${e instanceof Error ? e.message : e}`)
         process.exit(1)
       }
     }

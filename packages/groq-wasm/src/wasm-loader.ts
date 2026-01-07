@@ -61,7 +61,8 @@ async function doInit(): Promise<void> {
     const require = createRequire(import.meta.url)
 
     // Load the WASM module - it will synchronously initialize
-    const wasmPath = join(currentDir, '..', 'wasm', 'groq_wasm.js')
+    // Use .cjs extension since wasm-pack generates CJS and our package uses "type": "module"
+    const wasmPath = join(currentDir, '..', 'wasm', 'groq_wasm.cjs')
     const wasm = require(wasmPath)
 
     // Store the functions

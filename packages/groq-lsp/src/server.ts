@@ -22,6 +22,7 @@ import {
   type CompletionParams,
 } from 'vscode-languageserver/node.js'
 import { TextDocument } from 'vscode-languageserver-textdocument'
+import { URI } from 'vscode-uri'
 
 import { SchemaLoader } from './schema/loader.js'
 import { extractQueries, findQueryAtOffset, offsetToQueryPosition } from './utils/groq-extractor.js'
@@ -88,7 +89,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
   if (params.workspaceFolders && params.workspaceFolders.length > 0) {
     const workspaceUri = params.workspaceFolders[0]?.uri
     if (workspaceUri) {
-      const workspacePath = workspaceUri.replace('file://', '')
+      const workspacePath = URI.parse(workspaceUri).fsPath
       schemaLoader.discoverSchema(workspacePath)
     }
   }

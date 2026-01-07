@@ -31,10 +31,14 @@
  */
 
 import type { ESLint, Linter } from 'eslint'
+import { createRequire } from 'node:module'
 import { rules as groqRules } from '@sanity/groq-lint'
 import { rules as schemaRules } from '@sanity/schema-lint'
 import { createAllRules } from './utils/rule-factory'
 import { createAllSchemaRules } from './utils/schema-rule-factory'
+
+const require = createRequire(import.meta.url)
+const { version } = require('../package.json') as { version: string }
 
 // Create ESLint rules from all GROQ lint rules
 const groqEslintRules = createAllRules(groqRules)
@@ -52,7 +56,7 @@ const rules = {
 const plugin: ESLint.Plugin = {
   meta: {
     name: 'eslint-plugin-sanity',
-    version: '0.0.1',
+    version,
   },
   rules,
 }
