@@ -17,9 +17,9 @@ npm install eslint-plugin-sanity
 import sanity from 'eslint-plugin-sanity'
 
 export default [
-  sanity.configs.recommended,
+  ...sanity.configs.recommended,
   // or for stricter checking:
-  // sanity.configs.strict,
+  // ...sanity.configs.strict,
 ]
 ```
 
@@ -60,7 +60,10 @@ All rules enabled as errors.
 
 ### GROQ Rules
 
-These rules lint GROQ queries in `groq\`...\`` tagged template literals.
+These rules lint GROQ queries in:
+
+- `groq\`...\`` tagged template literals
+- `defineQuery('...')` function calls (from `next-sanity` or `@sanity/client`)
 
 | Rule                                       | Default | Description                                     |
 | ------------------------------------------ | ------- | ----------------------------------------------- |
@@ -109,8 +112,8 @@ For schema-aware rules (`unknown-field`, `invalid-type-filter`), you need to pro
 import sanity from 'eslint-plugin-sanity'
 
 export default [
+  ...sanity.configs.recommended,
   {
-    ...sanity.configs.recommended,
     settings: {
       sanity: {
         schemaPath: './schema.json',
@@ -125,6 +128,45 @@ Generate `schema.json` with:
 ```bash
 npx sanity schema extract
 ```
+
+## Monorepo Setup
+
+When using eslint-plugin-sanity in a monorepo (turborepo, pnpm workspaces, etc.), VS Code/Cursor may have trouble finding the ESLint config for nested packages.
+
+### VS Code / Cursor Settings
+
+Create `.vscode/settings.json` at your **monorepo root**:
+
+```json
+{
+  "eslint.workingDirectories": [
+    { "directory": "apps/web", "changeProcessCWD": true },
+    { "directory": "apps/studio", "changeProcessCWD": true }
+  ]
+}
+```
+
+Replace the paths with your actual package directories that have ESLint configs.
+
+### Alternative: Auto-detect
+
+You can also let ESLint auto-detect working directories:
+
+```json
+{
+  "eslint.workingDirectories": [{ "mode": "auto" }]
+}
+```
+
+### Troubleshooting
+
+If rules still don't appear in the editor:
+
+1. **Restart ESLint Server**: `Cmd+Shift+P` → "ESLint: Restart ESLint Server"
+2. **Check ESLint Output**: View → Output → select "ESLint" to see errors
+3. **Verify flat config**: Ensure `eslint.config.mjs` exists in your package directory
+
+> **Note**: The CLI (`npx eslint .`) works regardless of these settings. This is purely for editor integration.
 
 ## License
 

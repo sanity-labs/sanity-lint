@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Verify lockfile is in sync with package.json files
+# This catches the same error CI would catch with --frozen-lockfile
+pnpm install --frozen-lockfile
