@@ -2,7 +2,12 @@ import type { Rule as ESLintRule } from 'eslint'
 import type { TSESTree } from '@typescript-eslint/types'
 import type { Rule as GroqRule } from '@sanity/groq-lint'
 import { lint, rules as allGroqRules } from '@sanity/groq-lint'
-import { isGroqTaggedTemplate, extractGroqString } from './groq-extractor'
+import {
+  isGroqTaggedTemplate,
+  extractGroqString,
+  isGroqFunctionCall,
+  extractGroqStringFromCall,
+} from './groq-extractor'
 
 /**
  * Build a config that enables only the specified rule
@@ -33,31 +38,51 @@ export function createESLintRule(groqRule: GroqRule): ESLintRule.RuleModule {
     },
 
     create(context) {
+      /**
+       * Lint a GROQ query and report findings
+       */
+      function lintQuery(query: string, eslintNode: ESLintRule.Node): void {
+        try {
+          const result = lint(query, { config: { rules: buildSingleRuleConfig(groqRule.id) } })
+
+          for (const finding of result.findings) {
+            if (finding.ruleId === groqRule.id) {
+              context.report({
+                node: eslintNode,
+                messageId: groqRule.id,
+                data: {
+                  message: finding.help ? `${finding.message} ${finding.help}` : finding.message,
+                },
+              })
+            }
+          }
+        } catch {
+          // Parse error - don't report, let the user see it in runtime
+        }
+      }
+
       return {
+        // Handle groq`...` tagged template literals
         TaggedTemplateExpression(eslintNode: ESLintRule.Node) {
-          // Cast to our TSESTree type for type-safe property access
           const node = eslintNode as unknown as TSESTree.TaggedTemplateExpression
           if (!isGroqTaggedTemplate(node)) {
             return
           }
 
-          try {
-            const query = extractGroqString(node)
-            const result = lint(query, { config: { rules: buildSingleRuleConfig(groqRule.id) } })
+          const query = extractGroqString(node)
+          lintQuery(query, eslintNode)
+        },
 
-            for (const finding of result.findings) {
-              if (finding.ruleId === groqRule.id) {
-                context.report({
-                  node: eslintNode,
-                  messageId: groqRule.id,
-                  data: {
-                    message: finding.help ? `${finding.message} ${finding.help}` : finding.message,
-                  },
-                })
-              }
-            }
-          } catch {
-            // Parse error - don't report, let the user see it in runtime
+        // Handle defineQuery(`...`) and defineQuery("...") function calls
+        CallExpression(eslintNode: ESLintRule.Node) {
+          const node = eslintNode as unknown as TSESTree.CallExpression
+          if (!isGroqFunctionCall(node)) {
+            return
+          }
+
+          const query = extractGroqStringFromCall(node)
+          if (query !== null) {
+            lintQuery(query, eslintNode)
           }
         },
       }
