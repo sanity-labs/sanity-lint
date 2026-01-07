@@ -1,5 +1,5 @@
 /**
- * GROQ VS Code Extension
+ * GROQ Language Server Client
  *
  * Provides GROQ language support through the GROQ Language Server:
  * - Diagnostics (linting)
@@ -8,8 +8,8 @@
  * - Formatting
  */
 
-import * as path from 'node:path'
-import { workspace, window, commands, type ExtensionContext, type OutputChannel } from 'vscode'
+import * as path from 'path'
+import * as vscode from 'vscode'
 import {
   LanguageClient,
   LanguageClientOptions,
@@ -18,35 +18,44 @@ import {
 } from 'vscode-languageclient/node'
 
 let client: LanguageClient | undefined
-let outputChannel: OutputChannel | undefined
+let outputChannel: vscode.OutputChannel | undefined
 
 /**
- * Activates the extension
+ * Initialize the GROQ LSP client
  */
-export async function activate(context: ExtensionContext): Promise<void> {
-  // Check if extension is enabled
-  const config = workspace.getConfiguration('groq')
+export async function initializeLspClient(
+  context: vscode.ExtensionContext,
+  sharedOutputChannel?: vscode.OutputChannel
+): Promise<boolean> {
+  // Check if LSP is enabled
+  const config = vscode.workspace.getConfiguration('groq')
   if (!config.get<boolean>('enable', true)) {
-    return
+    return false
   }
 
-  // Create output channel
-  outputChannel = window.createOutputChannel('GROQ')
-  context.subscriptions.push(outputChannel)
+  // Use shared output channel or create one
+  outputChannel = sharedOutputChannel || vscode.window.createOutputChannel('GROQ LSP')
+  if (!sharedOutputChannel) {
+    context.subscriptions.push(outputChannel)
+  }
 
   // Start the language client
-  await startClient(context)
+  const started = await startClient(context)
+  if (!started) {
+    return false
+  }
 
-  // Register commands
-  registerCommands(context)
+  // Register LSP-specific commands
+  registerLspCommands(context)
 
-  outputChannel.appendLine('GROQ extension activated')
+  outputChannel.appendLine('GROQ LSP client initialized')
+  return true
 }
 
 /**
- * Deactivates the extension
+ * Stop the LSP client
  */
-export async function deactivate(): Promise<void> {
+export async function stopLspClient(): Promise<void> {
   if (client) {
     await client.stop()
     client = undefined
@@ -54,17 +63,29 @@ export async function deactivate(): Promise<void> {
 }
 
 /**
+ * Check if the LSP client is running
+ */
+export function isLspClientRunning(): boolean {
+  return client !== undefined
+}
+
+/**
+ * Get the output channel (for logging)
+ */
+export function getLspOutputChannel(): vscode.OutputChannel | undefined {
+  return outputChannel
+}
+
+/**
  * Starts the language client
  */
-async function startClient(context: ExtensionContext): Promise<void> {
+async function startClient(context: vscode.ExtensionContext): Promise<boolean> {
   // Find the server module
   const serverModule = await findServerModule(context)
   if (!serverModule) {
     outputChannel?.appendLine('Could not find GROQ language server module')
-    window.showErrorMessage(
-      'GROQ: Could not find language server. Please ensure @sanity/groq-lsp is installed.'
-    )
-    return
+    // Don't show error - LSP is optional, query execution can work without it
+    return false
   }
 
   outputChannel?.appendLine(`Using server module: ${serverModule}`)
@@ -84,10 +105,11 @@ async function startClient(context: ExtensionContext): Promise<void> {
     },
   }
 
-  // Get trace setting
-  const traceServer = workspace.getConfiguration('groq').get<string>('trace.server', 'off')
+  // Get configuration
+  const config = vscode.workspace.getConfiguration('groq')
+  const traceServer = config.get<string>('trace.server', 'off')
 
-  // Client options - only include outputChannel if defined
+  // Client options
   const clientOptions: LanguageClientOptions = {
     // Documents to activate on
     documentSelector: [
@@ -99,12 +121,12 @@ async function startClient(context: ExtensionContext): Promise<void> {
     ],
     synchronize: {
       // Notify server about file changes to schema files
-      fileEvents: workspace.createFileSystemWatcher('**/schema.json'),
+      fileEvents: vscode.workspace.createFileSystemWatcher('**/schema.json'),
     },
     initializationOptions: {
-      schemaPath: workspace.getConfiguration('groq').get<string>('schemaPath'),
-      maxDiagnostics: workspace.getConfiguration('groq').get<number>('maxDiagnostics', 100),
-      enableFormatting: workspace.getConfiguration('groq').get<boolean>('enableFormatting', true),
+      schemaPath: config.get<string>('schemaPath'),
+      maxDiagnostics: config.get<number>('maxDiagnostics', 100),
+      enableFormatting: config.get<boolean>('enableFormatting', true),
     },
   }
 
@@ -122,20 +144,27 @@ async function startClient(context: ExtensionContext): Promise<void> {
     client.setTrace(traceServer === 'verbose' ? 2 : 1)
   }
 
-  // Start the client and wait for it to be ready
-  await client.start()
-  outputChannel?.appendLine('GROQ Language Server started')
+  try {
+    // Start the client and wait for it to be ready
+    await client.start()
+    outputChannel?.appendLine('GROQ Language Server started')
 
-  // Register disposable for cleanup
-  context.subscriptions.push({
-    dispose: () => client?.stop(),
-  })
+    // Register disposable for cleanup
+    context.subscriptions.push({
+      dispose: () => client?.stop(),
+    })
+
+    return true
+  } catch (error) {
+    outputChannel?.appendLine(`Failed to start GROQ Language Server: ${error}`)
+    return false
+  }
 }
 
 /**
  * Find the server module path
  */
-async function findServerModule(context: ExtensionContext): Promise<string | undefined> {
+async function findServerModule(context: vscode.ExtensionContext): Promise<string | undefined> {
   outputChannel?.appendLine('Looking for GROQ language server...')
 
   // 1. For development: try sibling package in monorepo FIRST
@@ -155,7 +184,7 @@ async function findServerModule(context: ExtensionContext): Promise<string | und
   }
 
   // 3. Try workspace node_modules
-  const workspaceFolders = workspace.workspaceFolders
+  const workspaceFolders = vscode.workspace.workspaceFolders
   if (workspaceFolders && workspaceFolders.length > 0) {
     const workspaceRoot = workspaceFolders[0]?.uri.fsPath
     if (workspaceRoot) {
@@ -184,7 +213,7 @@ async function findServerModule(context: ExtensionContext): Promise<string | und
  */
 async function fileExists(filePath: string): Promise<boolean> {
   try {
-    const fs = await import('node:fs/promises')
+    const fs = await import('fs/promises')
     await fs.access(filePath)
     return true
   } catch {
@@ -193,12 +222,12 @@ async function fileExists(filePath: string): Promise<boolean> {
 }
 
 /**
- * Register extension commands
+ * Register LSP-specific commands
  */
-function registerCommands(context: ExtensionContext): void {
+function registerLspCommands(context: vscode.ExtensionContext): void {
   // Restart server command
   context.subscriptions.push(
-    commands.registerCommand('groq.restartServer', async () => {
+    vscode.commands.registerCommand('groq.restartServer', async () => {
       outputChannel?.appendLine('Restarting GROQ Language Server...')
 
       if (client) {
@@ -206,14 +235,18 @@ function registerCommands(context: ExtensionContext): void {
         client = undefined
       }
 
-      await startClient(context)
-      window.showInformationMessage('GROQ Language Server restarted')
+      const started = await startClient(context)
+      if (started) {
+        vscode.window.showInformationMessage('GROQ Language Server restarted')
+      } else {
+        vscode.window.showWarningMessage('Failed to restart GROQ Language Server')
+      }
     })
   )
 
   // Show output command
   context.subscriptions.push(
-    commands.registerCommand('groq.showOutput', () => {
+    vscode.commands.registerCommand('groq.showOutput', () => {
       outputChannel?.show()
     })
   )

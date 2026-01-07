@@ -39,8 +39,8 @@ groq-lint (Rust)        groq-format (Rust)
                   │
     ┌─────────────┼─────────────┐
     ▼             ▼             ▼
-@sanity/      eslint-plugin  (future)
-groq-lint       -sanity      oxlint-plugin
+@sanity/    prettier-plugin  eslint-plugin
+groq-lint        -groq         -sanity
     │
     ▼
 @sanity/groq-lsp → vscode-groq

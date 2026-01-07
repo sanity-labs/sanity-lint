@@ -130,26 +130,51 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on adding new lint rules.
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Integrations                             │
-├─────────────────┬──────────────────┬─────────────────┬──────────┤
-│  eslint-plugin  │    vscode-groq   │   CLI (groq)    │ prettier │
-├─────────────────┴────────┬─────────┴─────────────────┴──────────┤
-│                          │                                       │
-│                   @sanity/groq-lsp                               │
-│                          │                                       │
-├──────────────────────────┴───────────────────────────────────────┤
-│                        Core Libraries                             │
-├─────────────────────────────┬────────────────────────────────────┤
-│      @sanity/groq-lint      │        @sanity/schema-lint         │
-├─────────────────────────────┴────────────────────────────────────┤
-│                       @sanity/lint-core                           │
-├──────────────────────────────────────────────────────────────────┤
-│                       @sanity/groq-wasm                           │
-├──────────────────────────────────────────────────────────────────┤
-│            groq-lint (Rust)    │    groq-format (Rust)            │
-└──────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Integrations
+        eslint[eslint-plugin-sanity]
+        vscode[vscode-sanity]
+        cli["CLI (@sanity/groq-lint)"]
+        prettier[prettier-plugin-groq]
+    end
+
+    subgraph LSP
+        lsp["@sanity/groq-lsp"]
+    end
+
+    subgraph Core
+        groqlint["@sanity/groq-lint"]
+        schemalint["@sanity/schema-lint"]
+    end
+
+    subgraph Shared
+        core["@sanity/lint-core"]
+    end
+
+    subgraph WASM
+        wasm["@sanity/groq-wasm"]
+    end
+
+    subgraph Rust
+        rustlint[groq-lint]
+        rustfmt[groq-format]
+    end
+
+    eslint --> groqlint
+    eslint --> schemalint
+    vscode --> lsp
+    cli --> groqlint
+    prettier --> wasm
+
+    lsp --> groqlint
+
+    groqlint --> core
+    schemalint --> core
+    groqlint --> wasm
+
+    wasm --> rustlint
+    wasm --> rustfmt
 ```
 
 The core libraries are decoupled from integrations. The LSP server provides IDE features (diagnostics, hover, completion) for any editor that supports the Language Server Protocol.

@@ -9,11 +9,28 @@ export default defineConfig({
   clean: true,
   minify: false, // Keep readable for debugging
   external: ['vscode'], // VS Code API is provided by the runtime
-  noExternal: ['vscode-languageclient'], // Bundle the language client
+  noExternal: [
+    // Bundle these dependencies
+    '@sanity/client',
+    'groq-js',
+    'line-number',
+    'osenv',
+    'react',
+    'react-dom',
+    'react-jason',
+    'ts-node',
+    'xdg-basedir',
+  ],
   platform: 'node',
   target: 'node18',
   // Don't split chunks for extension
   splitting: false,
   // Tree shake unused code
   treeshake: true,
+  // Handle JSX
+  esbuildOptions(options) {
+    options.jsx = 'transform'
+    options.jsxFactory = 'React.createElement'
+    options.jsxFragment = 'React.Fragment'
+  },
 })

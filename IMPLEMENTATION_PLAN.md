@@ -654,46 +654,6 @@ Community poll showed 79% want TypeScript plugins, only 12% want WASM. Biome tea
 
 ---
 
-## Stage 7: MCP Server for AI Agents
-
-**Goal**: Let AI assistants validate GROQ before suggesting it.
-
-### 7.1 MCP Tools
-
-```typescript
-// tools exposed via MCP
-{
-  "lint-groq": {
-    description: "Lint a GROQ query for issues",
-    input: { query: string, schema?: string },
-    output: { valid: boolean, messages: LintMessage[] }
-  },
-  "format-groq": {
-    description: "Format a GROQ query",
-    input: { query: string },
-    output: { formatted: string }
-  },
-  "explain-groq": {
-    description: "Explain what a GROQ query does",
-    input: { query: string, schema?: string },
-    output: { explanation: string, returnType: TypeNode }
-  }
-}
-```
-
-### 7.2 Integration
-
-AI agents could:
-
-1. Lint GROQ before suggesting to user
-2. Auto-fix common issues
-3. Understand query return types
-4. Generate queries that match schema
-
-**Status**: Not Started
-
----
-
 ## Architecture Overview
 
 ```
@@ -706,7 +666,7 @@ AI agents could:
               │ wasm-pack                  │ wasm-pack
               ▼                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│              @sanity/groq-wasm (Stage 4 - new)                   │
+│                       @sanity/groq-wasm                          │
 │         lint(query) → Finding[]                                  │
 │         format(query) → string                                   │
 └─────────────────────────────────────────────────────────────────┘
@@ -714,20 +674,18 @@ AI agents could:
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
 ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
-│ @sanity/groq- │    │eslint-plugin- │    │oxlint-plugin- │
-│     lint      │    │    sanity     │    │    sanity     │
-│  (refactored) │    │  (existing)   │    │  (Stage 5)    │
+│ @sanity/groq- │    │eslint-plugin- │    │prettier-plugin│
+│     lint      │    │    sanity     │    │    -groq      │
 └───────┬───────┘    └───────────────┘    └───────────────┘
         │
         ├── WASM rules (pure GROQ)
         └── TS rules (schema-aware: unknown-field, invalid-type-filter)
 
 ┌───────────────────────────────────────────────────────────────┐
-│                    Unique TS Packages (keep)                    │
+│                      TypeScript Packages                        │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌───────────────┐  │
 │  │ @sanity/lint-   │  │ @sanity/schema- │  │ @sanity/groq- │  │
 │  │     core        │  │     lint        │  │     lsp       │  │
-│  │ (types, tester) │  │ (13 TS rules)   │  │               │  │
 │  └─────────────────┘  └─────────────────┘  └───────┬───────┘  │
 │                                                    │          │
 │                                             ┌──────┴──────┐   │
@@ -741,15 +699,13 @@ AI agents could:
 
 ## Dependencies
 
-### New Dependencies Needed
+### Dependencies Used
 
 ```json
 {
-  "@sanity/codegen": "^5.1.0", // Schema reading (Stage 1 - done)
-  "vscode-languageserver": "^9.0.0", // LSP server (Stage 2 - done)
-  "vscode-languageclient": "^9.0.0", // VS Code extension (Stage 3 - done)
-  "@modelcontextprotocol/sdk": "...", // MCP server (Stage 7)
-  "wasm-bindgen": "..." // WASM TS bindings (Stage 4)
+  "@sanity/codegen": "^5.1.0", // Schema reading (Stage 1)
+  "vscode-languageserver": "^9.0.0", // LSP server (Stage 2)
+  "vscode-languageclient": "^9.0.0" // VS Code extension (Stage 3)
 }
 ```
 
@@ -816,33 +772,39 @@ cargo install wasm-pack
 
 ---
 
-## Priority Recommendation
+## Status
 
-### Completed
+### Completed Stages
 
-- ~~Stage 1~~ - Schema-aware linting ✅
-- ~~Stage 2~~ - LSP server ✅
-- ~~Stage 3~~ - VS Code extension ✅
-- ~~Stage 4~~ - WASM Core ✅ (all integrations complete)
-- ~~Stage 5~~ - OxLint integration ✅ (ESLint plugin works out of the box!)
-- ~~Stage 6~~ - Biome research ✅ (blocked - GritQL-based, no WASM support)
+- ✅ **Stage 1** - Schema-aware linting
+- ✅ **Stage 2** - LSP server
+- ✅ **Stage 3** - VS Code extension (vscode-groq)
+- ✅ **Stage 4** - WASM Core (all integrations complete)
+- ✅ **Stage 5** - OxLint integration (ESLint plugin works out of the box)
+- ✅ **Stage 6** - Biome research (blocked - no viable integration path)
 
-### Stage 4 Summary
+### In Progress
 
-- ✅ @sanity/groq-wasm package with Rust WASM bindings
-- ✅ @sanity/groq-lint hybrid linter (WASM + TS)
-- ✅ prettier-plugin-groq WASM formatter
-- ✅ CLI uses WASM backend
-- ✅ LSP uses WASM for linting and formatting
-- ✅ GitHub Actions builds WASM automatically
-- ✅ All 372 tests passing
-- Optional: parity tests, performance benchmarks
+- 🔄 **Stage 7** - Merge vscode-sanity into monorepo (Not Started)
+
+### Summary
+
+- @sanity/groq-wasm package with Rust WASM bindings
+- @sanity/groq-lint hybrid linter (WASM + TypeScript)
+- prettier-plugin-groq WASM formatter
+- CLI uses WASM backend
+- LSP uses WASM for linting and formatting
+- GitHub Actions builds WASM automatically
+- All 372 tests passing
 
 ### Next Up
 
-1. **Stage 7 (MCP)** - Optional AI agent integration
-2. **Parity tests** - Verify TS vs WASM output matches (optional)
-3. **Benchmarks** - Performance comparisons (optional)
+- Stage 7: Import vscode-sanity, add LSP features, merge grammars
+
+### Optional Future Work
+
+- Parity tests (verify TS vs WASM output matches)
+- Performance benchmarks
 
 ---
 
@@ -885,6 +847,528 @@ cargo install wasm-pack
 - [Biome Plugin Discussion](https://github.com/biomejs/biome/discussions/231) - Custom rules RFC
 - [Biome Plugin RFC](https://github.com/biomejs/biome/discussions/1762) - Implementation discussion
 
-### MCP (Stage 7)
+---
 
-- [MCP Specification](https://modelcontextprotocol.io/)
+## Stage 7: Merge vscode-sanity into Monorepo
+
+**Goal**: Import `sanity-io/vscode-sanity` into this monorepo and enhance it with our LSP features (linting, formatting, completions). This is preparation work only - publishing will be coordinated separately with the Sanity team.
+
+**Status**: In Progress (7.5 Complete)
+
+### 7.1 Background
+
+Two VS Code extensions exist for Sanity/GROQ:
+
+| Feature                 | vscode-sanity (external)                                     | vscode-groq (this repo)       |
+| ----------------------- | ------------------------------------------------------------ | ----------------------------- |
+| **Primary focus**       | Query execution                                              | Language intelligence (LSP)   |
+| **Syntax highlighting** | `.groq`, tagged templates, markdown, vue, svelte, php, astro | `.groq`, tagged templates     |
+| **Execute queries**     | Yes (against live Sanity project)                            | No                            |
+| **Result viewer**       | Interactive JSON explorer (React)                            | No                            |
+| **CodeLens**            | "Execute Query" above GROQ                                   | No                            |
+| **Linting**             | No                                                           | Yes (via groq-lsp)            |
+| **Formatting**          | No                                                           | Yes (via groq-lsp + prettier) |
+| **Completions**         | No                                                           | Yes (via groq-lsp)            |
+| **Snippets**            | No                                                           | Yes                           |
+| **Config detection**    | Reads `sanity.cli.ts`                                        | Reads `schema.json`           |
+
+**Approach**: Import vscode-sanity as the base, then add our LSP features to it. This preserves the existing query execution UX while adding language intelligence.
+
+**Why merge:**
+
+- Users get one extension with both query execution AND language intelligence
+- Shared infrastructure (grammars, config detection, groq-js)
+- Single point of maintenance
+- LSP can validate queries before execution
+
+### 7.2 Preparation & Analysis
+
+**Tasks:**
+
+1. **Grammar audit and merge strategy**
+   - vscode-sanity advantages:
+     - More injection targets: vue, svelte, php, astro, markdown
+     - Supports `/* groq */` comment prefix
+     - Supports `// groq` line comment prefix
+     - Supports `defineQuery()` function calls
+   - vscode-groq advantages:
+     - Function namespaces (`string::`, `math::`, `array::`, etc.)
+     - System fields (`_id`, `_type`, `_rev`, `_createdAt`, etc.)
+     - Comment syntax support
+     - Template substitution handling (`${...}`)
+   - **Decision**: Merge both grammars, taking best from each
+
+2. **Settings namespace strategy**
+   - vscode-sanity: `sanity.*` namespace (`sanity.useCodelens`, `sanity.useCDN`, `sanity.openJSONFile`)
+   - vscode-groq: `groq.*` namespace (`groq.enable`, `groq.schemaPath`, `groq.maxDiagnostics`)
+   - **Decision**: Use `sanity.*` for execution settings, `groq.*` for LSP settings
+
+3. **Activation events**
+   - vscode-sanity: `["*"]` (always active) - too aggressive
+   - vscode-groq: Targeted language activation
+   - **Decision**: Use targeted activation with lazy initialization
+
+4. **Dependency reconciliation**
+
+   | Package               | vscode-sanity | vscode-groq | Decision                         |
+   | --------------------- | ------------- | ----------- | -------------------------------- |
+   | @sanity/client        | 6.29.1        | -           | Keep (query execution)           |
+   | groq-js               | 1.24.1        | -           | Keep (parameter detection)       |
+   | ts-node               | 10.9.2        | -           | Keep (sanity.cli.ts loading)     |
+   | react                 | 16.14.0       | -           | Keep (result viewer)             |
+   | react-dom             | 16.14.0       | -           | Keep (result viewer)             |
+   | react-jason           | 1.1.2         | -           | Keep (interactive JSON explorer) |
+   | vscode-languageclient | -             | 9.0.1       | Add (LSP client)                 |
+   | osenv                 | 0.1.5         | -           | Keep (auth token path)           |
+   | xdg-basedir           | 4.0.0         | -           | Keep (auth token path)           |
+
+**Success Criteria:**
+
+- [ ] Decision document for all conflicts
+- [ ] Merged grammar design documented
+- [ ] Dependency list finalized
+
+### 7.3 Import vscode-sanity & Restructure
+
+**Tasks:**
+
+1. **Import vscode-sanity into monorepo**
+
+   ```bash
+   # Clone vscode-sanity
+   git clone https://github.com/sanity-io/vscode-sanity /tmp/vscode-sanity
+
+   # Copy source (excluding git history)
+   cp -r /tmp/vscode-sanity packages/vscode-sanity
+   rm -rf packages/vscode-sanity/.git
+
+   # Remove old vscode-groq (we'll merge its features in)
+   rm -rf packages/vscode-groq
+   ```
+
+2. **Convert to pnpm and monorepo conventions**
+   - Remove `package-lock.json`
+   - Update `package.json`:
+     - Add workspace protocol for internal deps (`"@sanity/groq-lsp": "workspace:*"`)
+     - Update build scripts to use tsup (consistent with other packages)
+     - Add to turbo pipeline
+   - Update tsconfig to extend root config
+
+3. **Target directory structure** (after merge is complete)
+
+   ```
+   packages/vscode-sanity/
+   ├── src/
+   │   ├── extension.ts           # Main entry (enhanced with LSP)
+   │   ├── lsp/                   # NEW: LSP client (from vscode-groq)
+   │   │   └── client.ts
+   │   ├── config/                # Config loading (existing)
+   │   │   └── findConfig.ts
+   │   ├── providers/             # Existing providers
+   │   │   ├── content-provider.ts
+   │   │   └── groq-codelens-provider.ts
+   │   ├── resultView/            # Existing React result viewer
+   │   │   └── ResultView.tsx
+   │   └── query.ts               # Query execution
+   ├── grammars/                  # Merged grammars
+   │   ├── groq.json              # Enhanced with vscode-groq features
+   │   ├── groq.js.json           # JS/TS injection
+   │   └── groq.md.json           # Markdown injection
+   ├── snippets/                  # NEW: from vscode-groq
+   │   ├── groq.json
+   │   └── groq-ts.json
+   ├── language/
+   │   └── language-configuration.json
+   └── package.json
+   ```
+
+4. **Update workspace references**
+   - Add to `pnpm-workspace.yaml` if needed
+   - Add to `turbo.json` pipeline
+   - Update CI workflows
+
+**Success Criteria:**
+
+- [x] vscode-sanity imported and builds with pnpm
+- [x] Existing features work (query execution, CodeLens, result viewer)
+- [x] `pnpm build` passes
+- [x] `pnpm test` passes (366 tests)
+
+**Implementation Notes:**
+
+- Cloned from `sanity-io/vscode-sanity`, removed .git, placed in `packages/vscode-sanity`
+- Converted from npm to pnpm (removed `package-lock.json`)
+- Converted from tsc to tsup (created `tsup.config.ts`)
+- Updated `tsconfig.json` to extend root config (kept JSX for React result viewer)
+- Changed activation events from `["*"]` to targeted language activation
+- Fixed TypeScript strict mode errors in `findConfig.ts` and `extension.ts`
+- Removed redundant files: `.github/`, `renovate.json`, `release.config.mjs`, `fixtures/`
+- Bundle size: 1.57 MB (includes React, @sanity/client, groq-js, ts-node)
+- Old `packages/vscode-groq` backed up to `/tmp/vscode-groq-backup` for grammar merge
+
+### 7.4 Merge TextMate Grammars
+
+**Tasks:**
+
+1. **Merge `groq.tmLanguage.json`**
+   - Start with vscode-groq grammar (better structure)
+   - Add missing patterns from vscode-sanity:
+     - `nullary-access-operator`
+     - `sort-order`
+     - Better array/range handling
+   - Keep vscode-groq additions:
+     - Function namespaces (`array::`, `dateTime::`, `geo::`, etc.)
+     - System fields (`_id`, `_type`, `_rev`, etc.)
+     - Comments support
+
+2. **Merge `groq-injection.tmLanguage.json`**
+   - Expand injection targets from vscode-sanity:
+     ```json
+     "injectTo": [
+       "source.js", "source.jsx", "source.ts", "source.tsx",
+       "source.vue", "source.svelte", "source.php", "source.astro"
+     ]
+     ```
+   - Add patterns from vscode-sanity:
+     - `/* groq */` comment prefix
+     - `// groq` line comment prefix
+     - `defineQuery()` function calls
+   - Keep vscode-groq template substitution handling (`${...}`)
+
+3. **Add `groq-markdown.tmLanguage.json`** (from vscode-sanity)
+
+   ```json
+   {
+     "scopeName": "markdown.groq.codeblock",
+     "injectTo": ["text.html.markdown"],
+     "patterns": [...]
+   }
+   ```
+
+4. **Update `package.json` grammars contribution**
+
+**Success Criteria:**
+
+- [x] Syntax highlighting works in `.groq` files
+- [x] Syntax highlighting works in `groq\`...\`` tagged templates
+- [x] Syntax highlighting works with `/* groq */` comment prefix
+- [x] Syntax highlighting works with `defineQuery()`
+- [x] Syntax highlighting works in markdown fenced blocks
+- [x] All function namespaces highlighted
+- [x] System fields highlighted
+- [x] Template substitutions (`${...}`) highlighted correctly
+
+**Implementation Notes:**
+
+- Merged grammars by adding vscode-groq features to vscode-sanity grammars:
+  - `groq.json`: Added `function-namespace` pattern for `array::`, `dateTime::`, `geo::`, `global::`, `math::`, `pt::`, `sanity::`, `string::`, `text::` namespaces
+  - `groq.json`: Added `system-fields` pattern for `_id`, `_type`, `_rev`, `_createdAt`, `_updatedAt`, `_key`, `_ref`, `_weak`, `_strengthenOnPublish`
+  - `groq.json`: Added namespace patterns to `filter` and `value` repositories
+  - `groq.js.json`: Restructured with repository patterns, added `template-substitution` handling for `${...}` expressions
+- Kept vscode-sanity's broader injection support: vue, svelte, php, astro, markdown
+- Kept vscode-sanity's detection patterns: `/* groq */` comment prefix, `// groq` line comment, `defineQuery()` function
+- Copied snippets from vscode-groq backup to `packages/vscode-sanity/snippets/`
+- Updated `package.json` to register snippets for groq, typescript, typescriptreact, javascript, javascriptreact
+
+### 7.5 Add LSP Client Integration
+
+**Tasks:**
+
+vscode-sanity already has query execution, CodeLens, and result viewer. We need to ADD LSP features from vscode-groq.
+
+1. **Copy LSP client code from vscode-groq**
+   - Create `src/lsp/client.ts` from vscode-groq's `extension.ts` LSP logic
+   - Extract server module finding logic
+   - Keep the language client setup
+
+2. **Add LSP dependencies**
+
+   ```bash
+   pnpm --filter vscode-sanity add vscode-languageclient@^9.0.1
+   pnpm --filter vscode-sanity add -D @sanity/groq-lsp@workspace:*
+   ```
+
+3. **Integrate LSP into extension.ts**
+   - Keep existing query execution activation
+   - Add LSP client initialization alongside it
+   - Both features should work independently
+
+4. **Add LSP settings contribution** (merge with existing sanity.\* settings)
+
+   ```json
+   {
+     "groq.enable": {
+       "type": "boolean",
+       "default": true,
+       "description": "Enable GROQ language features (linting, completion, formatting)"
+     },
+     "groq.schemaPath": {
+       "type": "string",
+       "default": "",
+       "description": "Path to schema.json file (auto-detected if not set)"
+     },
+     "groq.maxDiagnostics": {
+       "type": "number",
+       "default": 100,
+       "description": "Maximum number of diagnostics to report per file"
+     },
+     "groq.enableFormatting": {
+       "type": "boolean",
+       "default": true,
+       "description": "Enable GROQ formatting"
+     },
+     "groq.trace.server": {
+       "type": "string",
+       "enum": ["off", "messages", "verbose"],
+       "default": "off",
+       "description": "Traces the communication between VS Code and the GROQ language server"
+     }
+   }
+   ```
+
+5. **Add LSP commands**
+   - `groq.restartServer` - Restart Language Server
+   - `groq.showOutput` - Show Output Channel
+
+6. **Copy snippets from vscode-groq**
+   - `snippets/groq.json` - GROQ file snippets
+   - `snippets/groq-ts.json` - JS/TS embedded snippets
+   - Register in package.json contributions
+
+**Success Criteria:**
+
+- [x] LSP client starts and connects to @sanity/groq-lsp
+- [x] Diagnostics appear in `.groq` files
+- [x] Diagnostics appear in embedded GROQ (`groq\`...\``)
+- [x] Completions work (fields, functions, document types)
+- [x] Hover information appears
+- [x] Formatting works (Cmd+Shift+F)
+- [x] Existing query execution still works
+- [x] Both features work independently (graceful degradation)
+
+**Implementation Notes:**
+
+- Created `src/lsp/client.ts` module with LSP client initialization, adapted from vscode-groq
+- Added dependencies: `vscode-languageclient@^9.0.1` (runtime), `@sanity/groq-lsp@workspace:^` (dev)
+- Modified `extension.ts`:
+  - Made `activate()` async
+  - Added `deactivate()` function to stop LSP client
+  - LSP client initializes in parallel with query execution (non-blocking)
+  - If LSP server not found, query execution still works (graceful degradation)
+- Added LSP settings to `package.json`:
+  - `groq.enable` - Enable/disable GROQ language features
+  - `groq.schemaPath` - Path to schema.json (auto-detected)
+  - `groq.maxDiagnostics` - Max diagnostics per file
+  - `groq.enableFormatting` - Enable/disable formatting
+  - `groq.trace.server` - LSP communication tracing
+- Added LSP commands to `package.json`:
+  - `groq.restartServer` - Restart Language Server
+  - `groq.showOutput` - Show Output Channel
+- Server discovery order: monorepo dev → bundled → workspace node_modules
+- Snippets already copied in Stage 7.4
+- Bundle size: 1.58 MB (unchanged - vscode-languageclient is tree-shaken out)
+- All 366 tests pass
+
+### 7.6 Integrate LSP with Execution
+
+**Tasks:**
+
+1. **Unified activation**
+
+   ```typescript
+   export async function activate(context: ExtensionContext) {
+     // Initialize shared config watcher
+     const configWatcher = new SanityConfigWatcher(context)
+
+     // Initialize LSP client (linting, completion, formatting)
+     await initializeLspClient(context, configWatcher)
+
+     // Initialize query execution (CodeLens, execute command)
+     await initializeQueryExecution(context, configWatcher)
+   }
+   ```
+
+2. **Share config detection** (`src/config/watcher.ts`)
+   - Create `SanityConfigWatcher` that:
+     - Finds `sanity.cli.ts` files in workspace
+     - Extracts projectId, dataset for execution
+     - Extracts/generates schema path for LSP
+     - Watches for changes and notifies consumers
+   - Both LSP and execution subscribe to config updates
+
+3. **Pre-execution validation** (optional enhancement)
+   - Before executing, check for LSP diagnostics on the query
+   - Show warning if query has lint errors
+   - Option to execute anyway or fix first
+
+4. **Schema-aware completions**
+   - If `sanity.cli.ts` found, auto-run `sanity schema extract`
+   - Or detect existing `schema.json` in project
+   - Pass schema path to LSP initialization
+
+5. **Unified output channel**
+   - Single "Sanity" output channel
+   - LSP logs go here
+   - Execution logs go here
+
+**Success Criteria:**
+
+- [ ] Single activation initializes both features
+- [ ] Config detected once, shared between features
+- [ ] LSP errors shown (optional: before query execution)
+- [ ] Schema auto-detected for completions
+- [ ] Clean logging in unified output channel
+
+### 7.7 Testing & Quality
+
+**Tasks:**
+
+1. **Unit tests**
+   - Config loader tests (mock `sanity.cli.ts` loading)
+   - Query executor tests (mock @sanity/client)
+   - CodeLens provider tests (detect queries in various formats)
+   - Grammar tests (snapshot testing for highlighting)
+
+2. **Integration tests**
+   - Extension activation test
+   - LSP client initialization test
+   - End-to-end query execution test (requires live Sanity project)
+
+3. **Manual testing checklist**
+   - [ ] Fresh install in VS Code
+   - [ ] Fresh install in Cursor
+   - [ ] Syntax highlighting in:
+     - [ ] `.groq` files
+     - [ ] `groq\`...\`` in JS/TS
+     - [ ] `/* groq */` prefix in JS/TS
+     - [ ] `defineQuery()` in JS/TS
+     - [ ] Markdown fenced blocks
+     - [ ] Vue/Svelte/Astro files
+   - [ ] LSP diagnostics appear
+   - [ ] Formatting works (Cmd+Shift+F)
+   - [ ] Completions appear (field names, functions, types)
+   - [ ] CodeLens "Execute Query" appears
+   - [ ] Query execution works
+   - [ ] Query with parameters works
+   - [ ] Multiple `sanity.cli.ts` picker works
+   - [ ] Settings changes take effect immediately
+
+4. **Performance testing**
+   - Activation time < 200ms
+   - LSP response time < 100ms
+   - No memory leaks on long sessions
+
+**Success Criteria:**
+
+- [ ] All unit tests pass
+- [ ] All integration tests pass
+- [ ] Manual testing checklist complete
+- [ ] Performance targets met
+
+### 7.8 Update Documentation & References
+
+**Tasks:**
+
+Update all references from `vscode-groq` to `vscode-sanity` throughout the monorepo.
+
+1. **Update root CLAUDE.md**
+   - Update packages table (replace vscode-groq with vscode-sanity)
+   - Update dependency graph
+   - Update any references in conventions/guidelines
+
+2. **Update root README.md**
+   - Update packages table
+   - Update architecture diagram
+   - Update feature descriptions
+
+3. **Update package README** (`packages/vscode-sanity/README.md`)
+   - Document all features (execution + LSP)
+   - Installation instructions
+   - Configuration reference (both `sanity.*` and `groq.*` settings)
+   - Usage examples
+   - Screenshots
+
+4. **Update groq-lsp README**
+   - Update references to VS Code extension
+   - Link to vscode-sanity instead of vscode-groq
+
+5. **Update turbo.json and CI**
+   - Update pipeline references
+   - Update any scripts that reference vscode-groq
+
+6. **Update cross-references in code**
+   - Search for "vscode-groq" in all files
+   - Update import paths, comments, documentation
+
+7. **Clean up**
+   - Remove any orphaned vscode-groq references
+   - Ensure all internal links work
+
+**Success Criteria:**
+
+- [ ] No references to "vscode-groq" remain (except git history)
+- [ ] Root README accurately describes vscode-sanity
+- [ ] CLAUDE.md packages table is accurate
+- [ ] All internal links work
+- [ ] Package README documents all features
+
+### 7.9 Publishing & Migration (Out of Scope)
+
+Publishing will be coordinated separately with the Sanity team. This section documents what will be needed when ready:
+
+- Coordinate with Sanity team for marketplace access
+- Set up semantic-release workflow
+- Configure VS Code marketplace + Open VSX publishing
+- Deprecate external vscode-sanity repository
+- Communication/announcement
+
+**Status**: Deferred - will be planned separately
+
+### 7.10 Risk Assessment
+
+| Risk                                 | Impact | Likelihood | Mitigation                                                    |
+| ------------------------------------ | ------ | ---------- | ------------------------------------------------------------- |
+| ts-node adds significant bundle size | Medium | Medium     | Consider esbuild alternative for `sanity.cli.ts` or lazy load |
+| LSP and execution conflicts          | Medium | Low        | Clear separation of concerns, both work independently         |
+| Grammar merge introduces regressions | Medium | Medium     | Snapshot tests, side-by-side manual testing                   |
+| Build system conflicts (npm vs pnpm) | Medium | Medium     | Full conversion to pnpm/tsup on import                        |
+
+### 7.11 Open Questions
+
+1. **Should we support `sanity.json` (legacy) in addition to `sanity.cli.ts`?**
+   - vscode-sanity has dead code for this (`findConfig.ts` references `sanity.json`)
+   - **Recommendation**: Only support `sanity.cli.ts` (modern projects only)
+
+2. **Should query execution require LSP to be working?**
+   - **Recommendation**: No, they should work independently (graceful degradation)
+
+3. **Should we auto-run `sanity schema extract` for LSP?**
+   - Pro: Seamless experience, always have schema
+   - Con: Requires sanity CLI installed, may be slow
+   - **Recommendation**: Detect existing `schema.json` first, offer command to extract if missing
+
+4. **Keep tsc or convert to tsup?**
+   - vscode-sanity uses tsc, our packages use tsup
+   - **Recommendation**: Convert to tsup for consistency, but test carefully
+
+### 7.12 Implementation Order
+
+The sub-stages should be completed in order:
+
+1. 7.2 Preparation & Analysis (can skip if decisions above are accepted)
+2. 7.3 Import vscode-sanity & Restructure
+3. 7.4 Merge TextMate Grammars
+4. 7.5 Add LSP Client Integration
+5. 7.6 Integrate LSP with Execution (optional enhancements)
+6. 7.7 Testing & Quality
+7. 7.8 Update Documentation & References
+
+Each sub-stage should result in a working, testable state.
+
+### 7.13 References
+
+- [vscode-sanity repository](https://github.com/sanity-io/vscode-sanity)
+- [VS Code Extension API](https://code.visualstudio.com/api)
+- [vsce publishing](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)
+- [Open VSX publishing](https://github.com/eclipse/openvsx/wiki/Publishing-Extensions)
+- [semantic-release-vsce](https://github.com/semantic-release/semantic-release)

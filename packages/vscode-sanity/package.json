@@ -1,0 +1,226 @@
+{
+  "name": "vscode-sanity",
+  "displayName": "Sanity.io",
+  "version": "0.2.5",
+  "license": "MIT",
+  "description": "Developer tools for applications powered by Sanity.io - query execution, linting, completion, and formatting",
+  "author": "Sanity.io <hello@sanity.io>",
+  "publisher": "sanity-io",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "keywords": [
+    "vscode",
+    "visual studio code",
+    "sanity",
+    "groq",
+    "linter",
+    "formatter"
+  ],
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sanity-io/sanity-lint"
+  },
+  "bugs": {
+    "url": "https://github.com/sanity-io/sanity-lint/issues"
+  },
+  "icon": "images/icon.png",
+  "activationEvents": [
+    "onLanguage:groq",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Sanity",
+      "properties": {
+        "sanity.useCodelens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable GROQ codelens."
+        },
+        "sanity.useCDN": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use APICDN for GROQ queries."
+        },
+        "sanity.openJSONFile": {
+          "type": "boolean",
+          "default": false,
+          "description": "Open query results in a new tab as an editable JSON file."
+        },
+        "groq.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable GROQ language features (linting, completion, formatting)."
+        },
+        "groq.schemaPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to schema.json file (auto-detected if not set)."
+        },
+        "groq.maxDiagnostics": {
+          "type": "number",
+          "default": 100,
+          "description": "Maximum number of diagnostics to report per file."
+        },
+        "groq.enableFormatting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable GROQ formatting."
+        },
+        "groq.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the GROQ language server."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "sanity.executeGroq",
+        "title": "Execute GROQ query"
+      },
+      {
+        "command": "groq.restartServer",
+        "title": "GROQ: Restart Language Server"
+      },
+      {
+        "command": "groq.showOutput",
+        "title": "GROQ: Show Output Channel"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "sanity.executeGroq",
+          "when": "editorLangId == groq || editorLangId == plaintext"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "id": "groq",
+        "aliases": [
+          "GROQ",
+          "groq"
+        ],
+        "extensions": [
+          ".groq"
+        ],
+        "configuration": "./language/language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "groq",
+        "scopeName": "source.groq",
+        "path": "./grammars/groq.json"
+      },
+      {
+        "injectTo": [
+          "source.js",
+          "source.ts",
+          "source.js.jsx",
+          "source.tsx",
+          "source.vue",
+          "source.svelte",
+          "source.php",
+          "source.astro"
+        ],
+        "scopeName": "inline.groq",
+        "path": "./grammars/groq.js.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.groq": "groq"
+        }
+      },
+      {
+        "scopeName": "markdown.groq.codeblock",
+        "path": "./grammars/groq.md.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.groq": "javascript"
+        }
+      }
+    ],
+    "snippets": [
+      {
+        "language": "groq",
+        "path": "./snippets/groq.json"
+      },
+      {
+        "language": "typescript",
+        "path": "./snippets/groq-ts.json"
+      },
+      {
+        "language": "typescriptreact",
+        "path": "./snippets/groq-ts.json"
+      },
+      {
+        "language": "javascript",
+        "path": "./snippets/groq-ts.json"
+      },
+      {
+        "language": "javascriptreact",
+        "path": "./snippets/groq-ts.json"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "sanity.executeGroq",
+        "key": "ctrl+shift+g",
+        "mac": "ctrl+shift+g",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "dependencies": {
+    "@sanity/client": "^6.29.1",
+    "groq-js": "^1.24.1",
+    "line-number": "^0.1.0",
+    "osenv": "^0.1.5",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "react-jason": "^1.1.2",
+    "ts-node": "^10.9.2",
+    "vscode-languageclient": "^9.0.1",
+    "xdg-basedir": "^4.0.0"
+  },
+  "devDependencies": {
+    "@sanity/groq-lsp": "workspace:^",
+    "@types/node": "^22.10.2",
+    "@types/react": "^16.14.68",
+    "@types/react-dom": "^16.9.25",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.22.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run build",
+    "build": "tsup",
+    "watch": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run --config ../../vitest.config.ts",
+    "test:watch": "vitest --config ../../vitest.config.ts",
+    "package": "vsce package --no-dependencies",
+    "publish": "vsce publish --no-dependencies"
+  }
+}

@@ -47,9 +47,9 @@
   },
   "devDependencies": {
     "@sanity/lint-core": "workspace:*",
-    "tsup": "^8.4.0",
-    "typescript": "^5.8.2",
-    "vitest": "^3.0.5"
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   },
   "engines": {
     "node": ">=20.0.0"
