@@ -27,7 +27,7 @@ rm -f "$WASM_DIR/README.md"
 
 # Rename .js to .cjs for ESM compatibility
 # The --target nodejs generates CJS files, but our package uses "type": "module"
+# Note: --target nodejs only generates groq_wasm.js (no _bg.js like bundler target)
 mv "$WASM_DIR/groq_wasm.js" "$WASM_DIR/groq_wasm.cjs"
-mv "$WASM_DIR/groq_wasm_bg.js" "$WASM_DIR/groq_wasm_bg.cjs"
 
 echo "WASM build complete! Output in $WASM_DIR"
