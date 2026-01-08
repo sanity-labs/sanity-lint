@@ -91,6 +91,11 @@ const recommended: Linter.Config[] = [
       'sanity/groq-count-in-correlated-subquery': 'warn',
       'sanity/groq-deep-pagination-param': 'warn',
 
+      // Schema-aware rules (require settings.sanity.schemaPath to be set)
+      // These silently skip if no schema is configured
+      'sanity/groq-invalid-type-filter': 'error',
+      'sanity/groq-unknown-field': 'warn',
+
       // === Schema Rules ===
 
       // Errors - correctness issues

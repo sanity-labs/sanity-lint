@@ -8,6 +8,7 @@ import {
   isGroqFunctionCall,
   extractGroqStringFromCall,
 } from './groq-extractor'
+import { getSchemaFromSettings } from './schema-cache'
 
 /**
  * Build a config that enables only the specified rule
@@ -38,12 +39,27 @@ export function createESLintRule(groqRule: GroqRule): ESLintRule.RuleModule {
     },
 
     create(context) {
+      // Load schema from settings if configured (for schema-aware rules)
+      const schema = getSchemaFromSettings(
+        context.settings as Record<string, unknown> | undefined,
+        context.filename,
+        context.cwd
+      )
+
+      // Skip schema-requiring rules if no schema is available
+      if (groqRule.requiresSchema && !schema) {
+        return {}
+      }
+
       /**
        * Lint a GROQ query and report findings
        */
       function lintQuery(query: string, eslintNode: ESLintRule.Node): void {
         try {
-          const result = lint(query, { config: { rules: buildSingleRuleConfig(groqRule.id) } })
+          const options = schema
+            ? { config: { rules: buildSingleRuleConfig(groqRule.id) }, schema }
+            : { config: { rules: buildSingleRuleConfig(groqRule.id) } }
+          const result = lint(query, options)
 
           for (const finding of result.findings) {
             if (finding.ruleId === groqRule.id) {
