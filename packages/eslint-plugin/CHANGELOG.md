@@ -1,5 +1,52 @@
 # eslint-plugin-sanity
 
+## 0.2.0
+
+### Minor Changes
+
+- [#20](https://github.com/sanity-io/sanity-lint/pull/20) [`73a4d57`](https://github.com/sanity-io/sanity-lint/commit/73a4d579c7579eca2ae5435fc5e9222261fd8f87) Thanks [@kmelve](https://github.com/kmelve)! - Add schema-aware linting support
+
+  The ESLint plugin now reads `settings.sanity.schemaPath` and loads the schema to enable
+  schema-aware GROQ rules:
+  - `sanity/groq-invalid-type-filter` (error) - Catches typos in `_type == "typo"`
+  - `sanity/groq-unknown-field` (warn) - Catches unknown fields in projections
+
+  These rules silently skip if no schema is configured, so existing setups continue to work.
+
+  **Setup:**
+
+  ```js
+  // eslint.config.js
+  export default [
+    ...sanity.configs.recommended,
+    {
+      settings: {
+        sanity: {
+          schemaPath: './schema.json', // relative to cwd
+        },
+      },
+    },
+  ]
+  ```
+
+  Generate `schema.json` with `npx sanity schema extract`.
+
+### Patch Changes
+
+- [#19](https://github.com/sanity-io/sanity-lint/pull/19) [`2192e6f`](https://github.com/sanity-io/sanity-lint/commit/2192e6fe32d46a8fe547660e52c900cf662df0d3) Thanks [@kmelve](https://github.com/kmelve)! - Export configs as arrays for easier spreading
+
+  `sanity.configs.recommended` and `sanity.configs.strict` are now arrays,
+  allowing users to use either syntax:
+
+  ```js
+  // Both of these now work:
+  export default [...sanity.configs.recommended]
+  export default [sanity.configs.recommended]  // ESLint flattens nested arrays
+  ```
+
+  This follows the convention used by other ESLint plugins and prevents the
+  "is not iterable" error when users spread the config.
+
 ## 0.1.2
 
 ### Patch Changes
