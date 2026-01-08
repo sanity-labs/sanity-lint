@@ -2,7 +2,7 @@
 
 Catch GROQ bugs before they hit production.
 
-This ESLint plugin validates your GROQ queries and Sanity schemas in your editor—finding typos, missing fields, and performance issues at write-time instead of runtime. Point it at your schema and get real-time validation against your actual document types.
+This ESLint plugin validates your GROQ queries and Sanity schemas in your editor. **With schema-aware linting enabled**, it catches typos in field names, invalid type filters, and queries that would silently return empty results. It also flags performance patterns that slow down your app at scale.
 
 Works with **ESLint**, **OxLint**, and other ESLint-compatible tools.
 
@@ -49,9 +49,12 @@ If you see this error, it's working. If not, check the [Troubleshooting](#troubl
 
 ## When GROQ Linting Matters (and When It Doesn't)
 
-The GROQ rules focus on **query performance**, not correctness. They catch patterns that are expensive at scale—joins in filters, deep pagination, repeated dereferences.
+**GROQ rules cover two areas:**
 
-**These rules matter most when:**
+- **Correctness** (schema-aware): Catches typos, invalid fields, and type mismatches that cause silent failures. _Requires [schema setup](#schema-aware-linting)._
+- **Performance**: Catches expensive patterns like joins in filters and deep pagination. _Works out of the box._
+
+**Performance rules matter most when:**
 
 - Queries run on every page load (not cached)
 - You're querying large datasets
@@ -63,7 +66,16 @@ The GROQ rules focus on **query performance**, not correctness. They catch patte
 - You're running one-off queries (migrations, audits)
 - Dataset is small and performance isn't a concern
 
-You can disable individual rules or set them to `warn` instead of `error` based on your use case:
+### Common Overrides
+
+Some rules may not fit every project. Here are the ones teams commonly adjust:
+
+| Rule                         | Why you might disable it                           |
+| ---------------------------- | -------------------------------------------------- |
+| `groq-join-in-filter`        | Results are cached or dataset is small             |
+| `groq-deep-pagination`       | You need offset-based pagination for a specific UI |
+| `schema-missing-icon`        | You don't need icons for all document types        |
+| `schema-missing-description` | You don't require descriptions on all fields       |
 
 ```javascript
 // eslint.config.js
@@ -71,8 +83,8 @@ export default [
   ...sanity.configs.recommended,
   {
     rules: {
-      'sanity/groq-join-in-filter': 'warn', // downgrade to warning
-      'sanity/groq-deep-pagination': 'off', // disable entirely
+      'sanity/groq-join-in-filter': 'off',
+      'sanity/schema-missing-description': 'warn',
     },
   },
 ]
