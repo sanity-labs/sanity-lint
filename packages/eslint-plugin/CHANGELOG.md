@@ -1,5 +1,24 @@
 # eslint-plugin-sanity
 
+## 0.3.0
+
+### Minor Changes
+
+- [`4fe5b19`](https://github.com/sanity-io/sanity-lint/commit/4fe5b19b296b0172532e0ce8a8321020a64f2e06) Thanks [@kmelve](https://github.com/kmelve)! - Rename package from `eslint-plugin-sanity` to `@sanity/eslint-plugin` for consistency with other `@sanity/*` packages.
+
+  **Migration:** Update your imports and package.json:
+
+  ```diff
+  - npm install eslint-plugin-sanity
+  + npm install @sanity/eslint-plugin
+  ```
+
+  ```diff
+  // eslint.config.js
+  - import sanity from 'eslint-plugin-sanity'
+  + import sanity from '@sanity/eslint-plugin'
+  ```
+
 ## 0.2.0
 
 ### Minor Changes
