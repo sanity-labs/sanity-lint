@@ -1,4 +1,4 @@
-# eslint-plugin-sanity
+# @sanity/eslint-plugin
 
 Catch bugs in your GROQ queries and schema definitions before they hit production.
 
@@ -37,14 +37,14 @@ defineField({ name: '_type', type: 'string' })
 ## Installation
 
 ```bash
-npm install eslint-plugin-sanity
+npm install @sanity/eslint-plugin
 ```
 
 ## Usage with ESLint
 
 ```javascript
 // eslint.config.js
-import sanity from 'eslint-plugin-sanity'
+import sanity from '@sanity/eslint-plugin'
 
 export default [
   ...sanity.configs.recommended,
@@ -60,7 +60,7 @@ OxLint supports ESLint-compatible JS plugins. Our plugin works out of the box:
 ```json
 // oxlint.config.json
 {
-  "jsPlugins": ["eslint-plugin-sanity"],
+  "jsPlugins": ["@sanity/eslint-plugin"],
   "rules": {
     "sanity/groq-join-in-filter": "error",
     "sanity/groq-deep-pagination": "warn"
@@ -167,7 +167,7 @@ For schema-aware rules (`unknown-field`, `invalid-type-filter`), you need to pro
 
 ```javascript
 // eslint.config.js
-import sanity from 'eslint-plugin-sanity'
+import sanity from '@sanity/eslint-plugin'
 
 export default [
   ...sanity.configs.recommended,
@@ -189,7 +189,7 @@ npx sanity schema extract
 
 ## Monorepo Setup
 
-When using eslint-plugin-sanity in a monorepo (turborepo, pnpm workspaces, etc.), VS Code/Cursor may have trouble finding the ESLint config for nested packages.
+When using @sanity/eslint-plugin in a monorepo (turborepo, pnpm workspaces, etc.), VS Code/Cursor may have trouble finding the ESLint config for nested packages.
 
 ### VS Code / Cursor Settings
 

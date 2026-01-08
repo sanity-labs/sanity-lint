@@ -12,11 +12,11 @@ This monorepo contains linting tools for Sanity, with integrations for different
 
 ### Editor Integrations
 
-| Package                                              | Description                                   |
-| ---------------------------------------------------- | --------------------------------------------- |
-| **[eslint-plugin-sanity](./packages/eslint-plugin)** | ESLint plugin - lint rules in your IDE and CI |
-| **[vscode-sanity](./packages/vscode-sanity)**        | VS Code/Cursor extension with LSP support     |
-| **[@sanity/groq-lint](./packages/groq-lint)**        | Standalone CLI for linting GROQ queries       |
+| Package                                               | Description                                   |
+| ----------------------------------------------------- | --------------------------------------------- |
+| **[@sanity/eslint-plugin](./packages/eslint-plugin)** | ESLint plugin - lint rules in your IDE and CI |
+| **[vscode-sanity](./packages/vscode-sanity)**         | VS Code/Cursor extension with LSP support     |
+| **[@sanity/groq-lint](./packages/groq-lint)**         | Standalone CLI for linting GROQ queries       |
 
 ### Core Libraries
 
@@ -36,12 +36,12 @@ This monorepo contains linting tools for Sanity, with integrations for different
 The easiest way to use Sanity Lint is through the ESLint plugin:
 
 ```bash
-npm install eslint-plugin-sanity --save-dev
+npm install @sanity/eslint-plugin --save-dev
 ```
 
 ```js
 // eslint.config.js (ESLint 9+ flat config)
-import sanity from 'eslint-plugin-sanity'
+import sanity from '@sanity/eslint-plugin'
 
 export default [
   ...sanity.configs.recommended, // ← start here
@@ -55,7 +55,7 @@ This gives you IDE integration (VS Code, Cursor, etc.) and CI linting for both G
 - **Correctness** (schema-aware): Catches typos, invalid fields, and type mismatches. _Requires running `npx sanity schema extract` first._
 - **Performance**: Catches expensive patterns like joins in filters and deep pagination. _Works out of the box._
 
-See the [eslint-plugin-sanity README](./packages/eslint-plugin) for detailed setup, monorepo configuration, and rule customization.
+See the [@sanity/eslint-plugin README](./packages/eslint-plugin) for detailed setup, monorepo configuration, and rule customization.
 
 ### Standalone CLI
 
@@ -139,7 +139,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on adding new lint rules.
 ```mermaid
 flowchart TB
     subgraph Integrations
-        eslint[eslint-plugin-sanity]
+        eslint["@sanity/eslint-plugin"]
         vscode[vscode-sanity]
         cli["CLI (@sanity/groq-lint)"]
         prettier[prettier-plugin-groq]

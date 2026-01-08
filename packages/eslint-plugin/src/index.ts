@@ -7,7 +7,7 @@
  * @example
  * ```js
  * // eslint.config.js
- * import sanity from 'eslint-plugin-sanity'
+ * import sanity from '@sanity/eslint-plugin'
  *
  * export default [
  *   {
@@ -22,7 +22,7 @@
  *
  * Or use the recommended config:
  * ```js
- * import sanity from 'eslint-plugin-sanity'
+ * import sanity from '@sanity/eslint-plugin'
  *
  * export default [
  *   ...sanity.configs.recommended,
@@ -55,7 +55,7 @@ const rules = {
 // Build the plugin object
 const plugin: ESLint.Plugin = {
   meta: {
-    name: 'eslint-plugin-sanity',
+    name: '@sanity/eslint-plugin',
     version,
   },
   rules,
