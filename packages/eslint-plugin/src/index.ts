@@ -109,9 +109,7 @@ const recommended: Linter.Config[] = [
       // Warnings - best practice violations
       'sanity/schema-missing-icon': 'warn',
       'sanity/schema-missing-title': 'warn',
-      'sanity/schema-presentation-field-name': 'warn',
       'sanity/schema-missing-slug-source': 'warn',
-      'sanity/schema-missing-required-validation': 'warn',
       'sanity/schema-heading-level-in-schema': 'warn',
 
       // Info - suggestions (off by default)
@@ -119,6 +117,8 @@ const recommended: Linter.Config[] = [
       'sanity/schema-boolean-instead-of-list': 'off',
       'sanity/schema-array-missing-constraints': 'off',
       'sanity/schema-unnecessary-reference': 'off',
+      'sanity/schema-presentation-field-name': 'off',
+      'sanity/schema-missing-required-validation': 'off',
     },
   },
 ]
@@ -136,10 +136,100 @@ const strict: Linter.Config[] = [
   },
 ]
 
+// GROQ-only config - for frontends, functions, anywhere you write GROQ queries
+const groq: Linter.Config[] = [
+  {
+    files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,astro,svelte}'],
+    plugins: {
+      sanity: plugin,
+    },
+    rules: {
+      // Errors - serious performance or correctness issues
+      'sanity/groq-join-in-filter': 'error',
+      'sanity/groq-extremely-large-query': 'error',
+
+      // Warnings - performance issues
+      'sanity/groq-deep-pagination': 'warn',
+      'sanity/groq-large-pages': 'warn',
+      'sanity/groq-many-joins': 'warn',
+      'sanity/groq-computed-value-in-filter': 'warn',
+      'sanity/groq-non-literal-comparison': 'warn',
+      'sanity/groq-order-on-expr': 'warn',
+      'sanity/groq-very-large-query': 'warn',
+      'sanity/groq-join-to-get-id': 'warn',
+      'sanity/groq-repeated-dereference': 'warn',
+      'sanity/groq-match-on-id': 'warn',
+      'sanity/groq-count-in-correlated-subquery': 'warn',
+      'sanity/groq-deep-pagination-param': 'warn',
+    },
+  },
+]
+
+// Schema-only config - for schema packages in monorepos
+const schema: Linter.Config[] = [
+  {
+    files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,astro,svelte}'],
+    plugins: {
+      sanity: plugin,
+    },
+    rules: {
+      // Errors - correctness issues
+      'sanity/schema-missing-define-type': 'error',
+      'sanity/schema-missing-define-field': 'error',
+      'sanity/schema-reserved-field-name': 'error',
+
+      // Warnings - best practice violations
+      'sanity/schema-missing-icon': 'warn',
+      'sanity/schema-missing-title': 'warn',
+      'sanity/schema-missing-slug-source': 'warn',
+      'sanity/schema-heading-level-in-schema': 'warn',
+
+      // Off by default - enable as needed
+      'sanity/schema-missing-description': 'off',
+      'sanity/schema-boolean-instead-of-list': 'off',
+      'sanity/schema-array-missing-constraints': 'off',
+      'sanity/schema-unnecessary-reference': 'off',
+      'sanity/schema-presentation-field-name': 'off',
+      'sanity/schema-missing-required-validation': 'off',
+    },
+  },
+]
+
+// Performance-focused config - only performance-related GROQ rules
+const performance: Linter.Config[] = [
+  {
+    files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,astro,svelte}'],
+    plugins: {
+      sanity: plugin,
+    },
+    rules: {
+      // Critical performance issues
+      'sanity/groq-join-in-filter': 'error',
+      'sanity/groq-extremely-large-query': 'error',
+
+      // Performance warnings
+      'sanity/groq-deep-pagination': 'warn',
+      'sanity/groq-large-pages': 'warn',
+      'sanity/groq-many-joins': 'warn',
+      'sanity/groq-computed-value-in-filter': 'warn',
+      'sanity/groq-very-large-query': 'warn',
+    },
+  },
+]
+
 // Configs with explicit type annotation
-const configs: { recommended: Linter.Config[]; strict: Linter.Config[] } = {
+const configs: {
+  recommended: Linter.Config[]
+  strict: Linter.Config[]
+  groq: Linter.Config[]
+  schema: Linter.Config[]
+  performance: Linter.Config[]
+} = {
   recommended,
   strict,
+  groq,
+  schema,
+  performance,
 }
 
 // Plugin type

@@ -80,11 +80,39 @@ oxlint --config oxlint.config.json src/
 
 ### `recommended`
 
-Balanced defaults - errors for serious issues, warnings for improvements.
+Balanced defaults - errors for serious issues, warnings for improvements. Includes both GROQ and schema rules.
+
+```javascript
+export default [...sanity.configs.recommended]
+```
 
 ### `strict`
 
 All rules enabled as errors.
+
+### `groq`
+
+GROQ rules only - use in frontends, functions, or anywhere you write GROQ queries but don't have schema definitions.
+
+```javascript
+export default [...sanity.configs.groq]
+```
+
+### `schema`
+
+Schema rules only - use in schema packages within monorepos where you only want to lint schema definitions.
+
+```javascript
+export default [...sanity.configs.schema]
+```
+
+### `performance`
+
+Performance-focused GROQ rules only - for teams who want to catch expensive queries but don't care about style/best practices.
+
+```javascript
+export default [...sanity.configs.performance]
+```
 
 ## Rules
 
@@ -120,18 +148,18 @@ These rules lint Sanity schema definitions using `defineType()` and `defineField
 | Rule                                        | Default | Description                                 |
 | ------------------------------------------- | ------- | ------------------------------------------- |
 | `sanity/schema-missing-define-type`         | error   | Must use `defineType()`                     |
-| `sanity/schema-missing-define-field`        | warn    | Fields should use `defineField()`           |
+| `sanity/schema-missing-define-field`        | error   | Fields should use `defineField()`           |
+| `sanity/schema-reserved-field-name`         | error   | Avoid reserved field names (`_id`, `_type`) |
 | `sanity/schema-missing-icon`                | warn    | Document types should have icons            |
 | `sanity/schema-missing-title`               | warn    | Types should have titles                    |
-| `sanity/schema-missing-description`         | info    | Fields should have descriptions             |
 | `sanity/schema-missing-slug-source`         | warn    | Slug fields need `options.source`           |
-| `sanity/schema-reserved-field-name`         | error   | Avoid reserved field names (`_id`, `_type`) |
-| `sanity/schema-array-missing-constraints`   | warn    | Arrays should have constraints              |
-| `sanity/schema-boolean-instead-of-list`     | info    | Consider options.list over boolean          |
 | `sanity/schema-heading-level-in-schema`     | warn    | Don't store heading levels                  |
-| `sanity/schema-unnecessary-reference`       | info    | Consider embedding instead                  |
-| `sanity/schema-presentation-field-name`     | warn    | Avoid presentation-focused names            |
-| `sanity/schema-missing-required-validation` | warn    | Critical fields need validation             |
+| `sanity/schema-missing-description`         | off     | Fields should have descriptions             |
+| `sanity/schema-boolean-instead-of-list`     | off     | Consider options.list over boolean          |
+| `sanity/schema-array-missing-constraints`   | off     | Arrays should have constraints              |
+| `sanity/schema-unnecessary-reference`       | off     | Consider embedding instead                  |
+| `sanity/schema-presentation-field-name`     | off     | Avoid presentation-focused names            |
+| `sanity/schema-missing-required-validation` | off     | Critical fields need validation             |
 
 ## Schema-Aware Linting
 
