@@ -65,6 +65,9 @@ const plugin: ESLint.Plugin = {
 // Users can use either: ...sanity.configs.recommended or sanity.configs.recommended
 const recommended: Linter.Config[] = [
   {
+    // Apply to all JS/TS files by default so it works out of the box
+    // Includes Astro and Svelte for parity with Sanity TypeGen
+    files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,astro,svelte}'],
     plugins: {
       sanity: plugin,
     },
@@ -118,6 +121,9 @@ const recommended: Linter.Config[] = [
 // Create strict config (all rules as errors)
 const strict: Linter.Config[] = [
   {
+    // Apply to all JS/TS files by default so it works out of the box
+    // Includes Astro and Svelte for parity with Sanity TypeGen
+    files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,astro,svelte}'],
     plugins: {
       sanity: plugin,
     },

@@ -1,10 +1,38 @@
 # eslint-plugin-sanity
 
-Catch GROQ bugs before they hit production.
+Catch bugs in your GROQ queries and schema definitions before they hit production.
 
-This ESLint plugin validates your GROQ queries and Sanity schemas in your editor. **With schema-aware linting enabled**, it catches typos in field names, invalid type filters, and queries that would silently return empty results. It also flags performance patterns that slow down your app at scale.
+Works with both **ESLint** and **OxLint**.
 
-Works with **ESLint**, **OxLint**, and other ESLint-compatible tools.
+## What It Catches
+
+**GROQ queries:**
+
+```typescript
+// ❌ Performance issue - joins in filters cause full scans
+const query = groq`*[_type == "post" && author->name == "John"]`
+// ⚠️ sanity/groq-join-in-filter
+
+// ❌ Typo that silently returns nothing (with schema-aware linting)
+const query = groq`*[_type == "psot"]`
+// ⚠️ sanity/groq-invalid-type-filter: Type "psot" not found in schema
+```
+
+**Schema definitions:**
+
+```typescript
+// ❌ Missing defineType wrapper
+export const post = {
+  name: 'post',
+  type: 'document',
+  fields: [...]
+}
+// ⚠️ sanity/schema-missing-define-type
+
+// ❌ Reserved field name that would break at runtime
+defineField({ name: '_type', type: 'string' })
+// ⚠️ sanity/schema-reserved-field-name
+```
 
 ## Installation
 
@@ -12,83 +40,41 @@ Works with **ESLint**, **OxLint**, and other ESLint-compatible tools.
 npm install eslint-plugin-sanity
 ```
 
-## Quick Start
-
-**Use `recommended` unless you have a reason not to.** It flags serious issues as errors and suggestions as warnings—a good balance for most teams.
+## Usage with ESLint
 
 ```javascript
 // eslint.config.js
 import sanity from 'eslint-plugin-sanity'
 
 export default [
-  ...sanity.configs.recommended, // ← start here
-]
-```
-
-The `strict` config treats all rules as errors. Use it if you want zero tolerance for lint warnings (e.g., in CI).
-
-## See It Working
-
-After setup, try this in any `.ts` or `.js` file:
-
-```typescript
-import { groq } from 'next-sanity'
-
-// This query has a performance issue - joins inside filters are expensive:
-const query = groq`*[_type == "post" && author->name == "John"]`
-```
-
-You should see:
-
-```
-error  Avoid joins (`->`) inside filters. They cause a full scan.
-       Consider fetching the author separately or restructuring the query.  sanity/groq-join-in-filter
-```
-
-If you see this error, it's working. If not, check the [Troubleshooting](#troubleshooting) section.
-
-## When GROQ Linting Matters (and When It Doesn't)
-
-**GROQ rules cover two areas:**
-
-- **Correctness** (schema-aware): Catches typos, invalid fields, and type mismatches that cause silent failures. _Requires [schema setup](#schema-aware-linting)._
-- **Performance**: Catches expensive patterns like joins in filters and deep pagination. _Works out of the box._
-
-**Performance rules matter most when:**
-
-- Queries run on every page load (not cached)
-- You're querying large datasets
-- Response time affects user experience
-
-**They matter less when:**
-
-- Results are cached (CDN, ISR, static generation)
-- You're running one-off queries (migrations, audits)
-- Dataset is small and performance isn't a concern
-
-### Common Overrides
-
-Some rules may not fit every project. Here are the ones teams commonly adjust:
-
-| Rule                         | Why you might disable it                           |
-| ---------------------------- | -------------------------------------------------- |
-| `groq-join-in-filter`        | Results are cached or dataset is small             |
-| `groq-deep-pagination`       | You need offset-based pagination for a specific UI |
-| `schema-missing-icon`        | You don't need icons for all document types        |
-| `schema-missing-description` | You don't require descriptions on all fields       |
-
-```javascript
-// eslint.config.js
-export default [
   ...sanity.configs.recommended,
-  {
-    rules: {
-      'sanity/groq-join-in-filter': 'off',
-      'sanity/schema-missing-description': 'warn',
-    },
-  },
+  // or for stricter checking:
+  // ...sanity.configs.strict,
 ]
 ```
+
+## Usage with OxLint
+
+OxLint supports ESLint-compatible JS plugins. Our plugin works out of the box:
+
+```json
+// oxlint.config.json
+{
+  "jsPlugins": ["eslint-plugin-sanity"],
+  "rules": {
+    "sanity/groq-join-in-filter": "error",
+    "sanity/groq-deep-pagination": "warn"
+  }
+}
+```
+
+Then run:
+
+```bash
+oxlint --config oxlint.config.json src/
+```
+
+> **Note**: OxLint JS plugins are experimental. See [OxLint JS Plugins](https://oxc.rs/docs/guide/usage/linter/js-plugins) for details.
 
 ## Configurations
 
@@ -175,102 +161,11 @@ npx sanity schema extract
 
 ## Monorepo Setup
 
-When using eslint-plugin-sanity in a monorepo (Turborepo, pnpm workspaces, etc.), the recommended approach is a **root-level ESLint config** that applies to all packages.
-
-### Basic Setup (Any Project)
-
-For monorepos without Next.js, create `eslint.config.mjs` at the **root**:
-
-```javascript
-// eslint.config.mjs
-import sanity from 'eslint-plugin-sanity'
-
-export default [
-  // Global ignores
-  {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/sanity.types.ts'],
-  },
-
-  // Sanity GROQ and schema linting for all packages
-  ...sanity.configs.recommended,
-]
-```
-
-**Required dependencies:**
-
-```bash
-pnpm add -D -w eslint eslint-plugin-sanity
-```
-
-That's it! This works for any JavaScript/TypeScript monorepo.
-
-### Next.js + Sanity Monorepo
-
-If you're using Next.js and want to combine its ESLint rules with Sanity linting:
-
-```javascript
-// eslint.config.mjs
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
-import { FlatCompat } from '@eslint/eslintrc'
-import sanity from 'eslint-plugin-sanity'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-})
-
-export default [
-  // Global ignores
-  {
-    ignores: ['**/node_modules/**', '**/.next/**', '**/dist/**', '**/sanity.types.ts'],
-  },
-
-  // Sanity GROQ and schema linting for all packages
-  ...sanity.configs.recommended,
-
-  // Next.js rules (scoped to web app)
-  ...compat.extends('next/core-web-vitals').map((config) => ({
-    ...config,
-    files: ['apps/web/**/*.{js,jsx,ts,tsx}'],
-    settings: {
-      ...config.settings,
-      next: { rootDir: 'apps/web' },
-      react: { version: 'detect' },
-    },
-  })),
-]
-```
-
-**Additional dependencies for Next.js:**
-
-```bash
-# Core deps
-pnpm add -D -w eslint eslint-plugin-sanity
-
-# Next.js ESLint integration (FlatCompat + peer deps)
-pnpm add -D -w @eslint/eslintrc eslint-config-next \
-  eslint-plugin-react eslint-plugin-react-hooks \
-  eslint-plugin-jsx-a11y eslint-plugin-import @next/eslint-plugin-next
-```
-
-> **Note:** The extra deps (`eslint-config-next`, `eslint-plugin-react`, etc.) are peer dependencies of `eslint-config-next` that pnpm doesn't auto-install at root level. Pin `@next/eslint-plugin-next` to the same version as `eslint-config-next` to avoid compatibility issues.
+When using eslint-plugin-sanity in a monorepo (turborepo, pnpm workspaces, etc.), VS Code/Cursor may have trouble finding the ESLint config for nested packages.
 
 ### VS Code / Cursor Settings
 
 Create `.vscode/settings.json` at your **monorepo root**:
-
-```json
-{
-  "eslint.useFlatConfig": true
-}
-```
-
-### Alternative: Per-Package Configs
-
-If you prefer separate configs per package, use `eslint.workingDirectories`:
 
 ```json
 {
@@ -281,7 +176,11 @@ If you prefer separate configs per package, use `eslint.workingDirectories`:
 }
 ```
 
-Or auto-detect:
+Replace the paths with your actual package directories that have ESLint configs.
+
+### Alternative: Auto-detect
+
+You can also let ESLint auto-detect working directories:
 
 ```json
 {
@@ -291,78 +190,13 @@ Or auto-detect:
 
 ### Troubleshooting
 
-**ESLint extension not showing errors:**
+If rules still don't appear in the editor:
 
-1. **Check ESLint Output**: `Cmd+Shift+P` → "ESLint: Show Output Channel" - look for config loading errors
-2. **Restart ESLint Server**: `Cmd+Shift+P` → "ESLint: Restart ESLint Server"
-3. **Verify extension is enabled**: Check that the ESLint extension is enabled for your workspace
-4. **Missing dependencies**: Ensure all peer dependencies are installed at root level
+1. **Restart ESLint Server**: `Cmd+Shift+P` → "ESLint: Restart ESLint Server"
+2. **Check ESLint Output**: View → Output → select "ESLint" to see errors
+3. **Verify flat config**: Ensure `eslint.config.mjs` exists in your package directory
 
-**Common errors:**
-
-- `Failed to load config "next/core-web-vitals"` - Install `eslint-config-next` at root
-- `Cannot find module 'eslint-plugin-react-hooks'` - Install Next.js ESLint peer deps at root
-- `Unexpected top-level property "name"` - Version mismatch between `eslint-config-next` and `@next/eslint-plugin-next`
-
-> **Note**: The CLI (`npx eslint .`) may work even when the extension doesn't. Check the ESLint Output panel for config loading errors.
-
-## ESLint, Prettier, and Modern Alternatives
-
-### ESLint vs Prettier
-
-**ESLint** and **Prettier** serve different purposes and work great together:
-
-| Tool         | Purpose                       | Examples                                          |
-| ------------ | ----------------------------- | ------------------------------------------------- |
-| **ESLint**   | Catches bugs and bad patterns | Unused variables, unsafe queries, missing `await` |
-| **Prettier** | Formats code consistently     | Indentation, line length, quote style             |
-
-`eslint-plugin-sanity` is an ESLint plugin - it catches GROQ query issues and schema problems. Use it alongside Prettier for formatting.
-
-**Recommended setup:**
-
-```json
-// package.json
-{
-  "scripts": {
-    "lint": "eslint . && prettier --check .",
-    "format": "prettier --write ."
-  }
-}
-```
-
-### OxLint (Faster Alternative)
-
-[OxLint](https://oxc.rs) is a Rust-based linter that's ~50-100x faster than ESLint. It supports ESLint plugins via JS plugin compatibility:
-
-```json
-// oxlint.config.json
-{
-  "jsPlugins": ["eslint-plugin-sanity"],
-  "rules": {
-    "sanity/groq-join-in-filter": "error",
-    "sanity/groq-deep-pagination": "warn"
-  }
-}
-```
-
-```bash
-oxlint --config oxlint.config.json src/
-```
-
-**When to use OxLint:**
-
-- Large codebases where ESLint is slow
-- CI/CD pipelines where speed matters
-- Projects that don't need the full ESLint ecosystem
-
-> **Note**: OxLint JS plugins are experimental. Not all ESLint features are supported.
-
-### Biome (All-in-One)
-
-[Biome](https://biomejs.dev) combines linting and formatting in one fast Rust tool. However, **Biome doesn't support ESLint plugins** - it has its own rule set.
-
-For Sanity projects, we recommend ESLint (or OxLint) + Prettier over Biome, since you get access to `eslint-plugin-sanity` rules.
+> **Note**: The CLI (`npx eslint .`) works regardless of these settings. This is purely for editor integration.
 
 ## License
 
