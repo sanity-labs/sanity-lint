@@ -487,7 +487,7 @@ OxLint (October 2025) introduced [JS plugins](https://oxc.rs/blog/2025-10-09-oxl
 
 **Option A: ESLint Plugin Compatibility (try first)** ✅ WORKS!
 
-- Test if eslint-plugin-sanity works with OxLint's ESLint compat layer
+- Test if @sanity/eslint-plugin works with OxLint's ESLint compat layer
 - Minimal work if it works out of the box
 
 **Option B: Native OxLint Plugin (if needed)**
@@ -499,7 +499,7 @@ OxLint (October 2025) introduced [JS plugins](https://oxc.rs/blog/2025-10-09-oxl
 **5.3.1 Test ESLint compatibility**
 
 - [x] Install OxLint with JS plugin support enabled
-- [x] Configure OxLint to load eslint-plugin-sanity
+- [x] Configure OxLint to load @sanity/eslint-plugin
 - [x] Test groq`...` template detection
 - [x] Document configuration
 
@@ -526,7 +526,7 @@ OxLint (October 2025) introduced [JS plugins](https://oxc.rs/blog/2025-10-09-oxl
 
 ```json
 {
-  "jsPlugins": ["eslint-plugin-sanity"],
+  "jsPlugins": ["@sanity/eslint-plugin"],
   "rules": {
     "sanity/groq-join-in-filter": "error",
     "sanity/groq-deep-pagination": "warn"
@@ -542,7 +542,7 @@ oxlint --config oxlint.config.json src/
 
 **Findings**:
 
-- eslint-plugin-sanity works with OxLint out of the box
+- @sanity/eslint-plugin works with OxLint out of the box
 - No native plugin needed
 - OxLint JS plugins are still marked as experimental
 - Performance is excellent (77ms for single file)
@@ -571,7 +571,7 @@ Biome provides `biome migrate eslint --write` which can:
 - Convert rules from 23+ ESLint plugins (React, TypeScript, Unicorn, etc.)
 - Handle `.eslintignore` files
 
-**However**: It only migrates rules that Biome has reimplemented natively. Custom plugins like `eslint-plugin-sanity` cannot be migrated.
+**However**: It only migrates rules that Biome has reimplemented natively. Custom plugins like `@sanity/eslint-plugin` cannot be migrated.
 
 #### GritQL Plugin System (Biome 2.0)
 
@@ -623,7 +623,7 @@ Community poll showed 79% want TypeScript plugins, only 12% want WASM. Biome tea
 
 ### 6.4 Recommendation
 
-**Short term**: Continue using OxLint with `eslint-plugin-sanity` (works today, 77ms performance).
+**Short term**: Continue using OxLint with `@sanity/eslint-plugin` (works today, 77ms performance).
 
 **Medium term**: Monitor these Biome developments:
 

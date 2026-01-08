@@ -14,16 +14,16 @@ Sanity Developer Experience Suite - linting, formatting, and static analysis for
 
 ### Packages
 
-| Package                         | npm Name               | Purpose                                          |
-| ------------------------------- | ---------------------- | ------------------------------------------------ |
-| `packages/core`                 | `@sanity/lint-core`    | Shared types, RuleTester, reporters              |
-| `packages/groq-wasm`            | `@sanity/groq-wasm`    | WASM bindings for Rust groq-lint/groq-format     |
-| `packages/groq-lint`            | `@sanity/groq-lint`    | GROQ query linting rules + CLI                   |
-| `packages/schema-lint`          | `@sanity/schema-lint`  | Sanity schema linting rules                      |
-| `packages/groq-lsp`             | `@sanity/groq-lsp`     | Language Server Protocol for GROQ                |
-| `packages/eslint-plugin`        | `eslint-plugin-sanity` | ESLint integration                               |
-| `packages/vscode-sanity`        | `vscode-sanity`        | VS Code/Cursor extension (query execution + LSP) |
-| `packages/prettier-plugin-groq` | `prettier-plugin-groq` | Prettier plugin for GROQ formatting              |
+| Package                         | npm Name                | Purpose                                          |
+| ------------------------------- | ----------------------- | ------------------------------------------------ |
+| `packages/core`                 | `@sanity/lint-core`     | Shared types, RuleTester, reporters              |
+| `packages/groq-wasm`            | `@sanity/groq-wasm`     | WASM bindings for Rust groq-lint/groq-format     |
+| `packages/groq-lint`            | `@sanity/groq-lint`     | GROQ query linting rules + CLI                   |
+| `packages/schema-lint`          | `@sanity/schema-lint`   | Sanity schema linting rules                      |
+| `packages/groq-lsp`             | `@sanity/groq-lsp`      | Language Server Protocol for GROQ                |
+| `packages/eslint-plugin`        | `@sanity/eslint-plugin` | ESLint integration                               |
+| `packages/vscode-sanity`        | `vscode-sanity`         | VS Code/Cursor extension (query execution + LSP) |
+| `packages/prettier-plugin-groq` | `prettier-plugin-groq`  | Prettier plugin for GROQ formatting              |
 
 ### Dependency Graph
 
@@ -39,8 +39,8 @@ groq-lint (Rust)        groq-format (Rust)
                   │
     ┌─────────────┼─────────────┐
     ▼             ▼             ▼
-@sanity/    prettier-plugin  eslint-plugin
-groq-lint        -groq         -sanity
+@sanity/    prettier-plugin  @sanity/
+groq-lint        -groq      eslint-plugin
     │
     ▼
 @sanity/groq-lsp → vscode-sanity

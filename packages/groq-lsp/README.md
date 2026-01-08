@@ -322,7 +322,7 @@ pnpm dev
 
 - [`@sanity/groq-lint`](../groq-lint) - GROQ linting rules
 - [`prettier-plugin-groq`](../prettier-plugin-groq) - Prettier plugin for GROQ
-- [`eslint-plugin-sanity`](../eslint-plugin) - ESLint plugin for Sanity
+- [`@sanity/eslint-plugin`](../eslint-plugin) - ESLint plugin for Sanity
 
 ## License
 

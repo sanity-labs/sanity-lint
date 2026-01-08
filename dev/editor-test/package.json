@@ -17,7 +17,7 @@
     "@sanity/icons": "^3.0.0",
     "@typescript-eslint/parser": "^8.18.0",
     "eslint": "^9.0.0",
-    "eslint-plugin-sanity": "workspace:*",
+    "@sanity/eslint-plugin": "workspace:*",
     "prettier": "^3.4.2",
     "@sanity/prettier-plugin-groq": "workspace:*",
     "sanity": "^5.1.0",

@@ -2,7 +2,7 @@
  * Sample GROQ queries with various lint issues.
  * Open this file in VS Code/Cursor to test editor integration.
  *
- * Once eslint-plugin-sanity is implemented, you should see
+ * Once @sanity/eslint-plugin is implemented, you should see
  * squiggly lines under the problematic queries.
  */
 
