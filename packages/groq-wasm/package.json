@@ -14,7 +14,7 @@
   "author": "Sanity.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sanity-io/sanity-lint.git",
+    "url": "https://github.com/sanity-labs/sanity-lint.git",
     "directory": "packages/groq-wasm"
   },
   "type": "module",

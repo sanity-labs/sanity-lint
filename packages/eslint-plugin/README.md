@@ -1,5 +1,9 @@
 # @sanity/eslint-plugin
 
+> **🧪 Experimental** - This project is part of [Sanity Labs](https://github.com/sanity-labs).
+> It's functional and useful, but not officially supported. Use at your own discretion.
+> Feedback and contributions welcome!
+
 Catch bugs in your GROQ queries and schema definitions before they hit production.
 
 Works with both **ESLint** and **OxLint**.
