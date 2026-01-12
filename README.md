@@ -1,8 +1,6 @@
 # Sanity Lint
 
-> **🧪 Experimental** - This project is part of [Sanity Labs](https://github.com/sanity-labs).
-> It's functional and useful, but not officially supported. Use at your own discretion.
-> Feedback and contributions welcome!
+> **🧪 Sanity Labs** - This project is functional and actively used, but maintained on a best-effort basis. It's pre-v1, so APIs may evolve based on feedback. Issues and contributions welcome!
 
 Catch GROQ bugs and performance issues before they hit production.
 
