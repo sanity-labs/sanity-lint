@@ -24,10 +24,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/sanity-io/sanity-lint"
+    "url": "https://github.com/sanity-labs/sanity-lint"
   },
   "bugs": {
-    "url": "https://github.com/sanity-io/sanity-lint/issues"
+    "url": "https://github.com/sanity-labs/sanity-lint/issues"
   },
   "icon": "images/icon.png",
   "activationEvents": [

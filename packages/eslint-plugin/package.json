@@ -6,12 +6,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sanity-io/sanity-lint.git",
+    "url": "git+https://github.com/sanity-labs/sanity-lint.git",
     "directory": "packages/eslint-plugin"
   },
-  "homepage": "https://github.com/sanity-io/sanity-lint#readme",
+  "homepage": "https://github.com/sanity-labs/sanity-lint#readme",
   "bugs": {
-    "url": "https://github.com/sanity-io/sanity-lint/issues"
+    "url": "https://github.com/sanity-labs/sanity-lint/issues"
   },
   "type": "module",
   "exports": {

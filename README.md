@@ -1,5 +1,7 @@
 # Sanity Lint
 
+> **🧪 Sanity Labs** - This project is functional and actively used, but maintained on a best-effort basis. It's pre-v1, so APIs may evolve based on feedback. Issues and contributions welcome!
+
 Catch GROQ bugs and performance issues before they hit production.
 
 This monorepo provides linting tools for Sanity projects. **With schema-aware linting enabled**, it catches typos in field names, invalid type filters, and queries that would silently return empty results. It also flags performance patterns that slow down your app at scale.
