@@ -1,4 +1,4 @@
-# @sanity/prettier-plugin-groq
+# @sanity-labs/groq-wasm
 
 ## 0.1.0
 
@@ -26,24 +26,3 @@
   - import sanity from '@sanity/eslint-plugin'
   + import sanity from '@sanity-labs/eslint-plugin'
   ```
-
-### Patch Changes
-
-- Updated dependencies [06a5052]
-  - @sanity-labs/groq-wasm@0.1.0
-
-## 0.0.2
-
-### Patch Changes
-
-- [#11](https://github.com/sanity-io/sanity-lint/pull/11) [`00b9e79`](https://github.com/sanity-io/sanity-lint/commit/00b9e79abc81e7f540a24aaa1892322718155d66) Thanks [@kmelve](https://github.com/kmelve)! - Add CommonJS exports to all library packages
-
-  All library packages now export both ESM and CJS formats, fixing compatibility
-  issues with ESLint configurations that use `require()` or FlatCompat.
-  - @sanity/lint-core: ESM + CJS
-  - @sanity/groq-lint: ESM + CJS (library), ESM only (CLI)
-  - @sanity/schema-lint: ESM + CJS
-  - @sanity/prettier-plugin-groq: ESM + CJS
-
-- Updated dependencies []:
-  - @sanity/groq-wasm@0.0.1

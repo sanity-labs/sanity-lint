@@ -1,6 +1,6 @@
 {
   "name": "@sanity-labs/lint-core",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Shared types and utilities for Sanity Lint",
   "author": "Sanity.io <hello@sanity.io>",
   "license": "MIT",
