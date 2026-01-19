@@ -1,4 +1,4 @@
-import type { Finding, Severity } from '@sanity/lint-core'
+import type { Finding, Severity } from '@sanity-labs/lint-core'
 import type { SchemaType, SchemaRule, SchemaLinterConfig, SchemaRuleContext } from './types'
 
 export interface LintOptions {

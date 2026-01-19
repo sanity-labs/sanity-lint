@@ -1,5 +1,5 @@
 /**
- * Types for @sanity/groq-wasm
+ * Types for @sanity-labs/groq-wasm
  *
  * These types match the Rust API from groq-lint and groq-format,
  * converted to TypeScript conventions (snake_case → camelCase).

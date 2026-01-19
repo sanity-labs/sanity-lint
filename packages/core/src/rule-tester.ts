@@ -117,7 +117,7 @@ function assertFindingMatches(finding: Finding, expected: ExpectedError, ruleId:
  *
  * @example
  * ```typescript
- * import { RuleTester } from '@sanity/lint-core'
+ * import { RuleTester } from '@sanity-labs/lint-core'
  * import { joinInFilter } from '../join-in-filter'
  *
  * const tester = new RuleTester()

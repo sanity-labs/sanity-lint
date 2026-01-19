@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { Finding } from '@sanity/lint-core'
+import type { Finding } from '@sanity-labs/lint-core'
 import type { SchemaType, SchemaRule, SchemaRuleContext } from './types'
 
 /**
@@ -112,7 +112,7 @@ export function createSchema(overrides: Partial<SchemaType> = {}): SchemaType {
  *
  * @example
  * ```typescript
- * import { SchemaRuleTester, createSchema } from '@sanity/schema-lint/testing'
+ * import { SchemaRuleTester, createSchema } from '@sanity-labs/schema-lint/testing'
  * import { missingIcon } from '../missing-icon'
  *
  * const tester = new SchemaRuleTester()

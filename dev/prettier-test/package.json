@@ -12,6 +12,6 @@
   },
   "devDependencies": {
     "prettier": "^3.4.2",
-    "@sanity/prettier-plugin-groq": "workspace:*"
+    "@sanity-labs/prettier-plugin-groq": "workspace:*"
   }
 }

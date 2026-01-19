@@ -1,7 +1,7 @@
 import type { Rule as ESLintRule } from 'eslint'
 import type { TSESTree } from '@typescript-eslint/types'
-import type { SchemaRule } from '@sanity/schema-lint'
-import { lint, rules as schemaRules } from '@sanity/schema-lint'
+import type { SchemaRule } from '@sanity-labs/schema-lint'
+import { lint, rules as schemaRules } from '@sanity-labs/schema-lint'
 import {
   isDefineTypeCall,
   extractSchemaFromDefineType,

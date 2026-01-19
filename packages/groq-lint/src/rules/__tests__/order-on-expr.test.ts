@@ -1,4 +1,4 @@
-import { RuleTester } from '@sanity/lint-core/testing'
+import { RuleTester } from '@sanity-labs/lint-core/testing'
 import { orderOnExpr } from '../order-on-expr'
 
 const tester = new RuleTester()

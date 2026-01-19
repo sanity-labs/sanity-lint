@@ -1,4 +1,4 @@
-import { RuleTester } from '@sanity/lint-core/testing'
+import { RuleTester } from '@sanity-labs/lint-core/testing'
 import { veryLargeQuery } from '../very-large-query'
 import { extremelyLargeQuery } from '../extremely-large-query'
 

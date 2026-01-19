@@ -23,7 +23,7 @@ export const DEFAULT_WIDTH = 80
  *
  * @example
  * ```typescript
- * import { initWasm, format } from '@sanity/groq-wasm'
+ * import { initWasm, format } from '@sanity-labs/groq-wasm'
  *
  * await initWasm()
  *

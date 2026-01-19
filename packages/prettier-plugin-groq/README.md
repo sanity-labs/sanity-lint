@@ -1,13 +1,13 @@
-# prettier-plugin-groq
+# @sanity-labs/prettier-plugin-groq
 
 Prettier plugin for formatting GROQ (Graph-Relational Object Queries) queries.
 
 ## Installation
 
 ```bash
-npm install --save-dev prettier-plugin-groq prettier
+npm install --save-dev @sanity-labs/prettier-plugin-groq prettier
 # or
-pnpm add -D prettier-plugin-groq prettier
+pnpm add -D @sanity-labs/prettier-plugin-groq prettier
 ```
 
 ## Usage
@@ -24,7 +24,7 @@ Configure in `.prettierrc`:
 
 ```json
 {
-  "plugins": ["prettier-plugin-groq"],
+  "plugins": ["@sanity-labs/prettier-plugin-groq"],
   "printWidth": 80
 }
 ```
@@ -35,7 +35,7 @@ To format GROQ queries embedded in JavaScript/TypeScript files, add the embed pl
 
 ```json
 {
-  "plugins": ["prettier-plugin-groq", "prettier-plugin-groq/embed"]
+  "plugins": ["@sanity-labs/prettier-plugin-groq", "@sanity-labs/prettier-plugin-groq/embed"]
 }
 ```
 
@@ -85,7 +85,7 @@ The formatter follows GROQ syntax rules:
 For better performance, this plugin can use WASM-compiled Rust for formatting. Initialize WASM at application startup:
 
 ```typescript
-import { initWasmFormatter, isWasmFormatterAvailable } from 'prettier-plugin-groq'
+import { initWasmFormatter, isWasmFormatterAvailable } from '@sanity-labs/prettier-plugin-groq'
 
 // Optional: Initialize WASM for better performance
 await initWasmFormatter()

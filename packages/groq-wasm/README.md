@@ -1,4 +1,4 @@
-# @sanity/groq-wasm
+# @sanity-labs/groq-wasm
 
 WASM bindings for GROQ linting and formatting.
 
@@ -12,13 +12,13 @@ Both are compiled to WebAssembly for use in Node.js and browsers without requiri
 ## Installation
 
 ```bash
-npm install @sanity/groq-wasm
+npm install @sanity-labs/groq-wasm
 ```
 
 ## Usage
 
 ```typescript
-import { initWasm, lint, format } from '@sanity/groq-wasm'
+import { initWasm, lint, format } from '@sanity-labs/groq-wasm'
 
 // Initialize WASM (call once at startup)
 await initWasm()
@@ -116,7 +116,7 @@ The following rules are available (from Rust groq-lint):
 ## Error Handling
 
 ```typescript
-import { WasmError } from '@sanity/groq-wasm'
+import { WasmError } from '@sanity-labs/groq-wasm'
 
 try {
   const findings = lint(query)
@@ -143,7 +143,7 @@ This package works in modern browsers that support WebAssembly. The WASM modules
 
 ```typescript
 // In browser
-import { initWasm, lint } from '@sanity/groq-wasm'
+import { initWasm, lint } from '@sanity-labs/groq-wasm'
 
 await initWasm()
 const findings = lint(query)

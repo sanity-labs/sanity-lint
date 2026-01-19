@@ -1,7 +1,7 @@
 import type { Rule as ESLintRule } from 'eslint'
 import type { TSESTree } from '@typescript-eslint/types'
-import type { Rule as GroqRule } from '@sanity/groq-lint'
-import { lint, rules as allGroqRules } from '@sanity/groq-lint'
+import type { Rule as GroqRule } from '@sanity-labs/groq-lint'
+import { lint, rules as allGroqRules } from '@sanity-labs/groq-lint'
 import {
   isGroqTaggedTemplate,
   extractGroqString,

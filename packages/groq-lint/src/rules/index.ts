@@ -1,4 +1,4 @@
-import type { Rule } from '@sanity/lint-core'
+import type { Rule } from '@sanity-labs/lint-core'
 import { computedValueInFilter } from './computed-value-in-filter'
 import { countInCorrelatedSubquery } from './count-in-correlated-subquery'
 import { deepPagination } from './deep-pagination'

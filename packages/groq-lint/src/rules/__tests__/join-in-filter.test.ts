@@ -1,4 +1,4 @@
-import { RuleTester } from '@sanity/lint-core/testing'
+import { RuleTester } from '@sanity-labs/lint-core/testing'
 import { joinInFilter } from '../join-in-filter'
 
 const tester = new RuleTester()

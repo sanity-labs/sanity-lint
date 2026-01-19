@@ -4,7 +4,7 @@
  * Wraps the Rust groq-lint library compiled to WASM.
  */
 
-import type { Finding, SourceLocation, SourceSpan } from '@sanity/lint-core'
+import type { Finding, SourceLocation, SourceSpan } from '@sanity-labs/lint-core'
 import {
   mapRuleId,
   mapSeverity,
@@ -24,7 +24,7 @@ import { callLint, isInitialized } from './wasm-loader.js'
  *
  * @example
  * ```typescript
- * import { initWasm, lint } from '@sanity/groq-wasm'
+ * import { initWasm, lint } from '@sanity-labs/groq-wasm'
  *
  * await initWasm()
  *

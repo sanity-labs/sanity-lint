@@ -4,7 +4,7 @@
  * Use these in tests to ensure queries are valid GROQ syntax:
  *
  * ```ts
- * import { assertValidGroq } from '@sanity/lint-core/testing'
+ * import { assertValidGroq } from '@sanity-labs/lint-core/testing'
  *
  * it('produces valid GROQ', () => {
  *   const result = formatGroq(query)

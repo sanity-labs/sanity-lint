@@ -5,7 +5,7 @@
  */
 
 import type { Diagnostic, DiagnosticSeverity, Range, Position } from 'vscode-languageserver'
-import { lint, type Finding, type Severity } from '@sanity/groq-lint'
+import { lint, type Finding, type Severity } from '@sanity-labs/groq-lint'
 import type { SchemaType } from 'groq-js'
 import type { GroqQuery } from '../types.js'
 

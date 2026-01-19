@@ -29,7 +29,7 @@ export async function formatQuery(
   try {
     // Dynamic import to avoid bundling issues
     const prettier = await import('prettier')
-    const groqPlugin = await import('@sanity/prettier-plugin-groq')
+    const groqPlugin = await import('@sanity-labs/prettier-plugin-groq')
 
     const formatted = await prettier.format(query.query, {
       parser: 'groq',

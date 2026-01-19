@@ -4,7 +4,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { glob } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { lint, initLinter } from './linter'
-import { formatFindings, summarizeFindings } from '@sanity/lint-core'
+import { formatFindings, summarizeFindings } from '@sanity-labs/lint-core'
 import type { SchemaType } from 'groq-js'
 
 const require = createRequire(import.meta.url)

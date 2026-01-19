@@ -1,4 +1,4 @@
-import type { Rule } from '@sanity/lint-core'
+import type { Rule } from '@sanity-labs/lint-core'
 
 const TEN_KB = 10 * 1024
 

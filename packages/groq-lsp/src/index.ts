@@ -11,12 +11,12 @@
  *
  * ### As a standalone server (CLI)
  * ```bash
- * npx @sanity/groq-lsp
+ * npx @sanity-labs/groq-lsp
  * ```
  *
  * ### As a library
  * ```typescript
- * import { SchemaLoader, extractQueries, computeDocumentDiagnostics } from '@sanity/groq-lsp'
+ * import { SchemaLoader, extractQueries, computeDocumentDiagnostics } from '@sanity-labs/groq-lsp'
  *
  * const loader = new SchemaLoader()
  * loader.loadFromPath('./schema.json')

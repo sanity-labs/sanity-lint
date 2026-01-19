@@ -19,5 +19,5 @@ export type { SchemaType } from 'groq-js'
 export { formatFindings, formatFindingsJson, summarizeFindings } from './reporter'
 export type { FindingsSummary } from './reporter'
 
-// Note: RuleTester is exported from '@sanity/lint-core/testing' to avoid
+// Note: RuleTester is exported from '@sanity-labs/lint-core/testing' to avoid
 // importing vitest in production code

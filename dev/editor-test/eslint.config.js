@@ -1,4 +1,4 @@
-import sanityPlugin from '@sanity/eslint-plugin'
+import sanityPlugin from '@sanity-labs/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
 
 export default [

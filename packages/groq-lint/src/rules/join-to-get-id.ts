@@ -1,4 +1,4 @@
-import type { Rule } from '@sanity/lint-core'
+import type { Rule } from '@sanity-labs/lint-core'
 import { walk } from '../walker'
 
 /**

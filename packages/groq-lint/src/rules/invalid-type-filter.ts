@@ -8,7 +8,7 @@
  * This rule requires a schema to function. Without a schema, it is skipped.
  */
 
-import type { Rule, Suggestion } from '@sanity/lint-core'
+import type { Rule, Suggestion } from '@sanity-labs/lint-core'
 import type { OpCallNode } from 'groq-js'
 import { walk } from '../walker'
 

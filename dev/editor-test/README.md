@@ -38,7 +38,7 @@ Test files for validating GROQ linting in VS Code, Cursor, and other editors.
 ### Linting
 
 ```bash
-# Lint with ESLint (all rules via @sanity/eslint-plugin)
+# Lint with ESLint (all rules via @sanity-labs/eslint-plugin)
 pnpm lint
 
 # Lint GROQ with schema (catches typos in types and fields)

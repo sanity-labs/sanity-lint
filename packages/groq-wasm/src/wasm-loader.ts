@@ -29,7 +29,7 @@ export function isInitialized(): boolean {
  *
  * @example
  * ```typescript
- * import { initWasm } from '@sanity/groq-wasm'
+ * import { initWasm } from '@sanity-labs/groq-wasm'
  *
  * await initWasm()
  * // Now lint() and format() are ready to use

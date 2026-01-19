@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/types'
-import type { SchemaType, SchemaField } from '@sanity/schema-lint'
-import type { SourceSpan } from '@sanity/lint-core'
+import type { SchemaType, SchemaField } from '@sanity-labs/schema-lint'
+import type { SourceSpan } from '@sanity-labs/lint-core'
 
 /**
  * Check if a node is a defineType() call

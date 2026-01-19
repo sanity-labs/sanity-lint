@@ -1,7 +1,7 @@
 /**
  * WASM-based GROQ printer for Prettier
  *
- * Uses @sanity/groq-wasm for high-performance formatting.
+ * Uses @sanity-labs/groq-wasm for high-performance formatting.
  * Falls back to the TypeScript printer if WASM is not available.
  */
 
@@ -14,7 +14,7 @@ let wasmInitialized = false
 let wasmInitPromise: Promise<boolean> | null = null
 
 // WASM module reference
-type WasmModule = typeof import('@sanity/groq-wasm')
+type WasmModule = typeof import('@sanity-labs/groq-wasm')
 let wasmModule: WasmModule | null = null
 
 /**
@@ -48,7 +48,7 @@ export async function initWasmFormatter(): Promise<boolean> {
 
 async function doInit(): Promise<boolean> {
   try {
-    wasmModule = await import('@sanity/groq-wasm')
+    wasmModule = await import('@sanity-labs/groq-wasm')
     await wasmModule.initWasm()
     wasmAvailable = true
     wasmInitialized = true

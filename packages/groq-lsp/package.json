@@ -1,5 +1,5 @@
 {
-  "name": "@sanity/groq-lsp",
+  "name": "@sanity-labs/groq-lsp",
   "version": "0.0.4",
   "description": "Language Server Protocol implementation for GROQ",
   "author": "Sanity.io <hello@sanity.io>",
@@ -33,11 +33,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@sanity/groq-lint": "workspace:*",
-    "@sanity/lint-core": "workspace:*",
+    "@sanity-labs/groq-lint": "workspace:*",
+    "@sanity-labs/lint-core": "workspace:*",
     "groq-js": "^1.14.0",
     "prettier": "^3.4.2",
-    "@sanity/prettier-plugin-groq": "workspace:*",
+    "@sanity-labs/prettier-plugin-groq": "workspace:*",
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.12",
     "vscode-uri": "^3.0.8"

@@ -1,13 +1,13 @@
-# @sanity/lint-core
+# @sanity-labs/lint-core
 
 Shared types, utilities, and testing infrastructure for Sanity lint packages.
 
 ## Installation
 
 ```bash
-npm install @sanity/lint-core
+npm install @sanity-labs/lint-core
 # or
-pnpm add @sanity/lint-core
+pnpm add @sanity-labs/lint-core
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ pnpm add @sanity/lint-core
 ### Types
 
 ```typescript
-import type { Rule, RuleContext, Finding, Severity, LinterConfig } from '@sanity/lint-core'
+import type { Rule, RuleContext, Finding, Severity, LinterConfig } from '@sanity-labs/lint-core'
 
 // Define a custom rule
 const myRule: Rule = {
@@ -33,7 +33,7 @@ const myRule: Rule = {
 ### Reporting Utilities
 
 ```typescript
-import { formatFindings, formatFindingsJson, summarizeFindings } from '@sanity/lint-core'
+import { formatFindings, formatFindingsJson, summarizeFindings } from '@sanity-labs/lint-core'
 
 // Format findings for terminal output
 const output = formatFindings(findings)
@@ -51,7 +51,7 @@ console.log(`${summary.errorCount} errors, ${summary.warningCount} warnings`)
 Import from the `/testing` subpath to use the RuleTester:
 
 ```typescript
-import { RuleTester } from '@sanity/lint-core/testing'
+import { RuleTester } from '@sanity-labs/lint-core/testing'
 import { myRule } from '../my-rule'
 
 const tester = new RuleTester()
@@ -70,7 +70,7 @@ tester.run('my-rule', myRule, {
 ### GROQ Validation
 
 ```typescript
-import { isValidGroq, parseGroq, assertValidGroq } from '@sanity/lint-core/testing'
+import { isValidGroq, parseGroq, assertValidGroq } from '@sanity-labs/lint-core/testing'
 
 // Check if GROQ is valid
 if (isValidGroq('*[_type == "post"]')) {

@@ -1,5 +1,5 @@
 /**
- * @sanity/groq-wasm
+ * @sanity-labs/groq-wasm
  *
  * WASM bindings for GROQ linting and formatting.
  *
@@ -12,7 +12,7 @@
  *
  * @example
  * ```typescript
- * import { initWasm, lint, format } from '@sanity/groq-wasm'
+ * import { initWasm, lint, format } from '@sanity-labs/groq-wasm'
  *
  * // Initialize WASM (call once at startup)
  * await initWasm()

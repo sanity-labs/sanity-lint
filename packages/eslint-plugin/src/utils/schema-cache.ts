@@ -7,7 +7,7 @@
 
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
-import type { SchemaType } from '@sanity/groq-lint'
+import type { SchemaType } from '@sanity-labs/groq-lint'
 
 /**
  * Cache of loaded schemas by absolute path

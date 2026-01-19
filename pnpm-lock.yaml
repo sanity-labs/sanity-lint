@@ -69,18 +69,18 @@ importers:
         specifier: ^12.0.8
         version: 12.0.8(@emotion/is-prop-valid@1.2.2)(@sanity/client@7.14.0)(@sanity/types@5.1.0(@types/react@18.3.27)(debug@4.4.3))(next@16.1.1(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-is@19.2.3)(react@18.3.1)(sanity@5.1.0(@emotion/is-prop-valid@1.2.2)(@portabletext/sanity-bridge@2.0.0(@types/react@18.3.27))(@types/node@22.19.3)(@types/react@18.3.27)(immer@10.2.0)(jiti@2.6.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(styled-components@6.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(styled-components@6.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)
     devDependencies:
-      '@sanity/eslint-plugin':
+      '@sanity-labs/eslint-plugin':
         specifier: workspace:*
         version: link:../../packages/eslint-plugin
-      '@sanity/groq-lint':
+      '@sanity-labs/groq-lint':
         specifier: workspace:*
         version: link:../../packages/groq-lint
+      '@sanity-labs/prettier-plugin-groq':
+        specifier: workspace:*
+        version: link:../../packages/prettier-plugin-groq
       '@sanity/icons':
         specifier: ^3.0.0
         version: 3.7.4(react@18.3.1)
-      '@sanity/prettier-plugin-groq':
-        specifier: workspace:*
-        version: link:../../packages/prettier-plugin-groq
       '@typescript-eslint/parser':
         specifier: ^8.18.0
         version: 8.52.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
@@ -99,10 +99,10 @@ importers:
 
   dev/playground:
     dependencies:
-      '@sanity/groq-lint':
+      '@sanity-labs/groq-lint':
         specifier: workspace:*
         version: link:../../packages/groq-lint
-      '@sanity/prettier-plugin-groq':
+      '@sanity-labs/prettier-plugin-groq':
         specifier: workspace:*
         version: link:../../packages/prettier-plugin-groq
       prettier:
@@ -133,7 +133,7 @@ importers:
 
   dev/prettier-test:
     devDependencies:
-      '@sanity/prettier-plugin-groq':
+      '@sanity-labs/prettier-plugin-groq':
         specifier: workspace:*
         version: link:../../packages/prettier-plugin-groq
       prettier:
@@ -158,13 +158,13 @@ importers:
 
   packages/eslint-plugin:
     dependencies:
-      '@sanity/groq-lint':
+      '@sanity-labs/groq-lint':
         specifier: workspace:*
         version: link:../groq-lint
-      '@sanity/lint-core':
+      '@sanity-labs/lint-core':
         specifier: workspace:*
         version: link:../core
-      '@sanity/schema-lint':
+      '@sanity-labs/schema-lint':
         specifier: workspace:*
         version: link:../schema-lint
     devDependencies:
@@ -186,15 +186,15 @@ importers:
 
   packages/groq-lint:
     dependencies:
+      '@sanity-labs/groq-wasm':
+        specifier: workspace:*
+        version: link:../groq-wasm
+      '@sanity-labs/lint-core':
+        specifier: workspace:*
+        version: link:../core
       '@sanity/codegen':
         specifier: ^5.1.0
         version: 5.1.0
-      '@sanity/groq-wasm':
-        specifier: workspace:*
-        version: link:../groq-wasm
-      '@sanity/lint-core':
-        specifier: workspace:*
-        version: link:../core
       groq-js:
         specifier: ^1.14.0
         version: 1.25.0
@@ -211,13 +211,13 @@ importers:
 
   packages/groq-lsp:
     dependencies:
-      '@sanity/groq-lint':
+      '@sanity-labs/groq-lint':
         specifier: workspace:*
         version: link:../groq-lint
-      '@sanity/lint-core':
+      '@sanity-labs/lint-core':
         specifier: workspace:*
         version: link:../core
-      '@sanity/prettier-plugin-groq':
+      '@sanity-labs/prettier-plugin-groq':
         specifier: workspace:*
         version: link:../prettier-plugin-groq
       groq-js:
@@ -248,7 +248,7 @@ importers:
 
   packages/groq-wasm:
     devDependencies:
-      '@sanity/lint-core':
+      '@sanity-labs/lint-core':
         specifier: workspace:*
         version: link:../core
       tsup:
@@ -263,14 +263,14 @@ importers:
 
   packages/prettier-plugin-groq:
     dependencies:
-      '@sanity/groq-wasm':
+      '@sanity-labs/groq-wasm':
         specifier: workspace:*
         version: link:../groq-wasm
       groq-js:
         specifier: ^1.14.0
         version: 1.25.0
     devDependencies:
-      '@sanity/lint-core':
+      '@sanity-labs/lint-core':
         specifier: workspace:*
         version: link:../core
       prettier:
@@ -288,7 +288,7 @@ importers:
 
   packages/schema-lint:
     dependencies:
-      '@sanity/lint-core':
+      '@sanity-labs/lint-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -335,7 +335,7 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
     devDependencies:
-      '@sanity/groq-lsp':
+      '@sanity-labs/groq-lsp':
         specifier: workspace:^
         version: link:../groq-lsp
       '@types/node':

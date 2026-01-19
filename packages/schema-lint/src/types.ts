@@ -1,4 +1,4 @@
-import type { Severity, Category, Finding, SourceSpan } from '@sanity/lint-core'
+import type { Severity, Category, Finding, SourceSpan } from '@sanity-labs/lint-core'
 
 /**
  * Represents a field in a Sanity schema

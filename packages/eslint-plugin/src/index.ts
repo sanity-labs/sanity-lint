@@ -7,7 +7,7 @@
  * @example
  * ```js
  * // eslint.config.js
- * import sanity from '@sanity/eslint-plugin'
+ * import sanity from '@sanity-labs/eslint-plugin'
  *
  * export default [
  *   {
@@ -22,7 +22,7 @@
  *
  * Or use the recommended config:
  * ```js
- * import sanity from '@sanity/eslint-plugin'
+ * import sanity from '@sanity-labs/eslint-plugin'
  *
  * export default [
  *   ...sanity.configs.recommended,
@@ -31,8 +31,8 @@
  */
 
 import type { ESLint, Linter } from 'eslint'
-import { rules as groqRules } from '@sanity/groq-lint'
-import { rules as schemaRules } from '@sanity/schema-lint'
+import { rules as groqRules } from '@sanity-labs/groq-lint'
+import { rules as schemaRules } from '@sanity-labs/schema-lint'
 import { createAllRules } from './utils/rule-factory'
 import { createAllSchemaRules } from './utils/schema-rule-factory'
 
@@ -55,7 +55,7 @@ const rules = {
 // Build the plugin object
 const plugin: ESLint.Plugin = {
   meta: {
-    name: '@sanity/eslint-plugin',
+    name: '@sanity-labs/eslint-plugin',
     version,
   },
   rules,

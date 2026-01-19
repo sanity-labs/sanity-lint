@@ -1,5 +1,5 @@
 {
-  "name": "@sanity/schema-lint",
+  "name": "@sanity-labs/schema-lint",
   "version": "0.0.3",
   "description": "Schema linting engine and rules for Sanity Lint",
   "author": "Sanity.io <hello@sanity.io>",
@@ -34,7 +34,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@sanity/lint-core": "workspace:*"
+    "@sanity-labs/lint-core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.3.5",

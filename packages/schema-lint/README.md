@@ -1,13 +1,13 @@
-# @sanity/schema-lint
+# @sanity-labs/schema-lint
 
 Sanity schema linter for catching common issues and enforcing best practices.
 
 ## Installation
 
 ```bash
-npm install @sanity/schema-lint
+npm install @sanity-labs/schema-lint
 # or
-pnpm add @sanity/schema-lint
+pnpm add @sanity-labs/schema-lint
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ pnpm add @sanity/schema-lint
 ### Programmatic API
 
 ```typescript
-import { lint } from '@sanity/schema-lint'
+import { lint } from '@sanity-labs/schema-lint'
 
 // Lint a schema type definition
 const result = lint({
@@ -32,7 +32,7 @@ for (const finding of result.findings) {
 ### Lint Multiple Schemas
 
 ```typescript
-import { lintSchemas } from '@sanity/schema-lint'
+import { lintSchemas } from '@sanity-labs/schema-lint'
 
 const schemas = [
   { name: 'post', type: 'document', fields: [...] },
@@ -45,7 +45,7 @@ const results = lintSchemas(schemas)
 ### With Configuration
 
 ```typescript
-import { lint } from '@sanity/schema-lint'
+import { lint } from '@sanity-labs/schema-lint'
 
 const result = lint(schema, {
   config: {
@@ -111,7 +111,7 @@ Lint multiple schema type definitions.
 ### Rules Array
 
 ```typescript
-import { rules } from '@sanity/schema-lint'
+import { rules } from '@sanity-labs/schema-lint'
 
 // All 13 rules
 console.log(rules.map((r) => r.id))
@@ -120,7 +120,7 @@ console.log(rules.map((r) => r.id))
 ### Individual Rule Imports
 
 ```typescript
-import { missingIcon, reservedFieldName } from '@sanity/schema-lint'
+import { missingIcon, reservedFieldName } from '@sanity-labs/schema-lint'
 
 // Use individual rules
 const customRules = [missingIcon, reservedFieldName]

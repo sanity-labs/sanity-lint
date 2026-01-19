@@ -9,9 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@sanity/groq-lint": "workspace:*",
+    "@sanity-labs/groq-lint": "workspace:*",
     "prettier": "^3.4.2",
-    "@sanity/prettier-plugin-groq": "workspace:*",
+    "@sanity-labs/prettier-plugin-groq": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

@@ -1,11 +1,11 @@
 /**
  * WASM-based linter for pure GROQ rules
  *
- * Uses @sanity/groq-wasm for high-performance linting of GROQ queries.
+ * Uses @sanity-labs/groq-wasm for high-performance linting of GROQ queries.
  * Falls back gracefully if WASM is not available.
  */
 
-import type { Finding } from '@sanity/lint-core'
+import type { Finding } from '@sanity-labs/lint-core'
 
 // WASM module state
 let wasmAvailable = false
@@ -13,7 +13,7 @@ let wasmInitialized = false
 let wasmInitPromise: Promise<boolean> | null = null
 
 // Import types for the WASM module
-type WasmModule = typeof import('@sanity/groq-wasm')
+type WasmModule = typeof import('@sanity-labs/groq-wasm')
 let wasmModule: WasmModule | null = null
 
 /**
@@ -63,7 +63,7 @@ export async function initWasmLinter(): Promise<boolean> {
 async function doInit(): Promise<boolean> {
   try {
     // Dynamic import to avoid bundling issues
-    wasmModule = await import('@sanity/groq-wasm')
+    wasmModule = await import('@sanity-labs/groq-wasm')
     await wasmModule.initWasm()
     wasmAvailable = true
     wasmInitialized = true

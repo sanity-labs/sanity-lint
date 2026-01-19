@@ -1,4 +1,4 @@
-import { RuleTester } from '@sanity/lint-core/testing'
+import { RuleTester } from '@sanity-labs/lint-core/testing'
 import { matchOnId } from '../match-on-id'
 
 const tester = new RuleTester()

@@ -1,9 +1,9 @@
 import { useState, useMemo, useCallback } from 'react'
-import { lint } from '@sanity/groq-lint'
-import type { Finding } from '@sanity/lint-core'
+import { lint } from '@sanity-labs/groq-lint'
+import type { Finding } from '@sanity-labs/lint-core'
 import type { SchemaType } from 'groq-js'
 import * as prettier from 'prettier/standalone'
-import * as groqPlugin from '@sanity/prettier-plugin-groq'
+import * as groqPlugin from '@sanity-labs/prettier-plugin-groq'
 
 /**
  * Sample schema for testing schema-aware rules

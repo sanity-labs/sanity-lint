@@ -1,4 +1,4 @@
-# @sanity/dev-tools
+# @sanity-labs/dev-tools
 
 Sanity Developer Experience Suite - linting, formatting, and static analysis for Sanity projects.
 
@@ -14,36 +14,36 @@ Sanity Developer Experience Suite - linting, formatting, and static analysis for
 
 ### Packages
 
-| Package                         | npm Name                | Purpose                                          |
-| ------------------------------- | ----------------------- | ------------------------------------------------ |
-| `packages/core`                 | `@sanity/lint-core`     | Shared types, RuleTester, reporters              |
-| `packages/groq-wasm`            | `@sanity/groq-wasm`     | WASM bindings for Rust groq-lint/groq-format     |
-| `packages/groq-lint`            | `@sanity/groq-lint`     | GROQ query linting rules + CLI                   |
-| `packages/schema-lint`          | `@sanity/schema-lint`   | Sanity schema linting rules                      |
-| `packages/groq-lsp`             | `@sanity/groq-lsp`      | Language Server Protocol for GROQ                |
-| `packages/eslint-plugin`        | `@sanity/eslint-plugin` | ESLint integration                               |
-| `packages/vscode-sanity`        | `vscode-sanity`         | VS Code/Cursor extension (query execution + LSP) |
-| `packages/prettier-plugin-groq` | `prettier-plugin-groq`  | Prettier plugin for GROQ formatting              |
+| Package                         | npm Name                     | Purpose                                          |
+| ------------------------------- | ---------------------------- | ------------------------------------------------ |
+| `packages/core`                 | `@sanity-labs/lint-core`     | Shared types, RuleTester, reporters              |
+| `packages/groq-wasm`            | `@sanity-labs/groq-wasm`     | WASM bindings for Rust groq-lint/groq-format     |
+| `packages/groq-lint`            | `@sanity-labs/groq-lint`     | GROQ query linting rules + CLI                   |
+| `packages/schema-lint`          | `@sanity-labs/schema-lint`   | Sanity schema linting rules                      |
+| `packages/groq-lsp`             | `@sanity-labs/groq-lsp`      | Language Server Protocol for GROQ                |
+| `packages/eslint-plugin`        | `@sanity-labs/eslint-plugin` | ESLint integration                               |
+| `packages/vscode-sanity`        | `vscode-sanity`              | VS Code/Cursor extension (query execution + LSP) |
+| `packages/prettier-plugin-groq` | `@sanity-labs/prettier-plugin-groq` | Prettier plugin for GROQ formatting       |
 
 ### Dependency Graph
 
 ```
-              Rust (upstream)
-    ┌─────────────┴─────────────┐
-    │                           │
-groq-lint (Rust)        groq-format (Rust)
-    └─────────────┬─────────────┘
-                  │ WASM
-                  ▼
-         @sanity/groq-wasm
-                  │
-    ┌─────────────┼─────────────┐
-    ▼             ▼             ▼
-@sanity/    prettier-plugin  @sanity/
-groq-lint        -groq      eslint-plugin
+                  Rust (upstream)
+    ┌─────────────────┴─────────────────┐
+    │                                   │
+groq-lint (Rust)              groq-format (Rust)
+    └─────────────────┬─────────────────┘
+                      │ WASM
+                      ▼
+           @sanity-labs/groq-wasm
+                      │
+    ┌─────────────────┼─────────────────┐
+    ▼                 ▼                 ▼
+@sanity-labs/   @sanity-labs/     @sanity-labs/
+groq-lint     prettier-plugin-groq eslint-plugin
     │
     ▼
-@sanity/groq-lsp → vscode-sanity
+@sanity-labs/groq-lsp → vscode-sanity
 ```
 
 ## Development
@@ -82,7 +82,7 @@ Every rule must:
 
 ```typescript
 // packages/groq-lint/src/rules/join-in-filter.ts
-import type { Rule } from '@sanity/lint-core'
+import type { Rule } from '@sanity-labs/lint-core'
 
 export const joinInFilter: Rule = {
   id: 'join-in-filter',
@@ -102,7 +102,7 @@ Use the RuleTester pattern with `valid` and `invalid` cases:
 
 ```typescript
 // packages/groq-lint/src/rules/__tests__/join-in-filter.test.ts
-import { RuleTester } from '@sanity/lint-core'
+import { RuleTester } from '@sanity-labs/lint-core'
 import { joinInFilter } from '../join-in-filter'
 
 const tester = new RuleTester()

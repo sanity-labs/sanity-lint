@@ -1,5 +1,5 @@
 import { parse, type SchemaType } from 'groq-js'
-import type { Finding, Rule, RuleContext, LinterConfig } from '@sanity/lint-core'
+import type { Finding, Rule, RuleContext, LinterConfig } from '@sanity-labs/lint-core'
 import { rules as allRules } from './rules'
 import { initWasmLinter, isWasmAvailable, isWasmRule, lintWithWasm } from './wasm-linter'
 
@@ -37,7 +37,7 @@ export interface LintOptions {
  *
  * @example
  * ```typescript
- * import { initLinter, lint } from '@sanity/groq-lint'
+ * import { initLinter, lint } from '@sanity-labs/groq-lint'
  *
  * // Optional: Initialize WASM for better performance
  * await initLinter()

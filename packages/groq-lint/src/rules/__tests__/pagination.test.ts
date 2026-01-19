@@ -1,4 +1,4 @@
-import { RuleTester } from '@sanity/lint-core/testing'
+import { RuleTester } from '@sanity-labs/lint-core/testing'
 import { deepPagination } from '../deep-pagination'
 import { largePages } from '../large-pages'
 

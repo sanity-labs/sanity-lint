@@ -1,4 +1,4 @@
-import { RuleTester } from '@sanity/lint-core/testing'
+import { RuleTester } from '@sanity-labs/lint-core/testing'
 import { joinToGetId } from '../join-to-get-id'
 
 const tester = new RuleTester()

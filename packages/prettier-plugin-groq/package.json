@@ -1,5 +1,5 @@
 {
-  "name": "@sanity/prettier-plugin-groq",
+  "name": "@sanity-labs/prettier-plugin-groq",
   "version": "0.0.2",
   "publishConfig": {
     "access": "public"
@@ -37,14 +37,14 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@sanity/groq-wasm": "workspace:*",
+    "@sanity-labs/groq-wasm": "workspace:*",
     "groq-js": "^1.14.0"
   },
   "peerDependencies": {
     "prettier": "^3.0.0"
   },
   "devDependencies": {
-    "@sanity/lint-core": "workspace:*",
+    "@sanity-labs/lint-core": "workspace:*",
     "prettier": "^3.4.2",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",

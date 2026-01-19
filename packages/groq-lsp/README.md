@@ -1,4 +1,4 @@
-# @sanity/groq-lsp
+# @sanity-labs/groq-lsp
 
 Language Server Protocol (LSP) implementation for GROQ - provides IDE features for GROQ queries in any editor.
 
@@ -14,9 +14,9 @@ Language Server Protocol (LSP) implementation for GROQ - provides IDE features f
 ## Installation
 
 ```bash
-npm install @sanity/groq-lsp
+npm install @sanity-labs/groq-lsp
 # or
-pnpm add @sanity/groq-lsp
+pnpm add @sanity-labs/groq-lsp
 ```
 
 ## Usage
@@ -26,7 +26,7 @@ pnpm add @sanity/groq-lsp
 Start the server using Node IPC:
 
 ```bash
-npx @sanity/groq-lsp
+npx @sanity-labs/groq-lsp
 ```
 
 The server communicates via stdio and can be connected to any LSP-compatible editor.
@@ -41,7 +41,7 @@ import {
   getCompletions,
   getHoverInfo,
   formatQuery,
-} from '@sanity/groq-lsp'
+} from '@sanity-labs/groq-lsp'
 
 // Load schema
 const loader = new SchemaLoader()
@@ -95,7 +95,7 @@ And in your extension code:
 ```typescript
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node'
 
-const serverModule = require.resolve('@sanity/groq-lsp/dist/server.js')
+const serverModule = require.resolve('@sanity-labs/groq-lsp/dist/server.js')
 
 const client = new LanguageClient(
   'groqLanguageServer',
@@ -125,7 +125,7 @@ local configs = require('lspconfig.configs')
 if not configs.groq_lsp then
   configs.groq_lsp = {
     default_config = {
-      cmd = { 'npx', '@sanity/groq-lsp' },
+      cmd = { 'npx', '@sanity-labs/groq-lsp' },
       filetypes = { 'groq', 'typescript', 'typescriptreact' },
       root_dir = lspconfig.util.root_pattern('schema.json', 'sanity.config.ts'),
     },

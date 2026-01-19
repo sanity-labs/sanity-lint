@@ -31,8 +31,8 @@ import { getHoverInfo } from './capabilities/hover.js'
 import { getCompletions, getCompletionTriggerCharacters } from './capabilities/completion.js'
 import { formatDocument, formatGroqFile } from './capabilities/formatting.js'
 import type { GroqQuery, DocumentState } from './types.js'
-import { initLinter } from '@sanity/groq-lint'
-import { initWasmFormatter } from '@sanity/prettier-plugin-groq'
+import { initLinter } from '@sanity-labs/groq-lint'
+import { initWasmFormatter } from '@sanity-labs/prettier-plugin-groq'
 
 // Create connection using Node IPC
 const connection = createConnection(ProposedFeatures.all)

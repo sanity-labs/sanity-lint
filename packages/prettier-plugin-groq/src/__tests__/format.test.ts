@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import * as prettier from 'prettier'
-import { assertValidGroq } from '@sanity/lint-core/testing'
+import { assertValidGroq } from '@sanity-labs/lint-core/testing'
 import plugin from '../index.js'
 
 /**

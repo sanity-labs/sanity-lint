@@ -1,13 +1,13 @@
-# @sanity/groq-lint
+# @sanity-labs/groq-lint
 
 GROQ query linter for catching performance issues and best practice violations.
 
 ## Installation
 
 ```bash
-npm install @sanity/groq-lint
+npm install @sanity-labs/groq-lint
 # or
-pnpm add @sanity/groq-lint
+pnpm add @sanity-labs/groq-lint
 ```
 
 ## Usage
@@ -16,22 +16,22 @@ pnpm add @sanity/groq-lint
 
 ```bash
 # Lint a query directly
-npx @sanity/groq-lint -q '*[author->name == "Bob"]'
+npx @sanity-labs/groq-lint -q '*[author->name == "Bob"]'
 
 # Lint files
-npx @sanity/groq-lint 'src/**/*.ts'
+npx @sanity-labs/groq-lint 'src/**/*.ts'
 
 # With schema for schema-aware rules
-npx @sanity/groq-lint 'src/**/*.ts' --schema schema.json
+npx @sanity-labs/groq-lint 'src/**/*.ts' --schema schema.json
 
 # JSON output for CI
-npx @sanity/groq-lint --json 'src/**/*.ts'
+npx @sanity-labs/groq-lint --json 'src/**/*.ts'
 ```
 
 ### Programmatic API
 
 ```typescript
-import { lint, initLinter } from '@sanity/groq-lint'
+import { lint, initLinter } from '@sanity-labs/groq-lint'
 
 // Optional: Initialize WASM for better performance
 await initLinter()
@@ -49,7 +49,7 @@ if (result.findings.length > 0) {
 ### With Configuration
 
 ```typescript
-import { lint } from '@sanity/groq-lint'
+import { lint } from '@sanity-labs/groq-lint'
 
 const result = lint(query, {
   config: {
@@ -64,7 +64,7 @@ const result = lint(query, {
 ### With Schema (Schema-Aware Rules)
 
 ```typescript
-import { lint } from '@sanity/groq-lint'
+import { lint } from '@sanity-labs/groq-lint'
 import type { SchemaType } from 'groq-js'
 
 const schema: SchemaType = {
@@ -98,7 +98,7 @@ const result = lint(query, { schema })
 This package uses WASM-compiled Rust for maximum performance on pure GROQ rules. Call `initLinter()` once at startup to enable WASM:
 
 ```typescript
-import { initLinter, lint } from '@sanity/groq-lint'
+import { initLinter, lint } from '@sanity-labs/groq-lint'
 
 // Initialize WASM (optional but recommended)
 const wasmAvailable = await initLinter()

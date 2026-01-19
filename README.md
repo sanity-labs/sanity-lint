@@ -16,20 +16,20 @@ This monorepo contains linting tools for Sanity, with integrations for different
 
 | Package                                               | Description                                   |
 | ----------------------------------------------------- | --------------------------------------------- |
-| **[@sanity/eslint-plugin](./packages/eslint-plugin)** | ESLint plugin - lint rules in your IDE and CI |
+| **[@sanity-labs/eslint-plugin](./packages/eslint-plugin)** | ESLint plugin - lint rules in your IDE and CI |
 | **[vscode-sanity](./packages/vscode-sanity)**         | VS Code/Cursor extension with LSP support     |
-| **[@sanity/groq-lint](./packages/groq-lint)**         | Standalone CLI for linting GROQ queries       |
+| **[@sanity-labs/groq-lint](./packages/groq-lint)**         | Standalone CLI for linting GROQ queries       |
 
 ### Core Libraries
 
 | Package                                                 | Description                             |
 | ------------------------------------------------------- | --------------------------------------- |
-| [@sanity/groq-lint](./packages/groq-lint)               | GROQ linting engine and rules           |
-| [@sanity/schema-lint](./packages/schema-lint)           | Schema linting engine and rules         |
-| [@sanity/groq-lsp](./packages/groq-lsp)                 | Language Server Protocol for GROQ       |
-| [@sanity/lint-core](./packages/core)                    | Shared types and utilities              |
-| [prettier-plugin-groq](./packages/prettier-plugin-groq) | Prettier plugin for GROQ formatting     |
-| [@sanity/groq-wasm](./packages/groq-wasm)               | WASM bindings for high-performance GROQ |
+| [@sanity-labs/groq-lint](./packages/groq-lint)               | GROQ linting engine and rules           |
+| [@sanity-labs/schema-lint](./packages/schema-lint)           | Schema linting engine and rules         |
+| [@sanity-labs/groq-lsp](./packages/groq-lsp)                 | Language Server Protocol for GROQ       |
+| [@sanity-labs/lint-core](./packages/core)                    | Shared types and utilities              |
+| [@sanity-labs/prettier-plugin-groq](./packages/prettier-plugin-groq) | Prettier plugin for GROQ formatting     |
+| [@sanity-labs/groq-wasm](./packages/groq-wasm)               | WASM bindings for high-performance GROQ |
 
 ## Quick Start
 
@@ -38,12 +38,12 @@ This monorepo contains linting tools for Sanity, with integrations for different
 The easiest way to use Sanity Lint is through the ESLint plugin:
 
 ```bash
-npm install @sanity/eslint-plugin --save-dev
+npm install @sanity-labs/eslint-plugin --save-dev
 ```
 
 ```js
 // eslint.config.js (ESLint 9+ flat config)
-import sanity from '@sanity/eslint-plugin'
+import sanity from '@sanity-labs/eslint-plugin'
 
 export default [
   ...sanity.configs.recommended, // ← start here
@@ -57,7 +57,7 @@ This gives you IDE integration (VS Code, Cursor, etc.) and CI linting for both G
 - **Correctness** (schema-aware): Catches typos, invalid fields, and type mismatches. _Requires running `npx sanity schema extract` first._
 - **Performance**: Catches expensive patterns like joins in filters and deep pagination. _Works out of the box._
 
-See the [@sanity/eslint-plugin README](./packages/eslint-plugin) for detailed setup, monorepo configuration, and rule customization.
+See the [@sanity-labs/eslint-plugin README](./packages/eslint-plugin) for detailed setup, monorepo configuration, and rule customization.
 
 ### Standalone CLI
 
@@ -65,13 +65,13 @@ For linting GROQ queries without ESLint:
 
 ```bash
 # Lint a query directly
-npx @sanity/groq-lint -q '*[author->name == "Bob"]'
+npx @sanity-labs/groq-lint -q '*[author->name == "Bob"]'
 
 # Lint a file
-npx @sanity/groq-lint query.groq
+npx @sanity-labs/groq-lint query.groq
 
 # JSON output for CI
-npx @sanity/groq-lint --json query.groq
+npx @sanity-labs/groq-lint --json query.groq
 ```
 
 ## Rules
@@ -141,27 +141,27 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on adding new lint rules.
 ```mermaid
 flowchart TB
     subgraph Integrations
-        eslint["@sanity/eslint-plugin"]
+        eslint["@sanity-labs/eslint-plugin"]
         vscode[vscode-sanity]
-        cli["CLI (@sanity/groq-lint)"]
-        prettier[prettier-plugin-groq]
+        cli["CLI (@sanity-labs/groq-lint)"]
+        prettier["@sanity-labs/prettier-plugin-groq"]
     end
 
     subgraph LSP
-        lsp["@sanity/groq-lsp"]
+        lsp["@sanity-labs/groq-lsp"]
     end
 
     subgraph Core
-        groqlint["@sanity/groq-lint"]
-        schemalint["@sanity/schema-lint"]
+        groqlint["@sanity-labs/groq-lint"]
+        schemalint["@sanity-labs/schema-lint"]
     end
 
     subgraph Shared
-        core["@sanity/lint-core"]
+        core["@sanity-labs/lint-core"]
     end
 
     subgraph WASM
-        wasm["@sanity/groq-wasm"]
+        wasm["@sanity-labs/groq-wasm"]
     end
 
     subgraph Rust
@@ -189,7 +189,7 @@ The core libraries are decoupled from integrations. The LSP server provides IDE 
 
 ### WASM Acceleration
 
-For maximum performance, `@sanity/groq-lint` and `prettier-plugin-groq` use WASM-compiled Rust for core operations:
+For maximum performance, `@sanity-labs/groq-lint` and `prettier-plugin-groq` use WASM-compiled Rust for core operations:
 
 - **Linting**: Pure GROQ rules run via Rust/WASM (~5-10x faster)
 - **Formatting**: GROQ formatting via Rust/WASM
