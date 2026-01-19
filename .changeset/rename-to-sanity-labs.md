@@ -1,11 +1,11 @@
 ---
-"@sanity-labs/lint-core": major
-"@sanity-labs/groq-wasm": major
-"@sanity-labs/groq-lint": major
-"@sanity-labs/schema-lint": major
-"@sanity-labs/groq-lsp": major
-"@sanity-labs/eslint-plugin": major
-"@sanity-labs/prettier-plugin-groq": major
+'@sanity-labs/lint-core': major
+'@sanity-labs/groq-wasm': major
+'@sanity-labs/groq-lint': major
+'@sanity-labs/schema-lint': major
+'@sanity-labs/groq-lsp': major
+'@sanity-labs/eslint-plugin': major
+'@sanity-labs/prettier-plugin-groq': major
 ---
 
 Rename all packages from `@sanity/*` to `@sanity-labs/*` scope

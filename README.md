@@ -14,22 +14,22 @@ This monorepo contains linting tools for Sanity, with integrations for different
 
 ### Editor Integrations
 
-| Package                                               | Description                                   |
-| ----------------------------------------------------- | --------------------------------------------- |
+| Package                                                    | Description                                   |
+| ---------------------------------------------------------- | --------------------------------------------- |
 | **[@sanity-labs/eslint-plugin](./packages/eslint-plugin)** | ESLint plugin - lint rules in your IDE and CI |
-| **[vscode-sanity](./packages/vscode-sanity)**         | VS Code/Cursor extension with LSP support     |
+| **[vscode-sanity](./packages/vscode-sanity)**              | VS Code/Cursor extension with LSP support     |
 | **[@sanity-labs/groq-lint](./packages/groq-lint)**         | Standalone CLI for linting GROQ queries       |
 
 ### Core Libraries
 
-| Package                                                 | Description                             |
-| ------------------------------------------------------- | --------------------------------------- |
-| [@sanity-labs/groq-lint](./packages/groq-lint)               | GROQ linting engine and rules           |
-| [@sanity-labs/schema-lint](./packages/schema-lint)           | Schema linting engine and rules         |
-| [@sanity-labs/groq-lsp](./packages/groq-lsp)                 | Language Server Protocol for GROQ       |
-| [@sanity-labs/lint-core](./packages/core)                    | Shared types and utilities              |
+| Package                                                              | Description                             |
+| -------------------------------------------------------------------- | --------------------------------------- |
+| [@sanity-labs/groq-lint](./packages/groq-lint)                       | GROQ linting engine and rules           |
+| [@sanity-labs/schema-lint](./packages/schema-lint)                   | Schema linting engine and rules         |
+| [@sanity-labs/groq-lsp](./packages/groq-lsp)                         | Language Server Protocol for GROQ       |
+| [@sanity-labs/lint-core](./packages/core)                            | Shared types and utilities              |
 | [@sanity-labs/prettier-plugin-groq](./packages/prettier-plugin-groq) | Prettier plugin for GROQ formatting     |
-| [@sanity-labs/groq-wasm](./packages/groq-wasm)               | WASM bindings for high-performance GROQ |
+| [@sanity-labs/groq-wasm](./packages/groq-wasm)                       | WASM bindings for high-performance GROQ |
 
 ## Quick Start
 
