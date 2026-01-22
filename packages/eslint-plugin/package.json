@@ -1,6 +1,6 @@
 {
   "name": "@sanity-labs/eslint-plugin",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "ESLint plugin for Sanity Lint - lint GROQ queries and schema definitions",
   "author": "Sanity.io <hello@sanity.io>",
   "license": "MIT",
