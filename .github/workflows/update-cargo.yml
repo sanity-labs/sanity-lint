@@ -1,0 +1,64 @@
+name: Update Cargo Dependencies
+
+on:
+  schedule:
+    # Every Monday at 07:00 UTC (before the Renovate npm run)
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    name: Update Cargo.lock
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run cargo update
+        working-directory: packages/groq-wasm/rust
+        run: cargo update 2>&1
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet packages/groq-wasm/rust/Cargo.lock; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Summarize updates
+        if: steps.changes.outputs.changed == 'true'
+        id: summary
+        working-directory: packages/groq-wasm/rust
+        run: |
+          {
+            echo 'summary<<EOF'
+            git diff Cargo.lock | grep '^[+-]' | grep -E '(name|version|source)' | head -50
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create pull request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/update-cargo-deps
+          commit-message: 'chore(groq-wasm): update cargo dependencies'
+          title: 'chore(groq-wasm): update cargo dependencies'
+          body: |
+            Automated weekly update of Cargo dependencies for `groq-wasm`.
+
+            This updates the `Cargo.lock` to pull in the latest compatible versions of all
+            Rust dependencies, including the `groq-lint` and `groq-format` git dependencies.
+
+            ```diff
+            ${{ steps.summary.outputs.summary }}
+            ```
+          labels: dependencies,rust
+          delete-branch: true
