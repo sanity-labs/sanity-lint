@@ -2,7 +2,7 @@
  * WASM Module Loader
  *
  * Handles loading and initializing the WASM modules for groq-lint and groq-format.
- * Currently supports Node.js environments.
+ * Uses the `--target web` output from wasm-pack, which works in both Node.js and browsers.
  */
 
 import { WasmError } from './types.js'
@@ -50,24 +50,23 @@ export async function initWasm(): Promise<void> {
 
 async function doInit(): Promise<void> {
   try {
-    // Dynamic import for the CommonJS WASM module
-    // The wasm-pack nodejs target generates CJS with synchronous WASM loading
-    const { createRequire } = await import('node:module')
-    const { fileURLToPath } = await import('node:url')
-    const { dirname, join } = await import('node:path')
+    const wasmModule = await import('../wasm/groq_wasm.js')
+    const wasmUrl = new URL('../wasm/groq_wasm_bg.wasm', import.meta.url)
 
-    // Create a require function that can load CJS modules
-    const currentDir = dirname(fileURLToPath(import.meta.url))
-    const require = createRequire(import.meta.url)
-
-    // Load the WASM module - it will synchronously initialize
-    // Use .cjs extension since wasm-pack generates CJS and our package uses "type": "module"
-    const wasmPath = join(currentDir, '..', 'wasm', 'groq_wasm.cjs')
-    const wasm = require(wasmPath)
+    if (wasmUrl.protocol === 'file:') {
+      // Node.js: fetch() doesn't support file:// URLs, read from disk
+      const { readFile } = await import('node:fs/promises')
+      const { fileURLToPath } = await import('node:url')
+      const bytes = await readFile(fileURLToPath(wasmUrl))
+      await wasmModule.default({ module_or_path: bytes })
+    } else {
+      // Browser / other runtimes: use fetch via the default init path
+      await wasmModule.default({ module_or_path: wasmUrl })
+    }
 
     // Store the functions
-    wasmLint = wasm.lint
-    wasmFormat = wasm.format
+    wasmLint = wasmModule.lint
+    wasmFormat = wasmModule.format
 
     initialized = true
   } catch (error) {
