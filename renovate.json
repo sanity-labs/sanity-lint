@@ -14,7 +14,15 @@
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "squash"
+    },
+    {
+      "matchManagers": ["cargo"],
+      "groupName": "cargo dependencies",
+      "labels": ["dependencies", "rust"]
     }
   ],
-  "schedule": ["before 9am on monday"]
+  "schedule": ["before 9am on monday"],
+  "cargo": {
+    "enabled": true
+  }
 }
