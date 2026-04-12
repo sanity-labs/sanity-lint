@@ -18,6 +18,11 @@ fi
 
 # Build WASM
 cd "$RUST_DIR"
+
+# Remap absolute paths in panic messages to avoid leaking the build machine's
+# username and directory structure in the published WASM binary.
+export RUSTFLAGS="--remap-path-prefix=$HOME/.cargo=.cargo --remap-path-prefix=$RUST_DIR=."
+
 wasm-pack build --target web --out-dir "$WASM_DIR" --release
 
 # Clean up unnecessary files
