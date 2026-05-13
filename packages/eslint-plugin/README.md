@@ -57,12 +57,12 @@ export default [
 
 ## Usage with OxLint
 
-OxLint supports ESLint-compatible JS plugins. Our plugin works out of the box:
+OxLint supports ESLint-compatible JS plugins. Configure it with an explicit `name` so the `sanity/` rule prefix resolves correctly:
 
 ```json
 // oxlint.config.json
 {
-  "jsPlugins": ["@sanity-labs/eslint-plugin"],
+  "jsPlugins": [{ "name": "sanity", "specifier": "@sanity-labs/eslint-plugin" }],
   "rules": {
     "sanity/groq-join-in-filter": "error",
     "sanity/groq-deep-pagination": "warn"
@@ -76,7 +76,7 @@ Then run:
 oxlint --config oxlint.config.json src/
 ```
 
-> **Note**: OxLint JS plugins are experimental. See [OxLint JS Plugins](https://oxc.rs/docs/guide/usage/linter/js-plugins) for details.
+> **Note**: OxLint JS plugins are experimental. The shorthand `"jsPlugins": ["@sanity-labs/eslint-plugin"]` currently fails with `Plugin 'sanity' not found` because OxLint derives the plugin name from the package specifier. Use the `{ name, specifier }` form above. See [OxLint JS Plugins](https://oxc.rs/docs/guide/usage/linter/js-plugins) for details.
 
 ## Configurations
 
