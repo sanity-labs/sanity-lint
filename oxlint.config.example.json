@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
-  "jsPlugins": ["@sanity/eslint-plugin"],
+  "jsPlugins": [{ "name": "sanity", "specifier": "@sanity-labs/eslint-plugin" }],
   "rules": {
     "sanity/groq-join-in-filter": "error",
     "sanity/groq-deep-pagination": "warn"
