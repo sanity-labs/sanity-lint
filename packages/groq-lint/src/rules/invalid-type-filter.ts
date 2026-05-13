@@ -9,7 +9,7 @@
  */
 
 import type { Rule, Suggestion } from '@sanity-labs/lint-core'
-import type { OpCallNode } from 'groq-js'
+import type { ExprNode, OpCallNode } from 'groq-js'
 import { walk } from '../walker'
 
 /**
@@ -105,6 +105,27 @@ function isTypeComparison(node: OpCallNode): { typeName: string } | null {
   return null
 }
 
+/**
+ * Check if we're inside a top-level document filter (*[...])
+ * Returns true only if the nearest Filter ancestor has Everything as its base
+ *
+ * This distinguishes between:
+ * - Top-level filters: *[_type == "post"] - should validate against document types
+ * - Nested array filters: content[_type == "imageBlock"] - object types in arrays
+ */
+function isInTopLevelDocumentFilter(parents: ExprNode[]): boolean {
+  // Walk up the parent chain to find the nearest Filter
+  for (let i = parents.length - 1; i >= 0; i--) {
+    const parent = parents[i]
+    if (parent && parent.type === 'Filter') {
+      // Check if this filter's base is Everything (i.e., *)
+      // Filter nodes always have a base property per groq-js types
+      return (parent as { base: ExprNode }).base.type === 'Everything'
+    }
+  }
+  return false
+}
+
 export const invalidTypeFilter: Rule = {
   id: 'invalid-type-filter',
   name: 'Invalid Type Filter',
@@ -120,11 +141,18 @@ export const invalidTypeFilter: Rule = {
     const documentTypes = getSchemaDocumentTypes(schema as { type: string; name: string }[])
     const documentTypeSet = new Set(documentTypes)
 
-    walk(ast, (node) => {
+    walk(ast, (node, walkContext) => {
       if (node.type !== 'OpCall') return
 
       const typeComparison = isTypeComparison(node as OpCallNode)
       if (!typeComparison) return
+
+      // Only validate document types in top-level filters (*[...])
+      // Skip validation for nested array filters (e.g., content[_type == "imageBlock"])
+      // which are used for discriminated union object types
+      if (!isInTopLevelDocumentFilter(walkContext.parents)) {
+        return
+      }
 
       const { typeName } = typeComparison
 
