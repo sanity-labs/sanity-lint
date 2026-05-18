@@ -98,6 +98,6 @@ export function assertValidGroq(query: string, context?: string): void {
       message += `\n\nQuery:\n${error.query}`
     }
 
-    throw new Error(message)
+    throw new Error(message, { cause: e })
   }
 }
