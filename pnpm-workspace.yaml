@@ -1,3 +1,10 @@
 packages:
   - 'packages/*'
   - 'dev/*'
+allowBuilds:
+  '@vscode/vsce-sign': true
+  esbuild: true
+  keytar: false
+  sharp: false
+catalog:
+  vitest: ^4.0.0
