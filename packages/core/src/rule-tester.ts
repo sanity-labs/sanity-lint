@@ -10,6 +10,8 @@ export interface ValidTestCase {
   code: string
   /** Optional name for the test */
   name?: string
+  /** Per-test timeout in milliseconds */
+  timeout?: number
 }
 
 /**
@@ -38,6 +40,8 @@ export interface InvalidTestCase {
   name?: string
   /** Expected errors */
   errors: ExpectedError[]
+  /** Per-test timeout in milliseconds */
+  timeout?: number
 }
 
 /**
@@ -150,10 +154,14 @@ export class RuleTester {
           const testCase = typeof test === 'string' ? { code: test } : test
           const testName = testCase.name ?? this.truncate(testCase.code, 60)
 
-          it(testName, () => {
-            const findings = runRule(rule, testCase.code)
-            expect(findings).toHaveLength(0)
-          })
+          it(
+            testName,
+            () => {
+              const findings = runRule(rule, testCase.code)
+              expect(findings).toHaveLength(0)
+            },
+            testCase.timeout
+          )
         }
       })
 
@@ -161,21 +169,25 @@ export class RuleTester {
         for (const test of tests.invalid) {
           const testName = test.name ?? this.truncate(test.code, 60)
 
-          it(testName, () => {
-            const findings = runRule(rule, test.code)
+          it(
+            testName,
+            () => {
+              const findings = runRule(rule, test.code)
 
-            // Check we got the expected number of errors
-            expect(findings).toHaveLength(test.errors.length)
+              // Check we got the expected number of errors
+              expect(findings).toHaveLength(test.errors.length)
 
-            // Check each error matches
-            for (let i = 0; i < test.errors.length; i++) {
-              const finding = findings[i]
-              const expected = test.errors[i]
-              if (finding && expected) {
-                assertFindingMatches(finding, expected, rule.id)
+              // Check each error matches
+              for (let i = 0; i < test.errors.length; i++) {
+                const finding = findings[i]
+                const expected = test.errors[i]
+                if (finding && expected) {
+                  assertFindingMatches(finding, expected, rule.id)
+                }
               }
-            }
-          })
+            },
+            test.timeout
+          )
         }
       })
     })

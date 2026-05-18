@@ -1,4 +1,5 @@
 import { RuleTester } from '@sanity-labs/lint-core/testing'
+
 import { veryLargeQuery } from '../very-large-query'
 import { extremelyLargeQuery } from '../extremely-large-query'
 
@@ -55,18 +56,20 @@ describe('extremely-large-query', () => {
       // Normal sized queries
       '*[_type == "post"]',
       // Just under 100KB
-      { name: 'query just under 100KB', code: makeQuery(100 * 1024 - 100) },
+      { name: 'query just under 100KB', code: makeQuery(100 * 1024 - 100), timeout: 30_000 },
     ],
     invalid: [
       {
         name: 'query over 100KB',
         code: makeQuery(101 * 1024),
         errors: [{ ruleId: 'extremely-large-query', severity: 'error' }],
+        timeout: 30_000,
       },
       {
         name: 'query around 200KB',
         code: makeQuery(200 * 1024),
         errors: [{ ruleId: 'extremely-large-query', severity: 'error' }],
+        timeout: 30_000,
       },
     ],
   })

@@ -6,3 +6,5 @@ allowBuilds:
   esbuild: true
   keytar: false
   sharp: false
+catalog:
+  vitest: ^4.0.0
