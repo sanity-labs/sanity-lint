@@ -1,5 +1,18 @@
 # eslint-plugin-sanity
 
+## 0.5.0
+
+### Minor Changes
+
+- c872504: Upgrade groq-wasm to latest version
+
+### Patch Changes
+
+- Updated dependencies [c872504]
+  - @sanity-labs/lint-core@0.2.0
+  - @sanity-labs/groq-lint@0.2.0
+  - @sanity-labs/schema-lint@0.2.0
+
 ## 0.4.1
 
 ### Patch Changes
