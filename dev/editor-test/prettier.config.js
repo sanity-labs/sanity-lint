@@ -1,5 +1,5 @@
 export default {
-  plugins: ['@sanity-labs/prettier-plugin-groq'],
+  plugins: ['../../packages/prettier-plugin-groq/dist/index.js'],
   semi: false,
   singleQuote: true,
   trailingComma: 'es5',
