@@ -1,5 +1,11 @@
 # @sanity-labs/groq-wasm
 
+## 0.3.0
+
+### Minor Changes
+
+- c872504: Upgrade groq-wasm to latest version
+
 ## 0.1.0
 
 ### Minor Changes

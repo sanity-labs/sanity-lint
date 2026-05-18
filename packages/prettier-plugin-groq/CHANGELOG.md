@@ -1,5 +1,16 @@
 # @sanity/prettier-plugin-groq
 
+## 0.2.0
+
+### Minor Changes
+
+- c872504: Upgrade groq-wasm to latest version
+
+### Patch Changes
+
+- Updated dependencies [c872504]
+  - @sanity-labs/groq-wasm@0.3.0
+
 ## 0.1.0
 
 ### Minor Changes
