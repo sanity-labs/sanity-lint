@@ -4,7 +4,7 @@ export default defineConfig([
   // Library exports (ESM + CJS)
   {
     entry: ['src/index.ts', 'src/schema.ts'],
-    format: ['esm', 'cjs'],
+    format: ['esm'],
     dts: true,
     clean: true,
     sourcemap: true,

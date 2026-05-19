@@ -3,7 +3,7 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { glob } from 'node:fs/promises'
 import { createRequire } from 'node:module'
-import { lint, initLinter } from './linter'
+import { lint } from './linter'
 import { formatFindings, summarizeFindings } from '@sanity-labs/lint-core'
 import type { SchemaType } from 'groq-js'
 
@@ -154,12 +154,6 @@ async function expandGlobs(patterns: string[]): Promise<string[]> {
 
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2))
-
-  // Initialize WASM for better performance (optional, falls back to TS)
-  const wasmAvailable = await initLinter()
-  if (wasmAvailable) {
-    // WASM loaded successfully - using high-performance Rust implementation
-  }
 
   // Load schema if provided
   const schema = options.schema ? loadSchema(options.schema) : undefined
