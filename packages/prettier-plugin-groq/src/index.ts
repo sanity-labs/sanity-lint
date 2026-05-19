@@ -1,11 +1,7 @@
-import type { Plugin, SupportLanguage, Parser, Printer } from 'prettier'
-import { doc } from 'prettier'
+import type { Parser, Plugin, Printer, SupportLanguage } from 'prettier'
+
 import { groqParser, type GroqAst } from './parser.js'
-import {
-  createWasmGroqPrinter,
-  initWasmFormatter,
-  isWasmFormatterAvailable,
-} from './wasm-printer.js'
+import { groqPrinter } from './wasm-printer.js'
 
 const languages: SupportLanguage[] = [
   {
@@ -20,8 +16,8 @@ const parsers: Record<string, Parser<GroqAst>> = {
   groq: groqParser,
 }
 
-const printers: Record<string, Printer> = {
-  'groq-ast': createWasmGroqPrinter(doc.builders),
+const printers: Record<string, Printer<unknown>> = {
+  'groq-ast': groqPrinter,
 }
 
 const plugin: Plugin = {
@@ -31,7 +27,4 @@ const plugin: Plugin = {
 }
 
 export default plugin
-export { languages, parsers, printers, initWasmFormatter, isWasmFormatterAvailable }
-
-// Re-export TS printer for direct use
-export { createGroqPrinter } from './printer.js'
+export { languages, parsers, printers }
