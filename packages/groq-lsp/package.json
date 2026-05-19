@@ -47,6 +47,9 @@
     "typescript": "^5.7.2",
     "vitest": "catalog:"
   },
+  "engines": {
+    "node": ">=22.3.0"
+  },
   "keywords": [
     "sanity",
     "groq",

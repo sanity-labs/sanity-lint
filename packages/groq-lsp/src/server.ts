@@ -31,8 +31,6 @@ import { getHoverInfo } from './capabilities/hover.js'
 import { getCompletions, getCompletionTriggerCharacters } from './capabilities/completion.js'
 import { formatDocument, formatGroqFile } from './capabilities/formatting.js'
 import type { GroqQuery, DocumentState } from './types.js'
-import { initLinter } from '@sanity-labs/groq-lint'
-import { initWasmFormatter } from '@sanity-labs/prettier-plugin-groq'
 
 // Create connection using Node IPC
 const connection = createConnection(ProposedFeatures.all)
@@ -124,23 +122,10 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 /**
  * After initialization
  */
-connection.onInitialized(async () => {
+connection.onInitialized(() => {
   if (hasConfigurationCapability) {
     // Register for configuration changes
     connection.client.register(DidChangeConfigurationNotification.type, undefined)
-  }
-
-  // Initialize WASM for better performance (linting and formatting)
-  try {
-    const [linterWasm, formatterWasm] = await Promise.all([initLinter(), initWasmFormatter()])
-    if (linterWasm) {
-      connection.console.log('WASM linter initialized')
-    }
-    if (formatterWasm) {
-      connection.console.log('WASM formatter initialized')
-    }
-  } catch {
-    // WASM not available, using TypeScript fallback
   }
 
   // Start watching schema for changes
