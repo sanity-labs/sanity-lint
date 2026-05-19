@@ -16,16 +16,13 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "default": "./dist/index.js"
     },
     "./embed": {
       "types": "./dist/embed.d.ts",
-      "import": "./dist/embed.js",
-      "require": "./dist/embed.cjs"
+      "default": "./dist/embed.js"
     }
   },
-  "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
@@ -37,15 +34,17 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@sanity-labs/groq-wasm": "workspace:*",
-    "groq-js": "^1.14.0"
+    "@sanity-labs/groq-wasm": "workspace:*"
   },
   "peerDependencies": {
     "prettier": "^3.0.0"
   },
+  "engines": {
+    "node": ">=22.3.0"
+  },
   "devDependencies": {
     "@sanity-labs/lint-core": "workspace:*",
-    "prettier": "^3.4.2",
+    "prettier": "^3.8.3",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
     "vitest": "catalog:"

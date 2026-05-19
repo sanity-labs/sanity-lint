@@ -63,7 +63,7 @@ export interface WasmFormatConfig {
 export class WasmError extends Error {
   constructor(
     message: string,
-    public readonly code: 'NOT_INITIALIZED' | 'PARSE_ERROR' | 'WASM_ERROR'
+    public readonly code: 'PARSE_ERROR' | 'WASM_ERROR'
   ) {
     super(message)
     this.name = 'WasmError'

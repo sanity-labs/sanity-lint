@@ -1,12 +1,10 @@
-*[
-  _type == "post" && published == true
-    && category in ["tech", "science", "culture"]
-] {
+*[_type == "post" && published == true
+  && category in ["tech", "science", "culture"]] {
   title,
   "slug": slug.current,
   "excerpt": pt::text(body)[0...200],
-  author->{ name, "avatar": image.asset->url },
-  categories[]->{ title, slug },
+  author-> { name, "avatar": image.asset->url },
+  categories[]-> { title, slug },
   _createdAt
 }[0...10]
   | order(_createdAt desc)

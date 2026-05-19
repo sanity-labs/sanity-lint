@@ -1,1 +1,1 @@
-*[_type == "post"] { title, body, author->{ name, image } }
+*[_type == "post"] { title, body, author-> { name, image } }

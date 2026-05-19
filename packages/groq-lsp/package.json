@@ -35,7 +35,7 @@
   "dependencies": {
     "@sanity-labs/groq-lint": "workspace:*",
     "@sanity-labs/lint-core": "workspace:*",
-    "groq-js": "^1.14.0",
+    "groq-js": "catalog:",
     "prettier": "^3.4.2",
     "@sanity-labs/prettier-plugin-groq": "workspace:*",
     "vscode-languageserver": "^9.0.1",
@@ -46,6 +46,9 @@
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
     "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.3.0"
   },
   "keywords": [
     "sanity",

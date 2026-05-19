@@ -21,6 +21,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "browser": "./dist/index.browser.js",
       "default": "./dist/index.js"
     }
   },
@@ -44,7 +45,7 @@
     "vitest": "catalog:"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.3.0"
   },
   "publishConfig": {
     "access": "public"

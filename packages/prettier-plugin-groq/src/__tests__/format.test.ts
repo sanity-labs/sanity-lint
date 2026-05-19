@@ -105,12 +105,12 @@ describe('prettier-plugin-groq', () => {
 
     it('formats nested projection with dereference', async () => {
       const result = await format('*[_type == "post"]{ title, author->{ name } }')
-      expect(result).toBe('*[_type == "post"] { title, author->{ name } }')
+      expect(result).toBe('*[_type == "post"] { title, author-> { name } }')
     })
 
     it('formats projection with array traversal and dereference', async () => {
       const result = await format('*[_type == "post"]{ categories[]->{ title } }')
-      expect(result).toBe('*[_type == "post"] { categories[]->{ title } }')
+      expect(result).toBe('*[_type == "post"] { categories[]-> { title } }')
     })
   })
 

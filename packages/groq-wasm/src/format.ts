@@ -5,7 +5,7 @@
  */
 
 import { WasmError, type WasmFormatConfig } from './types.js'
-import { callFormat, isInitialized } from './wasm-loader.js'
+import { callFormat } from './wasm-loader.js'
 
 /**
  * Default line width for formatting
@@ -19,26 +19,19 @@ export const DEFAULT_WIDTH = 80
  * @param query - The GROQ query string to format
  * @param config - Optional configuration (width defaults to 80)
  * @returns Formatted query string
- * @throws {WasmError} If WASM is not initialized or query parsing fails
+ * @throws {WasmError} If query parsing fails
  *
  * @example
  * ```typescript
- * import { initWasm, format } from '@sanity-labs/groq-wasm'
- *
- * await initWasm()
+ * import {format} from '@sanity-labs/groq-wasm'
  *
  * const formatted = format('*[_type=="post"]{title,body}')
  * // '*[_type == "post"]{ title, body }'
  * ```
  */
 export function format(query: string, config?: WasmFormatConfig): string {
-  if (!isInitialized()) {
-    throw new WasmError('WASM not initialized. Call initWasm() first.', 'NOT_INITIALIZED')
-  }
-
   const width = config?.width ?? DEFAULT_WIDTH
 
-  // Handle empty query
   if (!query.trim()) {
     return query
   }
@@ -57,15 +50,6 @@ export function format(query: string, config?: WasmFormatConfig): string {
 }
 
 /**
- * Async version of format for environments that prefer promises
- */
-export async function formatAsync(query: string, config?: WasmFormatConfig): Promise<string> {
-  // WASM operations are synchronous, but we provide async API
-  // for consistency and future-proofing
-  return format(query, config)
-}
-
-/**
  * Check if a query can be parsed (without full formatting)
  *
  * @param query - The GROQ query to validate
@@ -79,7 +63,6 @@ export function isValidSyntax(query: string): boolean {
     if (error instanceof WasmError && error.code === 'PARSE_ERROR') {
       return false
     }
-    // Re-throw other errors
     throw error
   }
 }

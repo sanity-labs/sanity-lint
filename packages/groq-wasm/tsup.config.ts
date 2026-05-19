@@ -1,11 +1,10 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['src/index.ts', 'src/index.browser.ts'],
   format: ['esm'],
   dts: true,
   clean: true,
   sourcemap: true,
-  // Don't bundle dependencies or Node built-ins (dynamically imported for file:// URL loading)
-  external: ['@sanity/lint-core', 'node:fs/promises', 'node:url'],
+  external: ['node:fs', 'node:url'],
 })

@@ -1,46 +1,20 @@
-import { describe, expect, it, beforeAll } from 'vitest'
+import { describe, expect, it } from 'vitest'
+
 import {
-  initWasm,
-  isInitialized,
-  lint,
-  lintAsync,
+  DEFAULT_WIDTH,
   format,
-  formatAsync,
   isValidSyntax,
-  WasmError,
+  lint,
   mapRuleId,
   mapSeverity,
-  DEFAULT_WIDTH,
+  WasmError,
 } from '../index.js'
 
-describe('@sanity/groq-wasm', () => {
-  describe('initialization', () => {
-    it('should report not initialized before init', () => {
-      // Note: This test assumes fresh module state
-      // In practice, other tests may have initialized it
-    })
-
-    it('should initialize successfully', async () => {
-      await initWasm()
-      expect(isInitialized()).toBe(true)
-    })
-
-    it('should be safe to call initWasm multiple times', async () => {
-      await initWasm()
-      await initWasm()
-      expect(isInitialized()).toBe(true)
-    })
-  })
-
+describe('@sanity-labs/groq-wasm', () => {
   describe('lint', () => {
-    beforeAll(async () => {
-      await initWasm()
-    })
-
     it('should lint a valid query without findings', () => {
       const findings = lint('*[_type == "post"]')
       expect(Array.isArray(findings)).toBe(true)
-      // Stub implementation returns empty array
     })
 
     it('should return findings array', () => {
@@ -50,12 +24,7 @@ describe('@sanity/groq-wasm', () => {
 
     it('should handle empty query', () => {
       const findings = lint('')
-      expect(Array.isArray(findings)).toBe(true)
-    })
-
-    it('should support async API', async () => {
-      const findings = await lintAsync('*[_type == "post"]')
-      expect(Array.isArray(findings)).toBe(true)
+      expect(findings).toEqual([])
     })
 
     it('should support config parameter', () => {
@@ -67,10 +36,6 @@ describe('@sanity/groq-wasm', () => {
   })
 
   describe('format', () => {
-    beforeAll(async () => {
-      await initWasm()
-    })
-
     it('should format a query', () => {
       const result = format('*[_type == "post"]')
       expect(typeof result).toBe('string')
@@ -91,27 +56,17 @@ describe('@sanity/groq-wasm', () => {
       expect(typeof result).toBe('string')
     })
 
-    it('should support async API', async () => {
-      const result = await formatAsync('*[_type == "post"]')
-      expect(typeof result).toBe('string')
-    })
-
     it('should export DEFAULT_WIDTH', () => {
       expect(DEFAULT_WIDTH).toBe(80)
     })
   })
 
   describe('isValidSyntax', () => {
-    beforeAll(async () => {
-      await initWasm()
-    })
-
     it('should return true for valid query', () => {
       expect(isValidSyntax('*[_type == "post"]')).toBe(true)
     })
 
     it('should return true for empty query', () => {
-      // Empty is technically valid
       expect(isValidSyntax('')).toBe(true)
     })
   })
@@ -121,7 +76,6 @@ describe('@sanity/groq-wasm', () => {
       expect(mapRuleId('join_in_filter')).toBe('join-in-filter')
       expect(mapRuleId('deep_pagination')).toBe('deep-pagination')
       expect(mapRuleId('very_large_query')).toBe('very-large-query')
-      // Unknown rules should still convert
       expect(mapRuleId('some_unknown_rule')).toBe('some-unknown-rule')
     })
 
@@ -134,9 +88,9 @@ describe('@sanity/groq-wasm', () => {
 
   describe('WasmError', () => {
     it('should create error with code', () => {
-      const error = new WasmError('test message', 'NOT_INITIALIZED')
+      const error = new WasmError('test message', 'WASM_ERROR')
       expect(error.message).toBe('test message')
-      expect(error.code).toBe('NOT_INITIALIZED')
+      expect(error.code).toBe('WASM_ERROR')
       expect(error.name).toBe('WasmError')
     })
 

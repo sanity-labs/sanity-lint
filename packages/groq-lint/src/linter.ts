@@ -1,7 +1,7 @@
 import { parse, type SchemaType } from 'groq-js'
 import type { Finding, Rule, RuleContext, LinterConfig } from '@sanity-labs/lint-core'
 import { rules as allRules } from './rules'
-import { initWasmLinter, isWasmAvailable, isWasmRule, lintWithWasm } from './wasm-linter'
+import { isWasmRule, lintWithWasm } from './wasm-linter'
 
 /**
  * Result of linting a query
@@ -28,33 +28,11 @@ export interface LintOptions {
 }
 
 /**
- * Initialize the WASM linter for better performance
+ * Lint a GROQ query.
  *
- * Call this once at application startup. The linter will automatically
- * fall back to TypeScript rules if WASM is not available.
- *
- * @returns Promise that resolves to true if WASM is available
- *
- * @example
- * ```typescript
- * import { initLinter, lint } from '@sanity-labs/groq-lint'
- *
- * // Optional: Initialize WASM for better performance
- * await initLinter()
- *
- * // Now lint() will use WASM for pure GROQ rules
- * const result = lint('*[_type == "post"]{ author-> }')
- * ```
- */
-export async function initLinter(): Promise<boolean> {
-  return initWasmLinter()
-}
-
-/**
- * Lint a GROQ query
- *
- * Uses WASM for pure GROQ rules (if available) and TypeScript for schema-aware rules.
- * Call `initLinter()` first to enable WASM support.
+ * Uses WASM for pure GROQ rules and TypeScript for schema-aware rules.
+ * WASM is initialized synchronously when `@sanity-labs/groq-wasm` is imported,
+ * so no async bootstrap is required.
  *
  * @param query - The GROQ query string to lint
  * @param options - Optional configuration and schema
@@ -77,21 +55,20 @@ export function lint(query: string, options?: LintOptions): LintResult {
   const tsRules: Rule[] = []
 
   for (const rule of enabledRules) {
-    if (!forceTs && isWasmAvailable() && isWasmRule(rule.id)) {
+    if (!forceTs && isWasmRule(rule.id)) {
       wasmRuleIds.add(rule.id)
     } else {
       tsRules.push(rule)
     }
   }
 
-  // Run WASM rules first (if available)
+  // Run WASM rules first
   const wasmFindings: Finding[] = []
-  if (wasmRuleIds.size > 0 && isWasmAvailable()) {
+  if (wasmRuleIds.size > 0) {
     try {
-      const wf = lintWithWasm(query, wasmRuleIds)
-      wasmFindings.push(...wf)
+      wasmFindings.push(...lintWithWasm(query, wasmRuleIds))
     } catch {
-      // WASM failed - fall back to TS rules
+      // WASM threw (e.g. parse error) - fall back to TS rules for the same ids
       for (const ruleId of wasmRuleIds) {
         const rule = enabledRules.find((r) => r.id === ruleId)
         if (rule) {
