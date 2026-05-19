@@ -40,7 +40,7 @@
     "@sanity/codegen": "^5.1.0",
     "@sanity-labs/groq-wasm": "workspace:*",
     "@sanity-labs/lint-core": "workspace:*",
-    "groq-js": "^1.14.0"
+    "groq-js": "catalog:"
   },
   "devDependencies": {
     "tsup": "^8.3.5",

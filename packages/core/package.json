@@ -39,7 +39,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "groq-js": "^1.14.0"
+    "groq-js": "catalog:"
   },
   "devDependencies": {
     "tsup": "^8.3.5",

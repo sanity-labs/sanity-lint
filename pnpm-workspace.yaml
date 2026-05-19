@@ -8,3 +8,4 @@ allowBuilds:
   sharp: false
 catalog:
   vitest: ^4.0.0
+  groq-js: ^1.30.1
