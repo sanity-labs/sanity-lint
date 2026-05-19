@@ -12,7 +12,7 @@ import * as wasmModule from '../wasm/groq_wasm.js'
 
 import { WasmError } from './types.js'
 
-export function initWasm(bytes: BufferSource): void {
+export function initWasm(bytes: ArrayBuffer | Uint8Array): void {
   try {
     wasmModule.initSync({ module: bytes })
   } catch (error) {
