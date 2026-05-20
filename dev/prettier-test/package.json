@@ -1,6 +1,6 @@
 {
   "name": "prettier-test",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Test environment for prettier-plugin-groq",
   "type": "module",
