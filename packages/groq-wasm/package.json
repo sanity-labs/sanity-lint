@@ -49,5 +49,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "homepage": "https://github.com/sanity-labs/sanity-lint",
+  "bugs": {
+    "url": "https://github.com/sanity-labs/sanity-lint/issues"
   }
 }
