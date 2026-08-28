@@ -7,6 +7,10 @@
   "description": "Prettier plugin for formatting GROQ queries",
   "author": "Sanity.io <hello@sanity.io>",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sanity-labs/sanity-lint/issues"
+  },
+  "homepage": "https://github.com/sanity-labs/sanity-lint/tree/main/packages/prettier-plugin-groq#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sanity-labs/sanity-lint.git",
