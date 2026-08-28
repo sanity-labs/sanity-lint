@@ -79,7 +79,7 @@ importers:
     dependencies:
       next-sanity:
         specifier: ^12.0.8
-        version: 12.0.8(@emotion/is-prop-valid@1.2.2)(@sanity/client@7.14.0)(@sanity/types@5.1.0(@types/react@19.2.14))(next@16.1.1(@babel/core@7.28.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react-is@19.2.3)(react@19.2.6)(sanity@5.1.0(@emotion/is-prop-valid@1.2.2)(@portabletext/sanity-bridge@2.0.0(@types/react@19.2.14))(@types/node@22.19.19)(@types/react@19.2.14)(jiti@2.7.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0))(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(typescript@5.9.3)
+        version: 12.0.8(@emotion/is-prop-valid@1.2.2)(@sanity/client@7.14.0)(@sanity/types@5.1.0(@types/react@19.2.14))(next@16.1.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react-is@19.2.3)(react@19.2.6)(sanity@5.1.0(@emotion/is-prop-valid@1.2.2)(@portabletext/sanity-bridge@2.0.0(@types/react@19.2.14))(@types/node@22.19.19)(@types/react@19.2.14)(jiti@2.7.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0))(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(typescript@5.9.3)
     devDependencies:
       '@sanity-labs/eslint-plugin':
         specifier: workspace:*
@@ -301,6 +301,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      sanity:
+        specifier: ^5.1.0
+        version: 5.1.0(@emotion/is-prop-valid@1.2.2)(@portabletext/sanity-bridge@2.0.0(@types/react@19.2.14))(@types/node@22.19.19)(@types/react@19.2.14)(jiti@2.7.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0)
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0)
@@ -4467,6 +4470,7 @@ packages:
   eslint@9.39.4:
     resolution: {integrity: sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -4747,6 +4751,7 @@ packages:
   git-raw-commits@5.0.1:
     resolution: {integrity: sha512-Y+csSm2GD/PCSh6Isd/WiMjNAydu0VBiG9J7EdQsNA5P9uXvLayqjmTsNlK5Gs9IhblFZqOU0yid5Il5JPoLiQ==}
     engines: {node: '>=18'}
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   github-from-package@0.0.0:
@@ -5563,6 +5568,7 @@ packages:
   next-sanity@12.0.8:
     resolution: {integrity: sha512-IZd9NS7F1FrGqUuy27x5KNixabZc+SOcf94kA+mYyF/1cpkPj/S/fOcq4evQxCHpv0QU81+D6cDmbBmWCMnLww==}
     engines: {node: '>=20.19 <22 || >=22.12'}
+    deprecated: This version is not recommended for usage with Next.js v16, please see https://www.sanity.io/docs/help/nextjs-16-sanitylive-status
     peerDependencies:
       '@sanity/client': ^7.13.2
       next: ^16.0.0-0
@@ -6667,6 +6673,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
@@ -10347,7 +10354,7 @@ snapshots:
     optionalDependencies:
       '@sanity/types': 5.1.0(@types/react@19.2.14)(debug@4.4.3)
 
-  '@sanity/visual-editing@5.0.4(@emotion/is-prop-valid@1.2.2)(@sanity/client@7.14.0)(@sanity/types@5.1.0(@types/react@19.2.14))(next@16.1.1(@babel/core@7.28.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react-is@19.2.3)(react@19.2.6)(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(typescript@5.9.3)':
+  '@sanity/visual-editing@5.0.4(@emotion/is-prop-valid@1.2.2)(@sanity/client@7.14.0)(@sanity/types@5.1.0(@types/react@19.2.14))(next@16.1.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react-is@19.2.3)(react@19.2.6)(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(typescript@5.9.3)':
     dependencies:
       '@sanity/comlink': 4.0.1
       '@sanity/icons': 3.7.4(react@19.2.6)
@@ -10366,7 +10373,7 @@ snapshots:
       xstate: 5.25.0
     optionalDependencies:
       '@sanity/client': 7.14.0(debug@4.4.3)
-      next: 16.1.1(@babel/core@7.28.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      next: 16.1.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
     transitivePeerDependencies:
       - '@emotion/is-prop-valid'
       - '@sanity/types'
@@ -12848,18 +12855,18 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next-sanity@12.0.8(@emotion/is-prop-valid@1.2.2)(@sanity/client@7.14.0)(@sanity/types@5.1.0(@types/react@19.2.14))(next@16.1.1(@babel/core@7.28.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react-is@19.2.3)(react@19.2.6)(sanity@5.1.0(@emotion/is-prop-valid@1.2.2)(@portabletext/sanity-bridge@2.0.0(@types/react@19.2.14))(@types/node@22.19.19)(@types/react@19.2.14)(jiti@2.7.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0))(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(typescript@5.9.3):
+  next-sanity@12.0.8(@emotion/is-prop-valid@1.2.2)(@sanity/client@7.14.0)(@sanity/types@5.1.0(@types/react@19.2.14))(next@16.1.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react-is@19.2.3)(react@19.2.6)(sanity@5.1.0(@emotion/is-prop-valid@1.2.2)(@portabletext/sanity-bridge@2.0.0(@types/react@19.2.14))(@types/node@22.19.19)(@types/react@19.2.14)(jiti@2.7.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0))(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(typescript@5.9.3):
     dependencies:
       '@portabletext/react': 6.0.2(react@19.2.6)
       '@sanity/client': 7.14.0(debug@4.4.3)
       '@sanity/comlink': 4.0.1
       '@sanity/presentation-comlink': 2.0.1(@sanity/client@7.14.0)(@sanity/types@5.1.0(@types/react@19.2.14))
       '@sanity/preview-url-secret': 4.0.2(@sanity/client@7.14.0)
-      '@sanity/visual-editing': 5.0.4(@emotion/is-prop-valid@1.2.2)(@sanity/client@7.14.0)(@sanity/types@5.1.0(@types/react@19.2.14))(next@16.1.1(@babel/core@7.28.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react-is@19.2.3)(react@19.2.6)(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(typescript@5.9.3)
+      '@sanity/visual-editing': 5.0.4(@emotion/is-prop-valid@1.2.2)(@sanity/client@7.14.0)(@sanity/types@5.1.0(@types/react@19.2.14))(next@16.1.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react-is@19.2.3)(react@19.2.6)(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(typescript@5.9.3)
       dequal: 2.0.3
       groq: 5.1.0
       history: 5.3.0
-      next: 16.1.1(@babel/core@7.28.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      next: 16.1.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
       sanity: 5.1.0(@emotion/is-prop-valid@1.2.2)(@portabletext/sanity-bridge@2.0.0(@types/react@19.2.14))(@types/node@22.19.19)(@types/react@19.2.14)(jiti@2.7.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(styled-components@6.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0)
@@ -12875,7 +12882,7 @@ snapshots:
       - svelte
       - typescript
 
-  next@16.1.1(@babel/core@7.28.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
+  next@16.1.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
     dependencies:
       '@next/env': 16.1.1
       '@swc/helpers': 0.5.15
@@ -12884,7 +12891,7 @@ snapshots:
       postcss: 8.4.31
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
-      styled-jsx: 5.1.6(@babel/core@7.28.5)(react@19.2.6)
+      styled-jsx: 5.1.6(react@19.2.6)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.1.1
       '@next/swc-darwin-x64': 16.1.1
@@ -14065,12 +14072,10 @@ snapshots:
       stylis: 4.3.6
       tslib: 2.6.2
 
-  styled-jsx@5.1.6(@babel/core@7.28.5)(react@19.2.6):
+  styled-jsx@5.1.6(react@19.2.6):
     dependencies:
       client-only: 0.0.1
       react: 19.2.6
-    optionalDependencies:
-      '@babel/core': 7.28.5
 
   stylis@4.3.6: {}
 

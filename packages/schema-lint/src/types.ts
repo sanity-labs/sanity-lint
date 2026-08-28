@@ -1,4 +1,7 @@
 import type { Severity, Category, Finding, SourceSpan } from '@sanity-labs/lint-core'
+import type { Path, SlugSourceFn } from 'sanity'
+
+export type { SlugSourceFn } from 'sanity'
 
 /**
  * Represents a field in a Sanity schema
@@ -22,7 +25,8 @@ export interface SchemaField {
   readOnly?: boolean
   /** Field options (e.g., source for slug, list for string) */
   options?: {
-    source?: string
+    /** Matches Sanity `SlugOptions.source`: field path, Path, or source function */
+    source?: string | Path | SlugSourceFn
     list?: unknown[]
     hotspot?: boolean
     layout?: string
