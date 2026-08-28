@@ -1,5 +1,13 @@
 # eslint-plugin-sanity
 
+## 1.0.1
+
+### Patch Changes
+
+- 8a4247d: Accept function (and identifier) `options.source` values for slug fields in `schema-missing-slug-source`, not only string paths. Model `options.source` with Sanity's exported `SlugSourceFn` and `Path` types.
+- Updated dependencies [8a4247d]
+  - @sanity-labs/schema-lint@1.0.1
+
 ## 1.0.0
 
 ### Major Changes
