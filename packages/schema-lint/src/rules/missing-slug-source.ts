@@ -4,6 +4,7 @@ import type { SchemaRule } from '../types'
  * Rule: missing-slug-source
  *
  * Slug fields should have options.source for auto-generation.
+ * Accepts both string paths and functions (needed for nested object fields).
  */
 export const missingSlugSource: SchemaRule = {
   id: 'missing-slug-source',
@@ -27,7 +28,7 @@ export const missingSlugSource: SchemaRule = {
           message: `Slug field "${field.name}" should have options.source`,
           severity: 'warning',
           ...(field.span && { span: field.span }),
-          help: 'Add options: { source: "title" } to auto-generate slug from another field',
+          help: 'Add options: { source: "title" } or a source function (e.g. for nested fields)',
         })
       }
     }

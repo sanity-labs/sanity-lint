@@ -1,6 +1,12 @@
 import type { TSESTree } from '@typescript-eslint/types'
-import type { SchemaType, SchemaField } from '@sanity-labs/schema-lint'
+import type { SchemaType, SchemaField, SlugSourceFn } from '@sanity-labs/schema-lint'
 import type { SourceSpan } from '@sanity-labs/lint-core'
+
+/**
+ * Placeholder for function/identifier slug sources extracted from AST.
+ * The rule only checks that `source` is present; the body is not evaluated.
+ */
+const SLUG_SOURCE_FN_PLACEHOLDER: SlugSourceFn = () => ''
 
 /**
  * Check if a node is a defineType() call
@@ -104,6 +110,20 @@ function getProperty(node: TSESTree.ObjectExpression, name: string): TSESTree.No
 }
 
 /**
+ * Whether a node is a valid non-string slug `options.source` value.
+ * Sanity accepts string paths and functions (needed for nested object fields).
+ */
+function isSlugSourceFunction(node: TSESTree.Node): boolean {
+  return (
+    node.type === 'ArrowFunctionExpression' ||
+    node.type === 'FunctionExpression' ||
+    // Identifier / member refs: `source: mySource` or `source: helpers.slug`
+    node.type === 'Identifier' ||
+    node.type === 'MemberExpression'
+  )
+}
+
+/**
  * Extract field options from an object expression
  */
 function extractFieldOptions(
@@ -121,7 +141,11 @@ function extractFieldOptions(
 
       if (name === 'source') {
         const source = extractStringValue(prop.value)
-        if (source !== undefined) options.source = source
+        if (source !== undefined) {
+          options.source = source
+        } else if (isSlugSourceFunction(prop.value)) {
+          options.source = SLUG_SOURCE_FN_PLACEHOLDER
+        }
       } else if (name === 'hotspot') {
         const hotspot = extractBooleanValue(prop.value)
         if (hotspot !== undefined) options.hotspot = hotspot

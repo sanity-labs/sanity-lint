@@ -6,6 +6,7 @@ export type {
   SchemaRuleContext,
   SchemaRuleConfig,
   SchemaLinterConfig,
+  SlugSourceFn,
 } from './types'
 
 // Linter

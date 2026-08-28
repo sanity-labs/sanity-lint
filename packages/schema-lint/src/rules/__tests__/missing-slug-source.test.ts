@@ -5,13 +5,29 @@ const tester = new SchemaRuleTester()
 
 tester.run('missing-slug-source', missingSlugSource, {
   valid: [
-    // Slug with source option
+    // Slug with string source option
     createSchema({
       name: 'post',
       type: 'document',
       fields: [
         { name: 'title', type: 'string' },
         { name: 'slug', type: 'slug', options: { source: 'title' } },
+      ],
+    }),
+
+    // Slug with function source (e.g. nested object fields using parent)
+    createSchema({
+      name: 'navItem',
+      type: 'object',
+      fields: [
+        { name: 'displayName', type: 'string' },
+        {
+          name: 'key',
+          type: 'slug',
+          options: {
+            source: (_document, { parent }) => String(parent.displayName ?? ''),
+          },
+        },
       ],
     }),
 
