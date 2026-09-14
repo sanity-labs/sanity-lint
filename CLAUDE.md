@@ -201,6 +201,56 @@ PRs require:
 - At least one approval (when collaborators are added)
 - Up-to-date with main branch
 
+### Releasing
+
+Merging a PR to `main` does **not** publish anything. Publishing is a two-step flow driven by Changesets and `.github/workflows/release.yml`.
+
+#### 1. Add a changeset to every user-facing PR
+
+```bash
+pnpm changeset   # pick the packages and bump type, describe the change
+```
+
+This writes a file to `.changeset/`. Commit it with the PR. A PR without a changeset (docs, CI, package.json metadata) will land on `main` but never reach npm until a follow-up PR adds one.
+
+#### 2. Merge the "chore: version packages" PR
+
+When a PR with a changeset merges, the Release workflow runs on `main` and, instead of publishing, opens or updates a bot PR titled **"chore: version packages"** on the `changeset-release/main` branch. It bumps versions, updates CHANGELOGs, and deletes the consumed changeset files.
+
+Publishing happens only when that PR is merged:
+
+```bash
+gh pr list --search "chore: version packages" --state open   # find it
+gh pr merge <number> --squash --delete-branch                # publish
+```
+
+On merge, the Release workflow builds WASM, runs `pnpm build` and `pnpm test`, then runs `pnpm changeset publish`. It publishes to npm via trusted publishing (OIDC, no npm token), pushes a `@sanity-labs/<pkg>@<version>` git tag per package, and creates a GitHub release for each.
+
+#### Verify
+
+```bash
+gh run list --workflow=release.yml --limit 1        # should be success
+npm view @sanity-labs/<pkg> version                 # registry can lag 1-2 min
+gh release list --limit 5
+```
+
+#### Known quirks
+
+- **CI on the version PR shows "action required".** The PR is authored by `github-actions[bot]`, so GitHub holds its CI run for manual approval. Either approve the run in the Actions tab or merge anyway. There is no branch protection on `main`, and the Release workflow re-runs build and tests before publishing.
+- **The version PR accumulates.** It is updated every time another changeset lands on `main`, so one merge can release several packages at once. Check its description for the list.
+- **Bumping a package bumps its dependents.** `updateInternalDependencies: patch` in `.changeset/config.json` means a `schema-lint` change also patch-bumps `eslint-plugin`.
+- **`vscode-sanity` is ignored** by Changesets and is released separately to the VS Code Marketplace.
+
+#### Manual fallback
+
+If the workflow did not run, trigger it by hand. It has `workflow_dispatch`:
+
+```bash
+gh workflow run release.yml --ref main
+```
+
+Publishing from a local machine (`pnpm changeset version && pnpm build && pnpm release`) is a last resort. It bypasses provenance and needs an npm login with publish rights to the `@sanity-labs` scope.
+
 ## Key References
 
 ### Rule Specifications
