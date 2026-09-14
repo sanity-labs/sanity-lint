@@ -99,6 +99,10 @@ jobs:
           title: 'chore: version packages'
           commit: 'chore: version packages'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Prefer a PAT so the version PR is opened by a user, not
+          # github-actions[bot]. Bot-authored PRs get CI runs stuck on
+          # "action required" (manual approval). Falls back to GITHUB_TOKEN
+          # when the secret is not set.
+          GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           # Uses npm trusted publishing (OIDC) - no NPM_TOKEN needed
           NPM_CONFIG_PROVENANCE: true
