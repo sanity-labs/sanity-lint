@@ -1,5 +1,11 @@
 # @sanity/prettier-plugin-groq
 
+## 1.0.2
+
+### Patch Changes
+
+- 7fbee03: Add `bugs` and `homepage` metadata to package.json so npm links to the issue tracker and README.
+
 ## 1.0.1
 
 ### Patch Changes
