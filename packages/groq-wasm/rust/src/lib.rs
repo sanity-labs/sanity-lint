@@ -75,7 +75,8 @@ mod tests {
 
     #[test]
     fn test_lint_valid_query() {
-        let result = lint("*[_type == \"post\"]");
+        // Bounded by a slice so the `unlimited_query` rule stays quiet.
+        let result = lint("*[_type == \"post\"][0...10]");
         assert!(result.is_ok());
         let findings: Vec<JsFinding> = serde_json::from_str(&result.unwrap()).unwrap();
         assert!(findings.is_empty());
