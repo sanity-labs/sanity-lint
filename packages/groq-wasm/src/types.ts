@@ -82,11 +82,11 @@ export const RULE_ID_MAP: Record<string, string> = {
   deep_pagination: 'deep-pagination',
   large_pages: 'large-pages',
   non_literal_comparison: 'non-literal-comparison',
-  repeated_dereference: 'repeated-dereference',
   count_in_correlated_subquery: 'count-in-correlated-subquery',
   very_large_query: 'very-large-query',
   extremely_large_query: 'extremely-large-query',
   many_joins: 'many-joins',
+  unlimited_query: 'unlimited-query',
 }
 
 /**

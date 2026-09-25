@@ -20,7 +20,6 @@ export const WASM_RULES = new Set([
   'deep-pagination',
   'large-pages',
   'non-literal-comparison',
-  'repeated-dereference',
   'count-in-correlated-subquery',
   'very-large-query',
   'extremely-large-query',
