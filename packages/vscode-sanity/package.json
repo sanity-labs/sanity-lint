@@ -223,5 +223,6 @@
     "test:watch": "vitest --config ../../vitest.config.ts",
     "package": "vsce package --no-dependencies",
     "publish": "vsce publish --no-dependencies"
-  }
+  },
+  "homepage": "https://github.com/sanity-labs/sanity-lint"
 }
