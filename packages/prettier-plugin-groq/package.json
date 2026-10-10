@@ -60,4 +60,9 @@
     "prettier-plugin",
     "formatter"
   ]
+,
+  "homepage": "https://github.com/sanity-labs/sanity-lint/tree/main/packages/prettier-plugin-groq#readme",
+  "bugs": {
+    "url": "https://github.com/sanity-labs/sanity-lint/issues"
+  }
 }
