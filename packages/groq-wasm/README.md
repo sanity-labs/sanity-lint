@@ -107,11 +107,11 @@ The following rules are available (from Rust groq-lint):
 | `deep-pagination`              | warning  | Large offset in slice (>=1000)                       |
 | `large-pages`                  | warning  | Fetching >100 results from index 0                   |
 | `non-literal-comparison`       | error    | Comparing two non-literal expressions                |
-| `repeated-dereference`         | info     | Multiple -> on same attribute in projection          |
 | `count-in-correlated-subquery` | info     | count() on correlated subqueries                     |
 | `very-large-query`             | error    | Query exceeds 10KB                                   |
 | `extremely-large-query`        | error    | Query exceeds 100KB                                  |
 | `many-joins`                   | warning  | Query has >10 dereference operators                  |
+| `unlimited-query`              | warning  | Top-level query without a slice or element limit     |
 
 ## Error Handling
 
