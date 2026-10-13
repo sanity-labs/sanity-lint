@@ -1,6 +1,6 @@
 {
   "name": "@sanity-labs/groq-lsp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Language Server Protocol implementation for GROQ",
   "author": "Sanity.io <hello@sanity.io>",
   "license": "MIT",
