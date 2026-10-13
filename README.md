@@ -121,7 +121,7 @@ npx @sanity-labs/groq-lint --json query.groq
 
 ### Prerequisites
 
-- Node.js >= 20
+- Node.js 22.22.1+ (22.x), 24.x, or >= 26
 - pnpm >= 9
 
 ### Commands
