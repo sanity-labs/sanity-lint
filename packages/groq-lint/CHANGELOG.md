@@ -1,5 +1,13 @@
 # @sanity/groq-lint
 
+## 1.0.1
+
+### Patch Changes
+
+- f1062e2: Update the Rust dependencies behind the WASM bindings and rebuild the committed `wasm/` artifacts. Upstream `groq-lint` dropped the `repeated_dereference` rule and added `unlimited_query`, so `repeated-dereference` is now served by the TypeScript implementation in `@sanity-labs/groq-lint` instead of WASM.
+- Updated dependencies [f1062e2]
+  - @sanity-labs/groq-wasm@1.0.1
+
 ## 1.0.0
 
 ### Major Changes

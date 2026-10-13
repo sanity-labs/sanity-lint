@@ -1,5 +1,13 @@
 # @sanity/groq-lsp
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [f1062e2]
+  - @sanity-labs/groq-lint@1.0.1
+  - @sanity-labs/prettier-plugin-groq@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes
