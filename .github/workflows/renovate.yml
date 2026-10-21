@@ -1,0 +1,58 @@
+# Self-hosted Renovate
+#
+# Schedule & triggers:
+#   - Weekly cron: runs every Monday at 08:00 UTC to pick up new dependency updates
+#   - PR merge: runs when a Renovate PR merges to main so it can immediately create the next batch
+#   - Dashboard edit: runs when someone checks a checkbox on the Dependency Dashboard issue
+#     (bot edits are filtered out to avoid double-runs after Renovate updates the dashboard)
+#   - Manual dispatch: for ad-hoc runs
+#
+# Note: Scheduling is owned by this workflow, not Renovate's config.
+# The Renovate config has no schedule, branchConcurrentLimit, or prHourlyLimit —
+# frequency is controlled here, and all updates are created in a single run.
+name: Renovate
+on:
+  schedule:
+    - cron: '0 8 * * 1' # Every Monday at 08:00 UTC
+  pull_request:
+    types: [closed]
+    branches: [main]
+  issues:
+    types: [edited]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+
+permissions:
+  contents: read
+
+jobs:
+  renovate:
+    if: >-
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'renovate/')) ||
+      (github.event_name == 'issues' && github.event.sender.type != 'Bot')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.ECOSPARK_APP_ID }}
+          private-key: ${{ secrets.ECOSPARK_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@83ec54fee49ab67d9cd201084c1ff325b4b462e4 # v46.1.10
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          configurationFile: .github/renovate-config.json5
+        env:
+          GITHUB_COM_TOKEN: ${{ github.token }}
+          NODE_OPTIONS: '--max-old-space-size=4096'
+          RENOVATE_SECRETS: '{"SANITY_NPM_TOKEN": "${{ secrets.NPM_PUBLISH_TOKEN }}"}'
+          LOG_LEVEL: debug # Remove once confirmed working

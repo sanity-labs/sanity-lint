@@ -1,0 +1,10 @@
+// Global config for the self-hosted Renovate run (see .github/workflows/renovate.yml).
+// This is NOT the per-repo config Renovate extends — that's .github/renovate.json.
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  platform: 'github',
+  autodiscover: false,
+  repositories: ['sanity-labs/sanity-lint'],
+  onboarding: false,
+  requireConfig: 'optional',
+}
