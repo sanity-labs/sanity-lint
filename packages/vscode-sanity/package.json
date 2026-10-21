@@ -7,7 +7,7 @@
   "author": "Sanity.io <hello@sanity.io>",
   "publisher": "sanity-io",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.91.0"
   },
   "keywords": [
     "vscode",
@@ -190,26 +190,25 @@
     ]
   },
   "dependencies": {
-    "@sanity/client": "^6.29.1",
+    "@sanity/client": "^8.10.1",
     "groq-js": "catalog:",
     "line-number": "^0.1.0",
-    "osenv": "^0.1.5",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-jason": "^1.1.2",
     "ts-node": "^10.9.2",
-    "vscode-languageclient": "^9.0.1",
+    "vscode-languageclient": "^10.1.2",
     "xdg-basedir": "^4.0.0"
   },
   "devDependencies": {
     "@sanity-labs/groq-lsp": "workspace:^",
-    "@types/node": "^22.10.2",
+    "@types/node": "^24.19.2",
     "@types/react": "^16.14.68",
     "@types/react-dom": "^16.9.25",
-    "@types/vscode": "^1.85.0",
-    "@vscode/vsce": "^2.22.0",
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
+    "@types/vscode": "^1.91.0",
+    "@vscode/vsce": "^4.0.0",
+    "tsup": "^9.0.0",
+    "typescript": "^6.0.3",
     "vitest": "catalog:"
   },
   "scripts": {

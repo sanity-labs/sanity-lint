@@ -48,9 +48,9 @@
   },
   "devDependencies": {
     "@sanity-labs/lint-core": "workspace:*",
-    "prettier": "^3.8.3",
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
+    "prettier": "^3.9.10",
+    "tsup": "^9.0.0",
+    "typescript": "^6.0.3",
     "vitest": "catalog:"
   },
   "keywords": [

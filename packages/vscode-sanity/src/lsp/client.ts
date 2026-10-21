@@ -18,14 +18,14 @@ import {
 } from 'vscode-languageclient/node'
 
 let client: LanguageClient | undefined
-let outputChannel: vscode.OutputChannel | undefined
+let outputChannel: vscode.LogOutputChannel | undefined
 
 /**
  * Initialize the GROQ LSP client
  */
 export async function initializeLspClient(
   context: vscode.ExtensionContext,
-  sharedOutputChannel?: vscode.OutputChannel
+  sharedOutputChannel?: vscode.LogOutputChannel
 ): Promise<boolean> {
   // Check if LSP is enabled
   const config = vscode.workspace.getConfiguration('groq')
@@ -34,7 +34,8 @@ export async function initializeLspClient(
   }
 
   // Use shared output channel or create one
-  outputChannel = sharedOutputChannel || vscode.window.createOutputChannel('GROQ LSP')
+  outputChannel =
+    sharedOutputChannel || vscode.window.createOutputChannel('GROQ LSP', { log: true })
   if (!sharedOutputChannel) {
     context.subscriptions.push(outputChannel)
   }
@@ -72,7 +73,7 @@ export function isLspClientRunning(): boolean {
 /**
  * Get the output channel (for logging)
  */
-export function getLspOutputChannel(): vscode.OutputChannel | undefined {
+export function getLspOutputChannel(): vscode.LogOutputChannel | undefined {
   return outputChannel
 }
 

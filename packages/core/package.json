@@ -39,8 +39,8 @@
     "groq-js": "catalog:"
   },
   "devDependencies": {
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
+    "tsup": "^9.0.0",
+    "typescript": "^6.0.3",
     "vitest": "catalog:"
   },
   "engines": {
