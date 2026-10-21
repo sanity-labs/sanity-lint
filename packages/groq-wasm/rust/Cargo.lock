@@ -188,9 +188,9 @@ dependencies = [
 
 [[package]]
 name = "equivalent"
-version = "1.0.2"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
+checksum = "00d174d5400e5e8fd687ad1049e2f578285fa914201b1af7e8b112a4546bd826"
 
 [[package]]
 name = "errno"
@@ -263,7 +263,7 @@ dependencies = [
 [[package]]
 name = "groq-parser"
 version = "0.1.0"
-source = "git+https://github.com/sanity-io/groq-parser-rs.git#61b337c13b4e40f51893b0fb591aab55b8fb81c9"
+source = "git+https://github.com/sanity-io/groq-parser-rs.git#216445b41fd41fa9d5896898cb97cdf44f4c7856"
 dependencies = [
  "serde",
  "serde_json",
@@ -416,9 +416,9 @@ checksum = "20870f649af7073d53e38067b2a84312175d56ea15217e1b15bc83506ec50afb"
 
 [[package]]
 name = "libc"
-version = "0.2.190"
+version = "0.2.191"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78"
+checksum = "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a"
 
 [[package]]
 name = "linux-raw-sys"
