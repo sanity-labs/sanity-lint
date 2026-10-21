@@ -60,10 +60,17 @@ jobs:
       pull-requests: write # For creating version PRs
       id-token: write # For npm provenance
     steps:
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.ECOSPARK_APP_ID }}
+          private-key: ${{ secrets.ECOSPARK_APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v7
         with:
           # Fetch all history for proper changeset versioning
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Download WASM artifacts
         uses: actions/download-artifact@v8
@@ -98,7 +105,7 @@ jobs:
           version-script: pnpm changeset version
           pr-title: 'chore: version packages'
           commit-message: 'chore: version packages'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ steps.app-token.outputs.token }}
         env:
           # Uses npm trusted publishing (OIDC) - no NPM_TOKEN needed
           NPM_CONFIG_PROVENANCE: true
