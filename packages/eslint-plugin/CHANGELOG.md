@@ -1,5 +1,14 @@
 # eslint-plugin-sanity
 
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies [b7c3c9a]
+  - @sanity-labs/lint-core@1.0.1
+  - @sanity-labs/groq-lint@1.0.3
+  - @sanity-labs/schema-lint@1.0.2
+
 ## 1.0.3
 
 ### Patch Changes
