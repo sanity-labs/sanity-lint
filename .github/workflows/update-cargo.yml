@@ -44,6 +44,28 @@ jobs:
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
+      # Without a changeset, merging the PR never triggers a release of groq-wasm.
+      - name: Add changeset
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          file=".changeset/groq-wasm-cargo-update-${{ github.run_id }}.md"
+          {
+            echo '---'
+            echo "'@sanity-labs/groq-wasm': patch"
+            echo '---'
+            echo
+            echo 'Update Rust dependencies in `Cargo.lock`:'
+            echo
+            git diff -U5 packages/groq-wasm/rust/Cargo.lock | awk '
+              /^[ +-]name = / { name = $3; gsub(/"/, "", name) }
+              /^-version = / { old = $3; gsub(/"/, "", old) }
+              /^\+version = / { new = $3; gsub(/"/, "", new); print "- `" name "` " (old == "" ? new " (added)" : old " -> " new); old = "" }
+              /^-source = "git\+/ { split($3, a, "#"); oldrev = substr(a[2], 1, 7) }
+              /^\+source = "git\+/ { split($3, a, "#"); print "- `" name "` (git) " oldrev " -> " substr(a[2], 1, 7) }
+            '
+          } > "$file"
+          cat "$file"
+
       - name: Create pull request
         if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8
@@ -51,6 +73,9 @@ jobs:
           author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           branch: chore/update-cargo-deps
+          add-paths: |
+            packages/groq-wasm/rust/Cargo.lock
+            .changeset/*.md
           commit-message: 'chore(groq-wasm): update cargo dependencies'
           title: 'chore(groq-wasm): update cargo dependencies'
           body: |
@@ -58,6 +83,8 @@ jobs:
 
             This updates the `Cargo.lock` to pull in the latest compatible versions of all
             Rust dependencies, including the `groq-lint` and `groq-format` git dependencies.
+            A patch changeset for `@sanity-labs/groq-wasm` is included so merging this PR
+            queues a release.
 
             ```diff
             ${{ steps.summary.outputs.summary }}
