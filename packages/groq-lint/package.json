@@ -34,14 +34,14 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@sanity/codegen": "^5.1.0",
+    "@sanity/codegen": "^5.10.1",
     "@sanity-labs/groq-wasm": "workspace:*",
     "@sanity-labs/lint-core": "workspace:*",
     "groq-js": "catalog:"
   },
   "devDependencies": {
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
+    "tsup": "^9.0.0",
+    "typescript": "^6.0.3",
     "vitest": "catalog:"
   },
   "engines": {

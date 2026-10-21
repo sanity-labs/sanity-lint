@@ -36,15 +36,15 @@
     "@sanity-labs/groq-lint": "workspace:*",
     "@sanity-labs/lint-core": "workspace:*",
     "groq-js": "catalog:",
-    "prettier": "^3.4.2",
+    "prettier": "^3.9.10",
     "@sanity-labs/prettier-plugin-groq": "workspace:*",
-    "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.12",
-    "vscode-uri": "^3.0.8"
+    "vscode-languageserver": "^10.1.2",
+    "vscode-languageserver-textdocument": "^1.0.15",
+    "vscode-uri": "^3.2.0"
   },
   "devDependencies": {
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
+    "tsup": "^9.0.0",
+    "typescript": "^6.0.3",
     "vitest": "catalog:"
   },
   "engines": {

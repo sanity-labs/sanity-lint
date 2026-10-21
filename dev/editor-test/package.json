@@ -14,16 +14,16 @@
   },
   "devDependencies": {
     "@sanity-labs/groq-lint": "workspace:*",
-    "@sanity/icons": "^3.0.0",
-    "@typescript-eslint/parser": "^8.18.0",
-    "eslint": "^9.0.0",
+    "@sanity/icons": "^5.2.3",
+    "@typescript-eslint/parser": "^8.72.0",
+    "eslint": "^10.13.0",
     "@sanity-labs/eslint-plugin": "workspace:*",
-    "prettier": "^3.4.2",
+    "prettier": "^3.9.10",
     "@sanity-labs/prettier-plugin-groq": "workspace:*",
-    "sanity": "^5.1.0",
-    "typescript": "^5.5.0"
+    "sanity": "^5.31.2",
+    "typescript": "^6.0.3"
   },
   "dependencies": {
-    "next-sanity": "^12.0.8"
+    "next-sanity": "^13.3.4"
   }
 }

@@ -14,7 +14,6 @@ export default defineConfig({
     '@sanity/client',
     'groq-js',
     'line-number',
-    'osenv',
     'react',
     'react-dom',
     'react-jason',

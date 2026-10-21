@@ -34,9 +34,9 @@
     "@sanity-labs/lint-core": "workspace:*"
   },
   "devDependencies": {
-    "sanity": "^5.1.0",
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
+    "sanity": "^5.31.2",
+    "tsup": "^9.0.0",
+    "typescript": "^6.0.3",
     "vitest": "catalog:"
   },
   "peerDependencies": {
