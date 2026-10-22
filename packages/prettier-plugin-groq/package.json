@@ -16,6 +16,10 @@
     "url": "git+https://github.com/sanity-labs/sanity-lint.git",
     "directory": "packages/prettier-plugin-groq"
   },
+  "bugs": {
+    "url": "https://github.com/sanity-labs/sanity-lint/issues"
+  },
+  "homepage": "https://github.com/sanity-labs/sanity-lint/tree/main/packages/prettier-plugin-groq#readme",
   "type": "module",
   "exports": {
     ".": {
