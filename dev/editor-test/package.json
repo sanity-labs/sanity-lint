@@ -20,7 +20,7 @@
     "@sanity-labs/eslint-plugin": "workspace:*",
     "prettier": "^3.9.10",
     "@sanity-labs/prettier-plugin-groq": "workspace:*",
-    "sanity": "^5.31.2",
+    "sanity": "^6.20.0",
     "typescript": "^6.0.3"
   },
   "dependencies": {
