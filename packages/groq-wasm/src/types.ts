@@ -141,3 +141,41 @@ export const RULE_ID_MAP: Record<string, string> = {
 export function mapRuleId(rustRuleId: string): string {
   return RULE_ID_MAP[rustRuleId] ?? rustRuleId.replace(/_/g, '-')
 }
+
+/**
+ * A GROQ syntax error from `validate`.
+ *
+ * `start` and `end` are indices into the JavaScript query string (UTF-16 code
+ * units), not UTF-8 byte offsets. `start` is inclusive and `end` is exclusive,
+ * so `query.slice(start, end)` is the reported span. groq-parser reports UTF-8
+ * byte offsets; `validate` converts them. A zero-width span (`start === end`)
+ * is a caret on a token boundary.
+ *
+ * `line` / `column` locate `start`, and `endLine` / `endColumn` locate `end`.
+ * Lines and columns are 1-based. Columns count UTF-16 code units, matching
+ * `SourceLocation` on lint findings.
+ */
+export interface ValidateError {
+  /** Parser message, without a serialized position suffix. */
+  message: string
+  /** Inclusive start index, 0-based UTF-16 code units. */
+  start: number
+  /** Exclusive end index, 0-based UTF-16 code units. */
+  end: number
+  /** 1-based line number of `start`. */
+  line: number
+  /** 1-based column of `start`, counted in UTF-16 code units. */
+  column: number
+  /** 1-based line number of `end`. */
+  endLine: number
+  /** 1-based column of `end`, counted in UTF-16 code units. */
+  endColumn: number
+}
+
+/**
+ * Result of {@link validate}.
+ *
+ * Syntax errors are values, not thrown exceptions. `lint` and `format` still
+ * throw {@link WasmError} when a query does not parse.
+ */
+export type ValidateResult = { ok: true } | { ok: false; error: ValidateError }

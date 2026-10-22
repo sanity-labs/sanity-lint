@@ -100,6 +100,34 @@ export function lint(query) {
         wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
     }
 }
+
+/**
+ * Parse a GROQ query and return a JSON validation result.
+ *
+ * Byte offsets in the JSON are UTF-8 offsets into `query`. The JavaScript
+ * wrapper converts them to UTF-16 code unit indices.
+ *
+ * Success is `{"ok":true}`. A syntax error is
+ * `{"ok":false,"message":"...","start":N,"end":M}` where `start` is inclusive,
+ * `end` is exclusive, and the two are equal when the parser reports a caret
+ * rather than a token span.
+ * @param {string} query
+ * @returns {string}
+ */
+export function validate(query) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(query, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.validate(ptr0, len0);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,

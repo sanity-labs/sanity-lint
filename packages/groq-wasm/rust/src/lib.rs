@@ -54,6 +54,49 @@ pub fn lint(query: &str) -> Result<String, JsValue> {
     }
 }
 
+/// Parse a GROQ query and return a JSON validation result.
+///
+/// Byte offsets in the JSON are UTF-8 offsets into `query`. The JavaScript
+/// wrapper converts them to UTF-16 code unit indices.
+///
+/// Success is `{"ok":true}`. A syntax error is
+/// `{"ok":false,"message":"...","start":N,"end":M}` where `start` is inclusive,
+/// `end` is exclusive, and the two are equal when the parser reports a caret
+/// rather than a token span.
+#[wasm_bindgen]
+pub fn validate(query: &str) -> String {
+    let mut parser = Parser::new(query);
+    match parser.parse() {
+        Ok(_) => "{\"ok\":true}".to_string(),
+        Err(error) => {
+            let (message, start, end) = parse_error_parts(error);
+            serde_json::json!({
+                "ok": false,
+                "message": message,
+                "start": start,
+                "end": end,
+            })
+            .to_string()
+        }
+    }
+}
+
+/// Split a structured parse error into a message and a UTF-8 byte span.
+fn parse_error_parts(error: ParseError) -> (String, usize, usize) {
+    match error {
+        ParseError::Syntax { message, pos } => (message, pos.start, pos.end),
+        ParseError::ExpressionDepthExceeded {
+            max_depth,
+            depth,
+            pos,
+        } => (
+            format!("expression depth {depth} exceeds configured maximum of {max_depth}"),
+            pos.start,
+            pos.end,
+        ),
+    }
+}
+
 /// Format a GROQ query.
 ///
 /// # Arguments
@@ -166,5 +209,78 @@ mod tests {
     fn test_format_query() {
         let result = format("*[_type==\"post\"]{title}", Some(80));
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_valid_query() {
+        assert_eq!(validate("*[_type == \"post\"]"), "{\"ok\":true}");
+    }
+
+    #[test]
+    fn test_validate_accepts_parameters() {
+        // Parser::new does not require parameter declarations.
+        assert_eq!(validate("*[_type == $type]"), "{\"ok\":true}");
+    }
+
+    fn parse_failure(query: &str) -> serde_json::Value {
+        let value: serde_json::Value = serde_json::from_str(&validate(query)).unwrap();
+        assert_eq!(value["ok"], false);
+        value
+    }
+
+    #[test]
+    fn test_validate_empty_query_is_a_point_error_at_the_start() {
+        for query in ["", "   ", "\n", "\t"] {
+            let value = parse_failure(query);
+            assert_eq!(value["message"], "no query", "{query:?}");
+            assert_eq!(value["start"], 0, "{query:?}");
+            assert_eq!(value["end"], 0, "{query:?}");
+        }
+    }
+
+    #[test]
+    fn test_validate_reports_utf8_byte_offsets() {
+        // `]` is a one-byte token. Offsets below are UTF-8 bytes, so a
+        // preceding "é" (2 bytes) or "😀" (4 bytes) shifts the span.
+        assert_span("]", "unexpected token \"]\", expected expression", 0, 1);
+        assert_span(
+            "*[_type == ]",
+            "unexpected token \"]\", expected expression",
+            11,
+            12,
+        );
+        assert_span(
+            "*[_type == \"post\"]]",
+            "unable to parse entire expression",
+            18,
+            18,
+        );
+        assert_span(
+            "*[\"a\" == ]",
+            "unexpected token \"]\", expected expression",
+            9,
+            10,
+        );
+        assert_span(
+            "*[\"é\" == ]",
+            "unexpected token \"]\", expected expression",
+            10,
+            11,
+        );
+        assert_span(
+            "*[\"😀\" == ]",
+            "unexpected token \"]\", expected expression",
+            12,
+            13,
+        );
+    }
+
+    fn assert_span(query: &str, message: &str, start: usize, end: usize) {
+        let value = parse_failure(query);
+        assert_eq!(value["message"], message, "{query}");
+        assert_eq!(value["start"], start, "{query}");
+        assert_eq!(value["end"], end, "{query}");
+        assert!(query.is_char_boundary(start), "{query}");
+        assert!(query.is_char_boundary(end), "{query}");
     }
 }

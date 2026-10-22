@@ -36,6 +36,19 @@ export function init(): void;
  */
 export function lint(query: string): string;
 
+/**
+ * Parse a GROQ query and return a JSON validation result.
+ *
+ * Byte offsets in the JSON are UTF-8 offsets into `query`. The JavaScript
+ * wrapper converts them to UTF-16 code unit indices.
+ *
+ * Success is `{"ok":true}`. A syntax error is
+ * `{"ok":false,"message":"...","start":N,"end":M}` where `start` is inclusive,
+ * `end` is exclusive, and the two are equal when the parser reports a caret
+ * rather than a token span.
+ */
+export function validate(query: string): string;
+
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
@@ -44,6 +57,7 @@ export interface InitOutput {
     readonly format: (a: number, b: number, c: number) => [number, number, number, number];
     readonly init: () => void;
     readonly lint: (a: number, b: number) => [number, number, number, number];
+    readonly validate: (a: number, b: number) => [number, number];
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

@@ -3,7 +3,7 @@
  *
  * Fetches the WASM bytes at import time and initializes the module via
  * top-level await + `initSync`. After this module finishes loading,
- * `lint()` and `format()` are usable synchronously. Bundlers that
+ * `lint()`, `format()`, and `validate()` are usable synchronously. Bundlers that
  * understand `new URL('...', import.meta.url)` (Vite, Rollup, Webpack 5,
  * esbuild) emit the WASM file as an asset and rewrite the URL.
  */

@@ -2,8 +2,8 @@
  * @sanity-labs/groq-wasm — Node entry.
  *
  * Loads the WASM module synchronously at import time using `fs.readFileSync`
- * + `initSync`. After importing this package, `lint()` and `format()` are
- * usable immediately — no async bootstrap.
+ * + `initSync`. After importing this package, `lint()`, `format()`, and
+ * `validate()` are usable immediately — no async bootstrap.
  */
 
 import { readFileSync } from 'node:fs'
