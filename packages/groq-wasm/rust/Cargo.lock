@@ -231,7 +231,7 @@ version = "0.1.0"
 source = "git+https://github.com/atombender/groq-format.git#03fbdfdd73b5d590e15637d43d66abeb4c688e14"
 dependencies = [
  "clap",
- "groq-parser 0.1.0 (git+https://github.com/sanity-io/groq-parser-rs.git?rev=82e343c)",
+ "groq-parser",
  "tempfile",
 ]
 
@@ -242,7 +242,7 @@ source = "git+https://github.com/atombender/groq-lint.git#edeffdd9e45bff08c38267
 dependencies = [
  "clap",
  "colored",
- "groq-parser 0.1.0 (git+https://github.com/sanity-io/groq-parser-rs.git)",
+ "groq-parser",
  "miette",
  "serde",
  "serde_yaml",
@@ -254,16 +254,7 @@ dependencies = [
 [[package]]
 name = "groq-parser"
 version = "0.1.0"
-source = "git+https://github.com/sanity-io/groq-parser-rs.git?rev=82e343c#82e343c77d6221133e48ed98a3c5329c9781ddf0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "groq-parser"
-version = "0.1.0"
-source = "git+https://github.com/sanity-io/groq-parser-rs.git#da4fae6602216b40d042608fc415292eae2af6f1"
+source = "git+https://github.com/atombender/groq-parser-rs.git?rev=da4fae6602216b40d042608fc415292eae2af6f1#da4fae6602216b40d042608fc415292eae2af6f1"
 dependencies = [
  "serde",
  "serde_json",
@@ -276,7 +267,7 @@ dependencies = [
  "console_error_panic_hook",
  "groq-format",
  "groq-lint",
- "groq-parser 0.1.0 (git+https://github.com/sanity-io/groq-parser-rs.git)",
+ "groq-parser",
  "serde",
  "serde_json",
  "wasm-bindgen",
