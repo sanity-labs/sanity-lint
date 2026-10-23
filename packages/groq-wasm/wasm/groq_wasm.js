@@ -1,6 +1,37 @@
 /* @ts-self-types="./groq_wasm.d.ts" */
 
 /**
+ * List every query parameter a GROQ query references, as JSON.
+ *
+ * Returns one entry per reference, ordered by `start`. Byte offsets are
+ * UTF-8 offsets into `query`; the JavaScript wrapper converts them to UTF-16
+ * code unit indices. Parameters bound by a custom function (`fn ns::f($p)`)
+ * are omitted inside that function's body.
+ * @param {string} query
+ * @returns {string}
+ */
+export function extractParams(query) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const ptr0 = passStringToWasm0(query, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.extractParams(ptr0, len0);
+        var ptr2 = ret[0];
+        var len2 = ret[1];
+        if (ret[3]) {
+            ptr2 = 0; len2 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred3_0 = ptr2;
+        deferred3_1 = len2;
+        return getStringFromWasm0(ptr2, len2);
+    } finally {
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+    }
+}
+
+/**
  * Format a GROQ query.
  *
  * # Arguments

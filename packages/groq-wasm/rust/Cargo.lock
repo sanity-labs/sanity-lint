@@ -276,6 +276,7 @@ dependencies = [
  "console_error_panic_hook",
  "groq-format",
  "groq-lint",
+ "groq-parser 0.1.0 (git+https://github.com/sanity-io/groq-parser-rs.git)",
  "serde",
  "serde_json",
  "wasm-bindgen",

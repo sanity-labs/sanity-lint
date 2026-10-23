@@ -3,6 +3,7 @@
 //! This crate wraps the Rust groq-lint and groq-format libraries,
 //! exposing them to JavaScript via WebAssembly.
 
+use groq_parser::parser::{ParseError, Parser};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -67,6 +68,85 @@ pub fn format(query: &str, width: Option<usize>) -> Result<String, JsValue> {
 
     groq_format::format_query(query, width)
         .map_err(|e| JsValue::from_str(&format!("Format error: {:?}", e)))
+}
+
+/// A `$parameter` reference, serialized for JS consumption.
+#[derive(Serialize, Deserialize)]
+pub struct JsParamReference {
+    /// Parameter name without the leading `$`.
+    pub name: String,
+    /// Inclusive UTF-8 byte offset of the `$`.
+    pub start: usize,
+    /// Exclusive UTF-8 byte offset of the end of the name.
+    pub end: usize,
+}
+
+/// List every query parameter a GROQ query references, as JSON.
+///
+/// Returns one entry per reference, ordered by `start`. Byte offsets are
+/// UTF-8 offsets into `query`; the JavaScript wrapper converts them to UTF-16
+/// code unit indices. Parameters bound by a custom function (`fn ns::f($p)`)
+/// are omitted inside that function's body.
+#[wasm_bindgen(js_name = extractParams)]
+pub fn extract_params(query: &str) -> Result<String, JsValue> {
+    let references =
+        param_references(query).map_err(|e| JsValue::from_str(&format!("Parse error: {}", e)))?;
+
+    serde_json::to_string(&references)
+        .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+}
+
+fn param_references(query: &str) -> Result<Vec<JsParamReference>, ParseError> {
+    let parsed = Parser::new(query).parse()?;
+    let mut references: Vec<JsParamReference> = parsed
+        .referenced_params()
+        .into_iter()
+        .map(|param| JsParamReference {
+            name: param.name.clone(),
+            start: param.pos.start,
+            end: param.pos.end,
+        })
+        .collect();
+    references.sort_by_key(|reference| reference.start);
+    Ok(references)
+}
+
+#[cfg(test)]
+mod extract_params_tests {
+    use super::*;
+
+    fn references(query: &str) -> Vec<(String, usize, usize)> {
+        param_references(query)
+            .unwrap()
+            .into_iter()
+            .map(|r| (r.name, r.start, r.end))
+            .collect()
+    }
+
+    #[test]
+    fn test_param_references_in_source_order_with_utf8_spans() {
+        assert_eq!(
+            references("*[_type == $type && title == \"é\" && slug == $slug][0...$limit]"),
+            vec![
+                ("type".to_string(), 11, 16),
+                ("slug".to_string(), 45, 50),
+                ("limit".to_string(), 56, 62),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_param_references_skip_function_locals() {
+        assert_eq!(
+            references("fn ex::double($x) = $x * 2; *[n == ex::double($x)]"),
+            vec![("x".to_string(), 46, 48)]
+        );
+    }
+
+    #[test]
+    fn test_param_references_parse_error() {
+        assert!(param_references("*[_type == ]").is_err());
+    }
 }
 
 #[cfg(test)]

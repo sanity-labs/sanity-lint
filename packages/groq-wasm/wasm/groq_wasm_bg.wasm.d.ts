@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
+export const extractParams: (a: number, b: number) => [number, number, number, number];
 export const format: (a: number, b: number, c: number) => [number, number, number, number];
 export const init: () => void;
 export const lint: (a: number, b: number) => [number, number, number, number];

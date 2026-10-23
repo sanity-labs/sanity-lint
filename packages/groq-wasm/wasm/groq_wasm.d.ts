@@ -2,6 +2,16 @@
 /* eslint-disable */
 
 /**
+ * List every query parameter a GROQ query references, as JSON.
+ *
+ * Returns one entry per reference, ordered by `start`. Byte offsets are
+ * UTF-8 offsets into `query`; the JavaScript wrapper converts them to UTF-16
+ * code unit indices. Parameters bound by a custom function (`fn ns::f($p)`)
+ * are omitted inside that function's body.
+ */
+export function extractParams(query: string): string;
+
+/**
  * Format a GROQ query.
  *
  * # Arguments
@@ -30,6 +40,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
+    readonly extractParams: (a: number, b: number) => [number, number, number, number];
     readonly format: (a: number, b: number, c: number) => [number, number, number, number];
     readonly init: () => void;
     readonly lint: (a: number, b: number) => [number, number, number, number];

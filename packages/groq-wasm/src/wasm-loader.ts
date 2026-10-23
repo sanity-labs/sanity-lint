@@ -27,6 +27,10 @@ export function callLint(query: string): string {
   return wasmModule.lint(query)
 }
 
+export function callExtractParams(query: string): string {
+  return wasmModule.extractParams(query)
+}
+
 export function callFormat(query: string, width?: number): string {
   return wasmModule.format(query, width ?? null)
 }

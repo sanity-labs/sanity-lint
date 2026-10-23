@@ -93,6 +93,44 @@ Default line width for formatting (80).
 
 Mapping from Rust rule IDs (snake_case) to TS convention (kebab-case).
 
+### Parameters
+
+#### `extractParams(query: string): QueryParam[]`
+
+List the `$parameters` a query references, using groq-parser. Returns one entry per distinct name (without the `$`) in order of first reference, each with every reference's span.
+
+```typescript
+import { extractParams } from '@sanity-labs/groq-wasm'
+
+const query = '*[_type == $type][0...$limit]{ "same": $type }'
+const params = extractParams(query)
+params.map((param) => param.name)
+// ['type', 'limit']
+params[0].references.map(({ start, end }) => query.slice(start, end))
+// ['$type', '$type']
+```
+
+```typescript
+interface QueryParam {
+  name: string // Without the `$`
+  references: ParamReference[] // Source order, never empty
+}
+
+interface ParamReference {
+  start: number // Inclusive index of the `$` (UTF-16 code units)
+  end: number // Exclusive index (UTF-16 code units)
+  line: number // 1-based line of `start`
+  column: number // 1-based column of `start` (UTF-16 code units)
+  endLine: number
+  endColumn: number
+}
+```
+
+- Parameters are found in filters, projections, slices, element indexes, function arguments and nested subqueries.
+- `$name` text inside strings and comments is not a reference.
+- Parameters bound by a custom function (`fn ns::f($p) = ...`) are not reported from inside that function's body.
+- An empty or whitespace-only query returns `[]`. Invalid syntax throws `WasmError` with code `PARSE_ERROR`, like `lint()` and `format()`.
+
 ## Lint Rules
 
 The following rules are available (from Rust groq-lint):
@@ -161,6 +199,7 @@ packages/groq-wasm/
 ├── wasm/                    # Built WASM output (generated)
 ├── src/                     # TypeScript wrappers
 │   ├── index.ts            # Main exports
+│   ├── params.ts           # Parameter extraction API
 │   ├── lint.ts             # Linting API
 │   ├── format.ts           # Formatting API
 │   └── wasm-loader.ts      # WASM initialization
