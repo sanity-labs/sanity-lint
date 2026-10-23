@@ -14,7 +14,7 @@ groq-lint = { git = "https://github.com/atombender/groq-lint.git" }
 groq-format = { git = "https://github.com/atombender/groq-format.git" }
 # Direct parser access (`ParseResult::referenced_params`, and structured
 # `ParseError`s with UTF-8 byte spans for `validate`). Same git source
-# groq-lint uses, so the [patch] below puts it on the same single revision.
+# groq-lint and groq-format use, so Cargo resolves a single revision.
 groq-parser = { git = "https://github.com/sanity-io/groq-parser-rs.git" }
 
 # WASM bindings
@@ -32,11 +32,3 @@ default = ["console_error_panic_hook"]
 # Optimize for size
 opt-level = "s"
 lto = true
-
-# groq-format pins groq-parser at 82e343c while groq-lint follows main
-# (da4fae6). Patch both onto that single revision so the WASM binary links
-# one parser. Cargo rejects a patch whose replacement is the same git source,
-# so this points at atombender/groq-parser-rs (the repo sanity-io/groq-parser-rs
-# redirects to) at the same commit.
-[patch."https://github.com/sanity-io/groq-parser-rs.git"]
-groq-parser = { git = "https://github.com/atombender/groq-parser-rs.git", rev = "da4fae6602216b40d042608fc415292eae2af6f1" }
