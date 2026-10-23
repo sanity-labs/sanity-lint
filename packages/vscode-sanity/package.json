@@ -190,7 +190,7 @@
     ]
   },
   "dependencies": {
-    "@sanity/client": "^8.10.1",
+    "@sanity/client": "^8.11.0",
     "groq-js": "catalog:",
     "line-number": "^0.1.0",
     "react": "^19.3.1",
@@ -205,7 +205,7 @@
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@types/vscode": "^1.91.0",
+    "@types/vscode": "^1.140.0",
     "@vscode/vsce": "^4.0.0",
     "tsup": "^9.0.0",
     "typescript": "^6.0.3",

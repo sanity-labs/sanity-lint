@@ -31,7 +31,7 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           targets: wasm32-unknown-unknown
 
@@ -71,7 +71,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '24.22.1'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -105,7 +105,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '24.22.1'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -173,7 +173,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '24.22.1'
           cache: 'pnpm'
 
       - name: Install dependencies

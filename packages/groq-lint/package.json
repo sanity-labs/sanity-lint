@@ -34,7 +34,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@sanity/codegen": "^8.2.0",
+    "@sanity/codegen": "^8.3.0",
     "@sanity-labs/groq-wasm": "workspace:*",
     "@sanity-labs/lint-core": "workspace:*",
     "groq-js": "catalog:"
