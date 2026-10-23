@@ -89,6 +89,13 @@ describe('computeQueryDiagnostics', () => {
       )
       expect(schemaErrors).toHaveLength(0)
     })
+
+    it('should not flag _type filters on array items as document types', () => {
+      const query = makeQuery('*[_type == "post"]{ "images": content[_type == "imageBlock"] }')
+      const result = computeQueryDiagnostics(query, { schema: sampleSchema })
+
+      expect(result.diagnostics.filter((d) => d.code === 'invalid-type-filter')).toHaveLength(0)
+    })
   })
 
   describe('diagnostic positions', () => {

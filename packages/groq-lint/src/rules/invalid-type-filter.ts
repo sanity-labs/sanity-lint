@@ -5,12 +5,17 @@
  * doesn't exist in the schema. This catches typos like `_type == "psot"`
  * when you meant `_type == "post"`.
  *
+ * Document filters (`*[...]`) are validated against document types. Filters on
+ * arrays (e.g. `content[_type == "imageBlock"]`) are validated against the
+ * member types allowed in that array. Comparisons whose context type cannot be
+ * determined from the schema are skipped.
+ *
  * This rule requires a schema to function. Without a schema, it is skipped.
  */
 
 import type { Rule, Suggestion } from '@sanity-labs/lint-core'
-import type { OpCallNode } from 'groq-js'
-import { walk } from '../walker'
+import type { AccessAttributeNode, OpCallNode } from 'groq-js'
+import { SchemaTypeResolver, walkScoped } from '../type-scope'
 
 /**
  * Calculate Levenshtein distance between two strings
@@ -68,16 +73,11 @@ function findSimilarTypes(typeName: string, schemaTypes: string[], maxDistance =
 }
 
 /**
- * Extract document type names from schema
- */
-function getSchemaDocumentTypes(schema: { type: string; name: string }[]): string[] {
-  return schema.filter((item) => item.type === 'document').map((item) => item.name)
-}
-
-/**
  * Check if an OpCallNode is a _type comparison
  */
-function isTypeComparison(node: OpCallNode): { typeName: string } | null {
+function isTypeComparison(
+  node: OpCallNode
+): { typeName: string; typeAccess: AccessAttributeNode } | null {
   if (node.op !== '==') return null
 
   const { left, right } = node
@@ -89,7 +89,7 @@ function isTypeComparison(node: OpCallNode): { typeName: string } | null {
     right.type === 'Value' &&
     typeof right.value === 'string'
   ) {
-    return { typeName: right.value }
+    return { typeName: right.value, typeAccess: left }
   }
 
   // Check "value" == _type
@@ -99,10 +99,17 @@ function isTypeComparison(node: OpCallNode): { typeName: string } | null {
     left.type === 'Value' &&
     typeof left.value === 'string'
   ) {
-    return { typeName: left.value }
+    return { typeName: left.value, typeAccess: right }
   }
 
   return null
+}
+
+function formatTypeList(types: string[]): string {
+  return `${types
+    .slice(0, 5)
+    .map((t) => `"${t}"`)
+    .join(', ')}${types.length > 5 ? '...' : ''}`
 }
 
 export const invalidTypeFilter: Rule = {
@@ -117,25 +124,26 @@ export const invalidTypeFilter: Rule = {
     const { schema } = context
     if (!schema) return // Schema required
 
-    const documentTypes = getSchemaDocumentTypes(schema as { type: string; name: string }[])
+    const resolver = new SchemaTypeResolver(schema)
+    const { documentTypes } = resolver
     const documentTypeSet = new Set(documentTypes)
 
-    walk(ast, (node) => {
+    walkScoped(ast, resolver, (node, scope) => {
       if (node.type !== 'OpCall') return
 
       const typeComparison = isTypeComparison(node as OpCallNode)
       if (!typeComparison) return
 
-      const { typeName } = typeComparison
+      const { typeName, typeAccess } = typeComparison
 
-      // Check if the type exists in the schema
-      if (!documentTypeSet.has(typeName)) {
+      // Only validate when the possible types of the value whose `_type` is
+      // compared are fully known; unknown contexts are skipped.
+      const ownerType = typeAccess.base ? resolver.resolve(typeAccess.base, scope) : scope.type
+      const possibleTypes = ownerType && resolver.possibleTypeNames(ownerType)
+      if (!possibleTypes || possibleTypes.includes(typeName)) return
+
+      if (!documentTypeSet.has(typeName) && possibleTypes.every((t) => documentTypeSet.has(t))) {
         const similarTypes = findSimilarTypes(typeName, documentTypes)
-
-        const suggestions: Suggestion[] = similarTypes.map((t) => ({
-          description: `Change to "${t}"`,
-          replacement: t,
-        }))
 
         context.report({
           message: `Document type "${typeName}" does not exist in schema`,
@@ -144,9 +152,26 @@ export const invalidTypeFilter: Rule = {
             similarTypes.length > 0
               ? `Did you mean: ${similarTypes.map((t) => `"${t}"`).join(', ')}?`
               : `Available types: ${documentTypes.slice(0, 5).join(', ')}${documentTypes.length > 5 ? '...' : ''}`,
-          suggestions,
+          suggestions: toSuggestions(similarTypes),
         })
+        return
       }
+
+      const similarTypes = findSimilarTypes(typeName, possibleTypes)
+
+      context.report({
+        message: `Type "${typeName}" is not a possible type here`,
+        severity: 'error',
+        help:
+          similarTypes.length > 0
+            ? `Did you mean: ${similarTypes.map((t) => `"${t}"`).join(', ')}?`
+            : `Possible types: ${formatTypeList(possibleTypes)}`,
+        suggestions: toSuggestions(similarTypes),
+      })
     })
   },
+}
+
+function toSuggestions(types: string[]): Suggestion[] {
+  return types.map((t) => ({ description: `Change to "${t}"`, replacement: t }))
 }
