@@ -228,7 +228,7 @@ checksum = "e629b9b98ef3dd8afe6ca2bd0f89306cec16d43d907889945bc5d6687f2f13c7"
 [[package]]
 name = "groq-format"
 version = "0.1.0"
-source = "git+https://github.com/atombender/groq-format.git#03fbdfdd73b5d590e15637d43d66abeb4c688e14"
+source = "git+https://github.com/atombender/groq-format.git#1abd1ed972593f80f8c6eb27a3cbad2f8e1e6c4a"
 dependencies = [
  "clap",
  "groq-parser",
