@@ -1,5 +1,21 @@
 # @sanity-labs/groq-wasm
 
+## 1.1.0
+
+### Minor Changes
+
+- 16500f8: Add `extractParams(query)`, which lists the `$parameters` a GROQ query references using groq-parser. It returns one entry per distinct name (without the `$`) in order of first reference, each with every reference's `start` / `end` as UTF-16 code unit indices and 1-based line and column for both ends. Custom function parameters are excluded inside their function body. An empty query returns `[]`, and invalid syntax throws `WasmError` with code `PARSE_ERROR`, like `lint` and `format`. Existing APIs are unchanged.
+- 8eb11c7: Add `validate(query)`, which parses a GROQ query and returns `{ ok: true }` or a syntax error. The error includes the parser message, inclusive/exclusive `start` and `end` as UTF-16 code unit indices, and 1-based line and column for both ends. Existing `lint`, `format`, and `isValidSyntax` behavior is unchanged.
+
+### Patch Changes
+
+- 9a4a5fc: Update Rust dependencies in `Cargo.lock`:
+
+  - `groq-parser` (git) 216445b -> da4fae6
+
+- e0b0c41: Fix line and column positions for lint findings in queries that contain non-ASCII text. Spans from the Rust linter are UTF-8 byte offsets; columns are now 1-based UTF-16 code units (the unit CodeMirror, Monaco, and LSP use) and `offset` is the matching JavaScript string index.
+- c6eb248: Link one `groq-parser` revision (`da4fae6`) into the WASM build. `groq-format` previously pinned `82e343c` while `groq-lint` followed `groq-parser` main, so the binary contained the parser twice.
+
 ## 1.0.3
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @sanity/groq-lint
 
+## 1.0.5
+
+### Patch Changes
+
+- 046db4e: Fix `invalid-type-filter` false positives for `_type` filters on array items (#27). Document filters (`*[...]`) are still validated against document types, while filters on arrays such as `content[_type == "imageBlock"]` are now validated against the member types allowed in that array (including inline object members and arrays reached through projections and dereferences). Comparisons whose context type cannot be determined from the schema are skipped.
+- Updated dependencies [9a4a5fc]
+- Updated dependencies [16500f8]
+- Updated dependencies [e0b0c41]
+- Updated dependencies [8eb11c7]
+- Updated dependencies [c6eb248]
+  - @sanity-labs/groq-wasm@1.1.0
+
 ## 1.0.4
 
 ### Patch Changes
