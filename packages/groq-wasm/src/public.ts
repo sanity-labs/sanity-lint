@@ -5,6 +5,7 @@
  * initialized the WASM module in its own environment-appropriate way.
  */
 
+export { extractParams } from './params.js'
 export { lint } from './lint.js'
 export { DEFAULT_WIDTH, format, isValidSyntax } from './format.js'
 export {
@@ -16,4 +17,6 @@ export {
   type WasmFormatConfig,
   type WasmLintConfig,
   type WasmSeverity,
+  type ParamReference,
+  type QueryParam,
 } from './types.js'

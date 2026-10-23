@@ -58,6 +58,52 @@ export interface WasmFormatConfig {
 }
 
 /**
+ * A parameter reference from the Rust parser (JSON format from WASM)
+ */
+export interface WasmParamReference {
+  /** Parameter name without the `$` */
+  name: string
+  /** Start byte offset of the `$` (0-based, UTF-8) */
+  start: number
+  /** End byte offset, exclusive (0-based, UTF-8) */
+  end: number
+}
+
+/**
+ * One `$name` reference in a query, from {@link extractParams}.
+ *
+ * `start` and `end` are indices into the JavaScript query string (UTF-16 code
+ * units), not UTF-8 byte offsets. `start` is inclusive and `end` is exclusive,
+ * so `query.slice(start, end)` is `"$name"`. Lines and columns are 1-based,
+ * and columns count UTF-16 code units, matching `SourceLocation` on lint
+ * findings.
+ */
+export interface ParamReference {
+  /** Inclusive start index of the `$`, 0-based UTF-16 code units. */
+  start: number
+  /** Exclusive end index, 0-based UTF-16 code units. */
+  end: number
+  /** 1-based line number of `start`. */
+  line: number
+  /** 1-based column of `start`, counted in UTF-16 code units. */
+  column: number
+  /** 1-based line number of `end`. */
+  endLine: number
+  /** 1-based column of `end`, counted in UTF-16 code units. */
+  endColumn: number
+}
+
+/**
+ * A query parameter referenced by a GROQ query, from {@link extractParams}.
+ */
+export interface QueryParam {
+  /** Parameter name without the `$`, e.g. `"type"` for `$type`. */
+  name: string
+  /** Every reference to this parameter, in source order. Never empty. */
+  references: ParamReference[]
+}
+
+/**
  * Error from WASM operations
  */
 export class WasmError extends Error {
