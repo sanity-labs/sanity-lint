@@ -1,7 +1,7 @@
 /**
  * WASM module runtime.
  *
- * Exposes the WASM-backed lint/format calls and a synchronous init helper.
+ * Exposes the WASM-backed lint/format/validate calls and a synchronous init helper.
  * The actual byte loading is platform-specific and happens in the
  * environment-specific entry (`index.ts` for Node, `index.browser.ts` for
  * the browser). By the time any caller of this package can call `lint()` /
@@ -33,4 +33,8 @@ export function callExtractParams(query: string): string {
 
 export function callFormat(query: string, width?: number): string {
   return wasmModule.format(query, width ?? null)
+}
+
+export function callValidate(query: string): string {
+  return wasmModule.validate(query)
 }

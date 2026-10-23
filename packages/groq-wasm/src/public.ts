@@ -8,11 +8,14 @@
 export { extractParams } from './params.js'
 export { lint } from './lint.js'
 export { DEFAULT_WIDTH, format, isValidSyntax } from './format.js'
+export { validate } from './validate.js'
 export {
   mapRuleId,
   mapSeverity,
   RULE_ID_MAP,
   WasmError,
+  type ValidateError,
+  type ValidateResult,
   type WasmFinding,
   type WasmFormatConfig,
   type WasmLintConfig,

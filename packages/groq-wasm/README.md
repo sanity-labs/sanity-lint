@@ -18,10 +18,9 @@ npm install @sanity-labs/groq-wasm
 ## Usage
 
 ```typescript
-import { initWasm, lint, format } from '@sanity-labs/groq-wasm'
+import { lint, format, validate } from '@sanity-labs/groq-wasm'
 
-// Initialize WASM (call once at startup)
-await initWasm()
+// WASM loads when the module is imported. lint, format, and validate are sync.
 
 // Lint a query
 const findings = lint('*[_type == "post"]{ author-> }')
@@ -32,20 +31,19 @@ console.log(findings)
 const formatted = format('*[_type=="post"]{title,body}')
 console.log(formatted)
 // '*[_type == "post"]{ title, body }'
+
+// Validate syntax without linting or formatting
+const result = validate('*["é" == ]')
+if (!result.ok) {
+  const { message, start, end } = result.error
+  // start/end are UTF-16 indices: query.slice(start, end) === ']'
+  console.log(message, start, end)
+}
 ```
 
 ## API
 
-### Initialization
-
-#### `initWasm(): Promise<void>`
-
-Initialize the WASM modules. Must be called before using `lint()` or `format()`.
-Safe to call multiple times.
-
-#### `isInitialized(): boolean`
-
-Check if WASM modules are initialized.
+Importing the package loads the WASM module. `lint()`, `format()`, and `validate()` are synchronous after that import resolves.
 
 ### Linting
 
@@ -59,10 +57,6 @@ interface WasmLintConfig {
 }
 ```
 
-#### `lintAsync(query: string, config?: WasmLintConfig): Promise<Finding[]>`
-
-Async version of `lint()`.
-
 ### Formatting
 
 #### `format(query: string, config?: WasmFormatConfig): string`
@@ -75,13 +69,43 @@ interface WasmFormatConfig {
 }
 ```
 
-#### `formatAsync(query: string, config?: WasmFormatConfig): Promise<string>`
-
-Async version of `format()`.
-
 #### `isValidSyntax(query: string): boolean`
 
-Check if a query has valid GROQ syntax.
+Check if a query has valid GROQ syntax by attempting to format it. An empty query is treated as valid. For a structured parse error, use `validate()`.
+
+### Validation
+
+#### `validate(query: string): ValidateResult`
+
+Parse a GROQ query with groq-parser and return a result value. Syntax errors are not thrown.
+
+```typescript
+type ValidateResult = { ok: true } | { ok: false; error: ValidateError }
+
+interface ValidateError {
+  message: string
+  /** Inclusive 0-based index into the JavaScript string (UTF-16 code units). */
+  start: number
+  /** Exclusive 0-based index into the JavaScript string (UTF-16 code units). */
+  end: number
+  /** 1-based line of `start`. */
+  line: number
+  /** 1-based column of `start`, counted in UTF-16 code units. */
+  column: number
+  /** 1-based line of `end`. */
+  endLine: number
+  /** 1-based column of `end`, counted in UTF-16 code units. */
+  endColumn: number
+}
+```
+
+groq-parser reports UTF-8 byte offsets (`ParseError` positions). `validate` converts `start` and `end` to UTF-16 code unit indices so they match JavaScript string indexing (`query.slice(start, end)`) and editors such as Sanity Vision. Lines and columns are 1-based, and columns count UTF-16 code units, the same convention as `line` / `column` on lint finding locations.
+
+`start === end` means the parser reported a caret on a boundary rather than a token span. An empty or whitespace-only query fails with message `"no query"` at offset 0. That differs from `lint('')` (no findings), `format('')` (returns the input), and `isValidSyntax('')` (returns `true`).
+
+`$parameter` references are syntactically valid. `validate` does not check that parameters were declared.
+
+`lint` and `format` are unchanged: invalid syntax still throws `WasmError` with code `PARSE_ERROR`.
 
 ### Constants
 
@@ -180,11 +204,11 @@ try {
 This package works in modern browsers that support WebAssembly. The WASM modules are loaded automatically based on the environment.
 
 ```typescript
-// In browser
-import { initWasm, lint } from '@sanity-labs/groq-wasm'
+// In browser. The WASM module is fetched and initialized on import.
+import { lint, validate } from '@sanity-labs/groq-wasm'
 
-await initWasm()
 const findings = lint(query)
+const parsed = validate(query)
 ```
 
 ## Architecture
@@ -202,6 +226,7 @@ packages/groq-wasm/
 │   ├── params.ts           # Parameter extraction API
 │   ├── lint.ts             # Linting API
 │   ├── format.ts           # Formatting API
+│   ├── validate.ts         # Syntax validation API
 │   └── wasm-loader.ts      # WASM initialization
 └── scripts/
     └── build-wasm.sh       # Build script

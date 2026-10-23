@@ -12,7 +12,8 @@ crate-type = ["cdylib", "rlib"]
 # GROQ tools from atombender
 groq-lint = { git = "https://github.com/atombender/groq-lint.git" }
 groq-format = { git = "https://github.com/atombender/groq-format.git" }
-# Direct parser access (`ParseResult::referenced_params`). Same unpinned git
+# Direct parser access (`ParseResult::referenced_params`, and structured
+# `ParseError`s with UTF-8 byte spans for `validate`). Same unpinned git
 # source groq-lint already uses, so this resolves to the groq-parser revision
 # in Cargo.lock. groq-format stays on its own pin.
 groq-parser = { git = "https://github.com/sanity-io/groq-parser-rs.git" }
