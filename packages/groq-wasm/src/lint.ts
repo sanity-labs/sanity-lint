@@ -4,7 +4,9 @@
  * Wraps the Rust groq-lint library compiled to WASM.
  */
 
-import type { Finding, SourceLocation, SourceSpan } from '@sanity-labs/lint-core'
+import type { Finding, SourceSpan } from '@sanity-labs/lint-core'
+
+import { createUtf8OffsetMapper } from './offsets.js'
 import {
   mapRuleId,
   mapSeverity,
@@ -15,7 +17,11 @@ import {
 import { callLint } from './wasm-loader.js'
 
 /**
- * Lint a GROQ query using the WASM-based linter
+ * Lint a GROQ query using the WASM-based linter.
+ *
+ * Finding spans are source locations in JavaScript string coordinates.
+ * The Rust linter reports UTF-8 byte offsets; `line`, `column`, and `offset`
+ * below are converted from those bytes. `column` counts UTF-16 code units.
  *
  * @param query - The GROQ query string to lint
  * @param config - Optional configuration
@@ -81,37 +87,17 @@ function convertFinding(wf: WasmFinding, query: string): Finding {
 }
 
 /**
- * Convert byte offsets to line/column source span
+ * Convert UTF-8 byte offsets to a line/column source span.
+ *
+ * `column` is a 1-based count of UTF-16 code units and `offset` is the
+ * matching JavaScript string index. See {@link createUtf8OffsetMapper}.
  */
 function byteSpanToSourceSpan(startByte: number, endByte: number, query: string): SourceSpan {
+  const toPosition = createUtf8OffsetMapper(query)
+  const start = toPosition(startByte)
+  const end = toPosition(endByte)
   return {
-    start: byteOffsetToLocation(startByte, query),
-    end: byteOffsetToLocation(endByte, query),
+    start: { line: start.line, column: start.column, offset: start.index },
+    end: { line: end.line, column: end.column, offset: end.index },
   }
-}
-
-/**
- * Convert byte offset to line/column location
- */
-function byteOffsetToLocation(offset: number, query: string): SourceLocation {
-  let line = 1
-  let column = 1
-  let currentOffset = 0
-
-  for (const char of query) {
-    if (currentOffset >= offset) {
-      break
-    }
-
-    if (char === '\n') {
-      line++
-      column = 1
-    } else {
-      column++
-    }
-
-    currentOffset++
-  }
-
-  return { line, column, offset }
 }

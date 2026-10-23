@@ -35,9 +35,9 @@ export interface WasmFinding {
   message: string
   /** Severity level */
   severity: WasmSeverity
-  /** Start byte offset (0-based) */
+  /** Start offset into the UTF-8 encoding of the query (0-based) */
   start: number
-  /** End byte offset (0-based) */
+  /** End offset into the UTF-8 encoding of the query (0-based, exclusive) */
   end: number
 }
 
