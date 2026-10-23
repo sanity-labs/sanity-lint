@@ -1,6 +1,6 @@
 {
   "name": "@sanity-labs/groq-lint",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "GROQ linting engine, rules, and CLI for Sanity Lint",
   "author": "Sanity.io <hello@sanity.io>",
   "license": "MIT",

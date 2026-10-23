@@ -1,5 +1,12 @@
 # @sanity/groq-lsp
 
+## 1.0.8
+
+### Patch Changes
+
+- @sanity-labs/groq-lint@1.0.6
+  - @sanity-labs/prettier-plugin-groq@1.0.7
+
 ## 1.0.7
 
 ### Patch Changes
