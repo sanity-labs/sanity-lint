@@ -46,6 +46,10 @@ export function extractParams(query: string): QueryParam[] {
   try {
     resultJson = callExtractParams(query)
   } catch (error) {
+    if (error instanceof WasmError) {
+      throw error
+    }
+
     const message = error instanceof Error ? error.message : String(error)
 
     if (message.includes('parse') || message.includes('Parse')) {

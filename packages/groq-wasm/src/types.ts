@@ -109,7 +109,7 @@ export interface QueryParam {
 export class WasmError extends Error {
   constructor(
     message: string,
-    public readonly code: 'PARSE_ERROR' | 'WASM_ERROR'
+    public readonly code: 'PARSE_ERROR' | 'WASM_ERROR' | 'NOT_INITIALIZED'
   ) {
     super(message)
     this.name = 'WasmError'

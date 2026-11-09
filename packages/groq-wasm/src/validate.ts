@@ -57,6 +57,10 @@ export function validate(query: string): ValidateResult {
   try {
     parsed = JSON.parse(callValidate(query))
   } catch (error) {
+    if (error instanceof WasmError) {
+      throw error
+    }
+
     const message = error instanceof Error ? error.message : String(error)
     throw new WasmError(`Validate failed: ${message}`, 'WASM_ERROR')
   }

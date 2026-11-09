@@ -20,7 +20,8 @@ npm install @sanity-labs/groq-wasm
 ```typescript
 import { lint, format, validate } from '@sanity-labs/groq-wasm'
 
-// WASM loads when the module is imported. lint, format, and validate are sync.
+// The default entry loads WASM when the module is imported.
+// lint, format, and validate are sync after that import resolves.
 
 // Lint a query
 const findings = lint('*[_type == "post"]{ author-> }')
@@ -41,9 +42,44 @@ if (!result.ok) {
 }
 ```
 
+## Lazy initialization
+
+The default browser entry fetches the WebAssembly module with a top-level `await`. Bundlers that wrap lazy chunks in non-async factories cannot import it. Sanity Studio's `bundledDev` mode does this and throws `SyntaxError: Unexpected reserved word`.
+
+`@sanity-labs/groq-wasm/lazy` exports the same functions and does not fetch or compile the module when the module is evaluated. Initialize it, then call the API:
+
+```typescript
+import { lint, format, validate, load } from '@sanity-labs/groq-wasm/lazy'
+
+await load()
+
+const findings = lint('*[_type == "post"]{ author-> }')
+const formatted = format('*[_type=="post"]{title,body}')
+```
+
+`load()` fetches the packaged `.wasm` file and initializes it. Concurrent calls share one request, and a later call after success does not fetch again. If `load()` rejects, the module stays uninitialized and the next call retries.
+
+Pass bytes, a `Response`, or a compiled `WebAssembly.Module` to `initWasm()` when you already have the module. Bytes and a `WebAssembly.Module` initialize synchronously. A `Response` returns a promise. `await initWasm(source)` is safe for every accepted source. A second successful call does nothing.
+
+```typescript
+import { initWasm, lint } from '@sanity-labs/groq-wasm/lazy'
+
+initWasm(wasmBytes)
+// await initWasm(response)
+// initWasm(compiledModule)
+
+const findings = lint(query)
+```
+
+`lint()`, `format()`, `validate()`, `extractParams()`, and `isValidSyntax()` throw `WasmError` with code `NOT_INITIALIZED` until initialization has succeeded. `lint`, `format`, and `extractParams` still return without touching the module for an empty or whitespace-only query.
+
+The raw module is also exported at `@sanity-labs/groq-wasm/wasm`.
+
+The default `@sanity-labs/groq-wasm` entry is unchanged. Importing it still initializes the module immediately, and it does not export `load` or `initWasm`.
+
 ## API
 
-Importing the package loads the WASM module. `lint()`, `format()`, and `validate()` are synchronous after that import resolves.
+Importing `@sanity-labs/groq-wasm` loads the WASM module. `lint()`, `format()`, and `validate()` are synchronous after that import resolves. To load the module yourself, import `@sanity-labs/groq-wasm/lazy` and call `load()` or `initWasm()`.
 
 ### Linting
 
@@ -177,8 +213,10 @@ The following rules are available (from Rust groq-lint):
 
 ## Error Handling
 
+The default entry initializes WASM on import, so `NOT_INITIALIZED` is not raised from that entry. The lazy entry (`@sanity-labs/groq-wasm/lazy`) throws it when an API is used before `load()` or `initWasm()` has succeeded.
+
 ```typescript
-import { WasmError } from '@sanity-labs/groq-wasm'
+import { WasmError, lint } from '@sanity-labs/groq-wasm/lazy'
 
 try {
   const findings = lint(query)
@@ -186,7 +224,7 @@ try {
   if (error instanceof WasmError) {
     switch (error.code) {
       case 'NOT_INITIALIZED':
-        // Call initWasm() first
+        // Call load() or initWasm() on '@sanity-labs/groq-wasm/lazy' first
         break
       case 'PARSE_ERROR':
         // Invalid GROQ syntax
@@ -201,15 +239,16 @@ try {
 
 ## Browser Support
 
-This package works in modern browsers that support WebAssembly. The WASM modules are loaded automatically based on the environment.
+This package works in modern browsers that support WebAssembly. The default browser entry fetches and initializes the WASM module on import, using top-level await.
 
 ```typescript
-// In browser. The WASM module is fetched and initialized on import.
 import { lint, validate } from '@sanity-labs/groq-wasm'
 
 const findings = lint(query)
 const parsed = validate(query)
 ```
+
+When the bundler cannot handle that top-level await, import `@sanity-labs/groq-wasm/lazy` and call `await load()` before using the API.
 
 ## Architecture
 
@@ -222,7 +261,9 @@ packages/groq-wasm/
 │   └── src/lib.rs          # wasm-bindgen exports
 ├── wasm/                    # Built WASM output (generated)
 ├── src/                     # TypeScript wrappers
-│   ├── index.ts            # Main exports
+│   ├── index.ts            # Node entry (sync init)
+│   ├── index.browser.ts    # Browser entry (top-level await)
+│   ├── index.lazy.ts       # Lazy entry (load / initWasm)
 │   ├── params.ts           # Parameter extraction API
 │   ├── lint.ts             # Linting API
 │   ├── format.ts           # Formatting API
