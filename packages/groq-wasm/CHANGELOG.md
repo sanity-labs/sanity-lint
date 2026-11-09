@@ -1,5 +1,32 @@
 # @sanity-labs/groq-wasm
 
+## 1.2.0
+
+### Minor Changes
+
+- 51f9241: Add `@sanity-labs/groq-wasm/lazy` for bundlers that cannot handle top-level await. It exports the same API as the main entry, plus `load()` and `initWasm()`, and does not fetch or compile the WebAssembly module until one of those is called. `load()` fetches the packaged `.wasm` once, including when several callers race. `initWasm()` accepts bytes, a `Response`, or a `WebAssembly.Module`. Using `lint`, `format`, `validate`, `extractParams`, or `isValidSyntax` before initialization throws `WasmError` with code `NOT_INITIALIZED`. The raw module is exported at `@sanity-labs/groq-wasm/wasm`. The default entry still initializes on import and does not export `load` or `initWasm`.
+
+### Patch Changes
+
+- 3a5ccda: Update Rust dependencies in `Cargo.lock`:
+
+  - `addr2line` 0.25.1 -> 0.27.1
+  - `backtrace` 0.3.76 -> 0.3.77
+  - `gimli` 0.32.3 -> 0.34.0
+  - `itoa` 1.0.18 -> 1.0.19
+  - `miniz_oxide` 0.8.9 -> 0.9.1
+  - `object` 0.37.3 -> 0.40.0
+  - `rustix` 1.1.5 -> 1.1.6
+  - `smallvec` 1.16.3 -> 1.16.5
+  - `syn` 3.0.9 -> 3.0.10
+  - `unicode-width` 0.2.2 -> 0.2.3
+  - `utf8_iter` 1.0.4 -> 1.1.0
+  - `utf_types` 1.0.0 (added)
+  - `wasm-bindgen` 0.2.129 -> 0.2.130
+  - `wasm-bindgen-macro` 0.2.129 -> 0.2.130
+  - `wasm-bindgen-macro-support` 0.2.129 -> 0.2.130
+  - `wasm-bindgen-shared` 0.2.129 -> 0.2.130
+
 ## 1.1.1
 
 ### Patch Changes
