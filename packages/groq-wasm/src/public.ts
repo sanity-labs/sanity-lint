@@ -1,8 +1,9 @@
 /**
  * Shared public API surface.
  *
- * Imported by both the Node and browser entry points after each has
- * initialized the WASM module in its own environment-appropriate way.
+ * Imported by the Node, browser, and lazy entries. The Node and browser
+ * entries initialize the WASM module before these functions are used. The
+ * lazy entry does not: call `load()` or `initWasm()` first.
  */
 
 export { extractParams } from './params.js'

@@ -39,6 +39,10 @@ export function format(query: string, config?: WasmFormatConfig): string {
   try {
     return callFormat(query, width)
   } catch (error) {
+    if (error instanceof WasmError) {
+      throw error
+    }
+
     const message = error instanceof Error ? error.message : String(error)
 
     if (message.includes('parse') || message.includes('Parse')) {

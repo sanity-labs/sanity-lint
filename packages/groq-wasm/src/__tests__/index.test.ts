@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import * as publicApi from '../index.js'
 import {
   DEFAULT_WIDTH,
   format,
@@ -11,6 +12,11 @@ import {
 } from '../index.js'
 
 describe('@sanity-labs/groq-wasm', () => {
+  it('does not export lazy init helpers', () => {
+    expect(publicApi).not.toHaveProperty('load')
+    expect(publicApi).not.toHaveProperty('initWasm')
+  })
+
   describe('lint', () => {
     it('should lint a valid query without findings', () => {
       const findings = lint('*[_type == "post"]')
