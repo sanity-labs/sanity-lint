@@ -25,3 +25,5 @@ minimumReleaseAgeExclude:
 overrides:
   vitest>vite: ^8.3.5
   ws@8.19.0: ^8.22.0
+lockfile:
+  format: v13
