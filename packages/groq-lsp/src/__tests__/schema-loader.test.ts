@@ -278,6 +278,32 @@ describe('SchemaLoader.handleFileEvents', () => {
     expect(loader.getState().path).toBe(schemaPath)
   })
 
+  it('ignores nested schema.json files that are not well-known workspace locations', () => {
+    loader.discoverSchema(tempDir)
+    expect(loader.getSchema()).toBeUndefined()
+
+    const nestedDir = join(tempDir, 'packages', 'app')
+    mkdirSync(nestedDir, { recursive: true })
+    const nested = join(nestedDir, 'schema.json')
+    writeFileSync(nested, JSON.stringify(article))
+
+    const nestedChanged = loader.handleFileEvents([
+      { uri: pathToFileURL(nested).toString(), type: FileChangeType.Created },
+    ])
+
+    expect(nestedChanged).toBe(false)
+    expect(loader.getSchema()).toBeUndefined()
+
+    writeFileSync(schemaPath, JSON.stringify(post))
+    const rootChanged = loader.handleFileEvents([
+      { uri: pathToFileURL(schemaPath).toString(), type: FileChangeType.Created },
+    ])
+
+    expect(rootChanged).toBe(true)
+    expect(loader.getSchema()).toEqual(post)
+    expect(loader.getState().path).toBe(schemaPath)
+  })
+
   it('does not replace a loaded schema with a different candidate file', () => {
     writeFileSync(schemaPath, JSON.stringify(post))
     loader.loadFromPath(schemaPath)

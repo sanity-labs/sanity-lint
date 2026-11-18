@@ -30,18 +30,27 @@ const SCHEMA_CANDIDATES = [
  */
 export const SCHEMA_WATCH_GLOBS = SCHEMA_CANDIDATES.map((candidate) => `**/${candidate}`)
 
-function isCandidatePath(filePath: string): boolean {
-  const normalized = filePath.replaceAll('\\', '/')
-  return SCHEMA_CANDIDATES.some((candidate) => normalized.endsWith(`/${candidate}`))
-}
-
 /**
  * SchemaLoader manages schema state for the LSP server
  */
 export class SchemaLoader {
   private state: SchemaState = {}
+  private workspaceRoot: string | undefined
   private watcher: FSWatcher | null = null
   private onChangeCallback: ((schema: SchemaType | undefined) => void) | null = null
+
+  /**
+   * True when filePath is one of the well-known schema locations under the
+   * discovered workspace root (same set discoverSchema searches).
+   */
+  private isCandidatePath(filePath: string): boolean {
+    const workspaceRoot = this.workspaceRoot
+    if (!workspaceRoot) {
+      return false
+    }
+    const resolved = resolve(filePath)
+    return SCHEMA_CANDIDATES.some((candidate) => resolve(workspaceRoot, candidate) === resolved)
+  }
 
   /**
    * Load schema from a specific path
@@ -80,6 +89,8 @@ export class SchemaLoader {
    * Auto-discover schema file in workspace
    */
   discoverSchema(workspaceRoot: string): SchemaState {
+    this.workspaceRoot = workspaceRoot
+
     for (const candidate of SCHEMA_CANDIDATES) {
       const candidatePath = join(workspaceRoot, candidate)
       if (existsSync(candidatePath)) {
@@ -151,7 +162,7 @@ export class SchemaLoader {
       switch (event.type) {
         case FileChangeType.Created:
         case FileChangeType.Changed:
-          if (isActive || (!this.state.schema && isCandidatePath(filePath))) {
+          if (isActive || (!this.state.schema && this.isCandidatePath(filePath))) {
             this.loadFromPath(isActive && this.state.path ? this.state.path : filePath)
             changed = true
           }
@@ -210,6 +221,7 @@ export class SchemaLoader {
   clear(): void {
     this.stopWatching()
     this.state = {}
+    this.workspaceRoot = undefined
   }
 }
 
