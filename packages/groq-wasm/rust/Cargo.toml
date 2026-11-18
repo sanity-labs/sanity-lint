@@ -32,3 +32,8 @@ default = ["console_error_panic_hook"]
 # Optimize for size
 opt-level = "s"
 lto = true
+
+# Use the vendored groq-format, which keeps `a["b-c"]` in bracket form when the
+# key is not a valid identifier. See vendor/groq-format/README.md.
+[patch."https://github.com/atombender/groq-format.git"]
+groq-format = { path = "vendor/groq-format" }
