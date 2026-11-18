@@ -36,7 +36,7 @@
     "@sanity-labs/groq-lint": "workspace:*",
     "@sanity-labs/lint-core": "workspace:*",
     "groq-js": "catalog:",
-    "prettier": "^3.9.10",
+    "prettier": "^3.10.1",
     "@sanity-labs/prettier-plugin-groq": "workspace:*",
     "vscode-languageserver": "^11.0.0",
     "vscode-languageserver-textdocument": "^1.0.16",

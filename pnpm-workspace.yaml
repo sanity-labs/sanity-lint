@@ -7,12 +7,22 @@ allowBuilds:
   keytar: false
   sharp: false
 catalog:
-  vitest: ^5.0.5
+  vitest: ^5.1.0
   groq-js: ^2.0.1
 minimumReleaseAgeExclude:
   - '@sanity/client@8.10.1'
   - '@sanity/client@8.11.0'
   - '@sanity/codegen@8.3.0'
+  - '@sanity/access-ui@6.24.0'
+  - '@sanity/diff@6.24.0'
+  - '@sanity/mutator@6.24.0'
+  - '@sanity/schema@6.24.0'
+  - '@sanity/sdk@3.14.0'
+  - '@sanity/sdk-react@3.14.0'
+  - '@sanity/types@6.24.0'
+  - '@sanity/util@6.24.0'
+  - '@sanity/validation@6.24.0'
+  - sanity@6.24.0
   - groq-js@2.0.1
   - '@turbo/darwin-64@2.11.10'
   - '@turbo/darwin-arm64@2.11.10'
@@ -23,7 +33,7 @@ minimumReleaseAgeExclude:
   - turbo@2.11.10
   - vite@8.3.5
 overrides:
-  vitest>vite: ^8.3.5
-  ws@8.19.0: ^8.22.0
+  vitest>vite: ^8.3.8
+  ws@8.19.0: ^8.23.0
 lockfile:
   format: v13

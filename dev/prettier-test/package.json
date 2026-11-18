@@ -11,7 +11,7 @@
     "demo": "node demo.js"
   },
   "devDependencies": {
-    "prettier": "^3.9.10",
+    "prettier": "^3.10.1",
     "@sanity-labs/prettier-plugin-groq": "workspace:*"
   }
 }
