@@ -215,6 +215,32 @@ export class SchemaLoader {
 }
 
 /**
+ * Schemas by path, each read again when its file changes on disk
+ */
+export class SchemaFileCache {
+  private loaders = new Map<string, SchemaLoader>()
+
+  load(schemaPath: string): SchemaState {
+    const path = resolve(schemaPath)
+    let loader = this.loaders.get(path)
+    if (!loader) {
+      loader = new SchemaLoader()
+      loader.loadFromPath(path)
+      this.loaders.set(path, loader)
+      return loader.getState()
+    }
+    if (!loader.reloadIfNeeded() && !loader.getState().schema && existsSync(path)) {
+      loader.loadFromPath(path)
+    }
+    return loader.getState()
+  }
+
+  clear(): void {
+    this.loaders.clear()
+  }
+}
+
+/**
  * Singleton instance for convenience
  */
 let defaultLoader: SchemaLoader | null = null

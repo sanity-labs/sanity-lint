@@ -137,14 +137,32 @@ lspconfig.groq_lsp.setup{}
 
 ## Schema Discovery
 
-The server automatically searches for schema files in these locations:
+The server uses the first schema it finds:
 
-1. `schema.json`
-2. `sanity.schema.json`
-3. `.sanity/schema.json`
-4. `studio/schema.json`
+1. The `schemaPath` setting.
+2. A schema file in the first workspace folder: `schema.json`, `sanity.schema.json`, `.sanity/schema.json` or `studio/schema.json`.
+3. The schema [groq-content-mapper](https://github.com/sanity-labs/groq-content-mapper) is configured with in the `tsconfig.json` nearest the document: the `schemas` entry whose deepest folder contains the document, else `schema`.
 
-The server reloads the schema when it receives `workspace/didChangeWatchedFiles` events for these files (it registers watchers itself when the client supports dynamic registration), and re-lints open documents.
+The server reloads the schema when it receives `workspace/didChangeWatchedFiles` events for these files and for `tsconfig.json` (it registers watchers itself when the client supports dynamic registration), and re-lints open documents.
+
+### groq-content-mapper settings
+
+The server reads the `contentMappers` entry for `@sanity-labs/groq-content-mapper` from the `tsconfig.json` nearest each document, as the mapper's loaders do:
+
+```jsonc
+// tsconfig.json
+{
+  "contentMappers": [
+    {
+      "package": "@sanity-labs/groq-content-mapper",
+      "extensions": [".groq"],
+      "options": { "schema": "./schema.json", "functions": ["groq/*.groq"] },
+    },
+  ],
+}
+```
+
+Besides locating the schema, the `functions` option lists files of shared [custom GROQ functions](https://www.sanity.io/docs/content-lake/custom-groq-functions). A query in a file with one of the mapper's `extensions` that calls one is linted with the definitions it needs prepended, as the mapper's loaders deliver it, so the call is not a parse error. Findings are reported at their place in the query; those inside the prepended definitions are left out. Problems with the options or the functions files are logged to the server output.
 
 Generate a schema file from your Sanity project:
 

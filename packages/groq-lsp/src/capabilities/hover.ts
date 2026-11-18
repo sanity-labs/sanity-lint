@@ -6,6 +6,7 @@
 
 import type { Hover, MarkupContent } from 'vscode-languageserver'
 import { parse, typeEvaluate, type TypeNode, type SchemaType } from 'groq-js'
+import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
 import type { GroqQuery, TypeInfo } from '../types.js'
 
 /**
@@ -14,6 +15,8 @@ import type { GroqQuery, TypeInfo } from '../types.js'
 export interface HoverOptions {
   /** Schema for type evaluation */
   schema?: SchemaType | undefined
+  /** Shared custom GROQ functions, prepended to a query that calls them before it is parsed */
+  functions?: Map<string, GroqFunction> | undefined
 }
 
 /**
@@ -25,7 +28,9 @@ export function getHoverInfo(
   options: HoverOptions = {}
 ): Hover | null {
   try {
-    const ast = parse(query.query)
+    const ast = parse(
+      options.functions ? withGroqFunctions(query.query, options.functions) : query.query
+    )
 
     // Find the node at the cursor position
     const nodeInfo = findNodeAtPosition(ast, positionInQuery, query.query)

@@ -17,6 +17,7 @@ import {
   InitializeResult,
   DidChangeConfigurationNotification,
   DidChangeWatchedFilesNotification,
+  FileChangeType,
   type InitializeParams,
   type TextDocumentPositionParams,
   type DocumentFormattingParams,
@@ -24,8 +25,12 @@ import {
 } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
+import type { SchemaType } from 'groq-js'
 
-import { SchemaLoader, SCHEMA_WATCH_GLOBS } from './schema/loader.js'
+import { basename, extname } from 'node:path'
+import { ContentMapperConfigs, type ContentMapperConfig } from './content-mapper/config.js'
+import type { GroqFunction } from './content-mapper/functions.js'
+import { SchemaFileCache, SchemaLoader, SCHEMA_WATCH_GLOBS } from './schema/loader.js'
 import { extractQueries, findQueryAtOffset, offsetToQueryPosition } from './utils/groq-extractor.js'
 import { computeDocumentDiagnostics } from './capabilities/diagnostics.js'
 import { getHoverInfo } from './capabilities/hover.js'
@@ -41,6 +46,12 @@ const documents = new TextDocuments(TextDocument)
 
 // Schema loader
 const schemaLoader = new SchemaLoader()
+
+// groq-content-mapper's tsconfig.json settings, and the schemas they name
+const contentMapperConfigs = new ContentMapperConfigs()
+const contentMapperSchemas = new SchemaFileCache()
+const reportedProblems = new Set<string>()
+const watchedGlobs = new Set<string>()
 
 // Document states (caches extracted queries)
 const documentStates = new Map<string, DocumentState>()
@@ -133,11 +144,7 @@ connection.onInitialized(() => {
     void connection.client.register(DidChangeConfigurationNotification.type, undefined)
   }
 
-  if (hasWatchedFilesDynamicRegistration) {
-    void connection.client.register(DidChangeWatchedFilesNotification.type, {
-      watchers: SCHEMA_WATCH_GLOBS.map((globPattern) => ({ globPattern })),
-    })
-  }
+  watchGlobs([...SCHEMA_WATCH_GLOBS, '**/tsconfig.json', '**/*.groq'])
 
   // Start watching schema for changes
   schemaLoader.startWatching((schema) => {
@@ -174,14 +181,95 @@ connection.onDidChangeConfiguration((change) => {
  * Schema files created, changed or deleted on disk
  */
 connection.onDidChangeWatchedFiles((params) => {
-  if (!schemaLoader.handleFileEvents(params.changes)) {
-    return
+  const schemaChanged = schemaLoader.handleFileEvents(params.changes)
+  if (schemaChanged) {
+    const { schema, error } = schemaLoader.getState()
+    connection.console.log(schema ? 'Schema reloaded' : `Schema cleared: ${error ?? 'unknown'}`)
   }
 
-  const { schema, error } = schemaLoader.getState()
-  connection.console.log(schema ? 'Schema reloaded' : `Schema cleared: ${error ?? 'unknown'}`)
-  documents.all().forEach(validateDocument)
+  const mapperFiles = new Set(
+    contentMapperConfigs
+      .all()
+      .flatMap((config) => [...config.schemaPaths, ...(config.functions?.files ?? [])])
+  )
+  const mapperChanged = params.changes.some(({ uri, type }) => {
+    const file = URI.parse(uri).fsPath
+    return (
+      basename(file) === 'tsconfig.json' ||
+      mapperFiles.has(file) ||
+      // A new or deleted .groq file may be one a `functions` glob matches.
+      (extname(file) === '.groq' && type !== FileChangeType.Changed)
+    )
+  })
+  if (mapperChanged) {
+    contentMapperConfigs.invalidate()
+    contentMapperSchemas.clear()
+    reportedProblems.clear()
+  }
+
+  if (schemaChanged || mapperChanged) {
+    documents.all().forEach(validateDocument)
+  }
 })
+
+function watchGlobs(globs: Array<string>): void {
+  const added = globs.filter((glob) => !watchedGlobs.has(glob))
+  if (!hasWatchedFilesDynamicRegistration || added.length === 0) {
+    return
+  }
+  added.forEach((glob) => watchedGlobs.add(glob))
+  void connection.client.register(DidChangeWatchedFilesNotification.type, {
+    watchers: added.map((globPattern) => ({ globPattern })),
+  })
+}
+
+function reportOnce(problem: string): void {
+  if (reportedProblems.has(problem)) {
+    return
+  }
+  reportedProblems.add(problem)
+  connection.console.warn(problem)
+}
+
+/**
+ * The schema and the shared custom functions for a document.
+ *
+ * The schema is the one `groq.schemaPath` names, else a well-known schema file in the
+ * workspace, else the one groq-content-mapper's settings in the nearest tsconfig.json give the
+ * file. The functions are those of the mapper's `functions` option, for the file extensions the
+ * mapper handles.
+ */
+interface DocumentContext {
+  schema: SchemaType | undefined
+  functions: Map<string, GroqFunction> | undefined
+}
+
+function contextFor(uri: string): DocumentContext {
+  const parsed = URI.parse(uri)
+  const file = parsed.scheme === 'file' ? parsed.fsPath : undefined
+  const config: ContentMapperConfig | undefined = file
+    ? contentMapperConfigs.forFile(file)
+    : undefined
+  if (config) {
+    config.issues.forEach(reportOnce)
+    watchGlobs(config.schemaPaths.map((path) => `**/${basename(path)}`))
+  }
+
+  let schema = schemaLoader.getSchema()
+  const mapperSchemaPath = file && config?.schemaFor(file)
+  if (!schema && mapperSchemaPath) {
+    const state = contentMapperSchemas.load(mapperSchemaPath)
+    if (state.error) {
+      reportOnce(state.error)
+    }
+    schema = state.schema
+  }
+
+  return {
+    schema,
+    functions: file && config?.handles(file) ? config.functions?.functions : undefined,
+  }
+}
 
 /**
  * Document opened or changed
@@ -237,8 +325,7 @@ function validateDocument(document: TextDocument): void {
   }
 
   // Compute diagnostics
-  const schema = schemaLoader.getSchema()
-  const diagnostics = computeDocumentDiagnostics(queries, { schema })
+  const diagnostics = computeDocumentDiagnostics(queries, contextFor(uri))
 
   // Apply limit
   const maxDiagnostics = globalSettings.maxDiagnostics ?? 100
@@ -283,8 +370,7 @@ connection.onHover((params: TextDocumentPositionParams) => {
   const documentOffset = document.offsetAt(params.position)
   const queryOffset = offsetToQueryPosition(query, documentOffset)
 
-  const schema = schemaLoader.getSchema()
-  return getHoverInfo(query, queryOffset, { schema })
+  return getHoverInfo(query, queryOffset, contextFor(document.uri))
 })
 
 /**
@@ -306,8 +392,7 @@ connection.onCompletion((params: CompletionParams) => {
   const documentOffset = document.offsetAt(params.position)
   const queryOffset = offsetToQueryPosition(query, documentOffset)
 
-  const schema = schemaLoader.getSchema()
-  return getCompletions(query, queryOffset, { schema })
+  return getCompletions(query, queryOffset, { schema: contextFor(document.uri).schema })
 })
 
 /**
