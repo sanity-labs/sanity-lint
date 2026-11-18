@@ -10409,7 +10409,7 @@ snapshots:
 					"optional": true,
 				},
 				"@types/node": {
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"below": true,
 				},
 				"babel-plugin-react-compiler": {
@@ -11696,7 +11696,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": "*",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
