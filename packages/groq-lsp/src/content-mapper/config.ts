@@ -17,7 +17,7 @@
 
 import { statSync } from 'node:fs'
 import { dirname, extname, resolve } from 'node:path'
-import { getTsconfig, parseTsconfig } from 'get-tsconfig'
+import { findTsconfig, parseTsconfig } from 'get-tsconfig'
 import { type LoadedGroqFunctions, loadGroqFunctions } from './functions.js'
 import { compileInclude, type Include } from './include.js'
 
@@ -208,8 +208,8 @@ export class ContentMapperConfigs {
     const folder = dirname(file)
     let configPath = this.nearest.get(folder)
     if (configPath === undefined) {
-      const found = getTsconfig(folder, 'tsconfig.json', this.lookupCache as never)
-      configPath = found ? resolve(found.path) : null
+      const found = findTsconfig(folder, 'tsconfig.json', this.lookupCache as never)
+      configPath = found ? resolve(found) : null
       this.nearest.set(folder, configPath)
     }
     if (!configPath) {

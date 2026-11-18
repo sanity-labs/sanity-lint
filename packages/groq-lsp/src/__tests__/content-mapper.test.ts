@@ -189,6 +189,16 @@ describe('content mapper config', () => {
     expect(config?.issues).toHaveLength(3)
   })
 
+  it('returns undefined when the nearest tsconfig.json cannot be parsed', () => {
+    write('tsconfig.json', '"not an object"')
+    const configs = new ContentMapperConfigs()
+    expect(configs.forFile(join(project, 'a.groq'))).toBeUndefined()
+
+    write('tsconfig.json', JSON.stringify({ extends: './missing.json' }))
+    configs.invalidate()
+    expect(configs.forFile(join(project, 'a.groq'))).toBeUndefined()
+  })
+
   it('reads the config again when the tsconfig or a functions file changes', () => {
     tsconfig({ schema: './one.json', functions: 'fns.groq' })
     const fns = write('fns.groq', 'fn a::one($x) = $x{a};')
