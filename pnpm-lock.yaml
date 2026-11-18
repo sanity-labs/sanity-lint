@@ -442,8 +442,8 @@ snapshots:
 					"version": "3.9.10",
 				},
 				"vscode-languageserver": {
-					"specifier": "^10.1.2",
-					"version": "10.1.2",
+					"specifier": "^11.0.0",
+					"version": "11.0.0",
 				},
 				"vscode-languageserver-textdocument": {
 					"specifier": "^1.0.16",
@@ -14318,11 +14318,6 @@ snapshots:
 			"engines": {"node": ">=14.17.0"},
 		},
 
-		"vscode-jsonrpc@9.0.3": {
-			"integrity": "sha512-qETYf9PCl1lVfwR+oBmMfc4vP2nqLNA35ABxorw3j06+xlKRgDVxbLgKm4Y/xPL0YWdeDjLoI4ImICIT3nB0zQ==",
-			"engines": {"node": ">=14.0.0"},
-		},
-
 		"vscode-languageclient@11.0.0": {
 			"integrity": "sha512-kVyeGLfyd1M74PbMNPfFkgRnhMYgnt6YGc5uXr/tNMzCpfZ0wFtfiqmqX1M05kkdNgV0HSozEUPvgggJbyIAYw==",
 			"engines": {"vscode": "^1.91.0"},
@@ -14331,14 +14326,6 @@ snapshots:
 				"semver": "7.8.5",
 				"vscode-languageserver-protocol": "3.18.5",
 				"vscode-languageserver-textdocument": "1.0.16",
-			},
-		},
-
-		"vscode-languageserver-protocol@3.18.4": {
-			"integrity": "sha512-CCXbyr99dafRJzJH/0Ryk7ly5T8XPmSR0//OuF2w4m+9JiOin7zcAT5iET8GRE7Z9taFBejb3GbM0a0mbjdbrg==",
-			"dependencies": {
-				"vscode-jsonrpc": "9.0.3",
-				"vscode-languageserver-types": "3.18.4",
 			},
 		},
 
@@ -14354,19 +14341,15 @@ snapshots:
 			"integrity": "sha512-qeNEuOi9a3qkqRf7Gfez2WL2VwlBTLCNekHBGO9kxPVUp9XuY15yfTJ9jwvOwKI0I2MhUUfZq95NSp+LK1CLQg==",
 		},
 
-		"vscode-languageserver-types@3.18.4": {
-			"integrity": "sha512-nQsacoiijvl0fRf2q28uFDrAVwRhdCa3QveiF7/CX0r18mLR5FU/1WskSsCKOjmEbtteKUnY8x8Yzxop+k0zwg==",
-		},
-
 		"vscode-languageserver-types@3.18.5": {
 			"integrity": "sha512-kPd6+JQNz3HMJvjKlqUxERSlZHAntl/aGpsk7ImwIh0ewDKDcjgAEyVSYciPiOJD3ftbK9IrfiqUeTZLSbCizw==",
 		},
 
-		"vscode-languageserver@10.1.2": {
-			"integrity": "sha512-pXPWde3RytdeBVEs6PulOOT5OpeXC5GkWRpcT11f5rNn41jviQsAYPyAqJ/0oVGETQLKPJtYbHNiMPlfLb0NTQ==",
+		"vscode-languageserver@11.0.0": {
+			"integrity": "sha512-dOyMIyq0PNVJhTkj+FZoi3H8N3WffNSZEepfbQT+x2E16x1ONPacSx00DoVRqyVKO7PN35ixj/l2RQwQmStkNg==",
 			"hasBin": true,
 			"dependencies": {
-				"vscode-languageserver-protocol": "3.18.4",
+				"vscode-languageserver-protocol": "3.18.5",
 			},
 		},
 
