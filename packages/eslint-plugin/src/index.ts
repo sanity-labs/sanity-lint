@@ -38,6 +38,7 @@ import { createAllSchemaRules } from './utils/schema-rule-factory'
 
 // Version is injected at build time by tsup
 declare const PACKAGE_VERSION: string
+// oxlint-disable-next-line unicorn/no-typeof-undefined -- the global is undeclared when tsup has not injected it
 const version = typeof PACKAGE_VERSION !== 'undefined' ? PACKAGE_VERSION : '0.0.0'
 
 // Create ESLint rules from all GROQ lint rules
@@ -63,7 +64,7 @@ const plugin: ESLint.Plugin = {
 
 // Create recommended config as an array for easy spreading
 // Users can use either: ...sanity.configs.recommended or sanity.configs.recommended
-const recommended: Linter.Config[] = [
+const recommended: Array<Linter.Config> = [
   {
     // Apply to all JS/TS files by default so it works out of the box
     // Includes Astro and Svelte for parity with Sanity TypeGen
@@ -124,7 +125,7 @@ const recommended: Linter.Config[] = [
 ]
 
 // Create strict config (all rules as errors)
-const strict: Linter.Config[] = [
+const strict: Array<Linter.Config> = [
   {
     // Apply to all JS/TS files by default so it works out of the box
     // Includes Astro and Svelte for parity with Sanity TypeGen
@@ -137,7 +138,7 @@ const strict: Linter.Config[] = [
 ]
 
 // GROQ-only config - for frontends, functions, anywhere you write GROQ queries
-const groq: Linter.Config[] = [
+const groq: Array<Linter.Config> = [
   {
     files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,astro,svelte}'],
     plugins: {
@@ -166,7 +167,7 @@ const groq: Linter.Config[] = [
 ]
 
 // Schema-only config - for schema packages in monorepos
-const schema: Linter.Config[] = [
+const schema: Array<Linter.Config> = [
   {
     files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,astro,svelte}'],
     plugins: {
@@ -196,7 +197,7 @@ const schema: Linter.Config[] = [
 ]
 
 // Performance-focused config - only performance-related GROQ rules
-const performance: Linter.Config[] = [
+const performance: Array<Linter.Config> = [
   {
     files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,astro,svelte}'],
     plugins: {
@@ -217,14 +218,15 @@ const performance: Linter.Config[] = [
   },
 ]
 
-// Configs with explicit type annotation
-const configs: {
-  recommended: Linter.Config[]
-  strict: Linter.Config[]
-  groq: Linter.Config[]
-  schema: Linter.Config[]
-  performance: Linter.Config[]
-} = {
+interface SanityConfigs {
+  recommended: Array<Linter.Config>
+  strict: Array<Linter.Config>
+  groq: Array<Linter.Config>
+  schema: Array<Linter.Config>
+  performance: Array<Linter.Config>
+}
+
+const configs: SanityConfigs = {
   recommended,
   strict,
   groq,

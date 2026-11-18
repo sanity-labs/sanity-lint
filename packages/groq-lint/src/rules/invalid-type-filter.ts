@@ -25,8 +25,12 @@ function levenshteinDistance(a: string, b: string): number {
   const n = b.length
 
   // Edge cases
-  if (m === 0) return n
-  if (n === 0) return m
+  if (m === 0) {
+    return n
+  }
+  if (n === 0) {
+    return m
+  }
 
   // Use two rows instead of full matrix for efficiency
   let prevRow = new Array<number>(n + 1)
@@ -60,13 +64,16 @@ function levenshteinDistance(a: string, b: string): number {
 /**
  * Find similar type names from the schema
  */
-function findSimilarTypes(typeName: string, schemaTypes: string[], maxDistance = 3): string[] {
+function findSimilarTypes(
+  typeName: string,
+  schemaTypes: Array<string>,
+  maxDistance = 3
+): Array<string> {
   return schemaTypes
-    .map((t) => ({
-      type: t,
-      distance: levenshteinDistance(typeName.toLowerCase(), t.toLowerCase()),
-    }))
-    .filter((t) => t.distance <= maxDistance && t.distance > 0)
+    .flatMap((type) => {
+      const distance = levenshteinDistance(typeName.toLowerCase(), type.toLowerCase())
+      return distance <= maxDistance && distance > 0 ? [{ type, distance }] : []
+    })
     .sort((a, b) => a.distance - b.distance)
     .slice(0, 3)
     .map((t) => t.type)
@@ -78,7 +85,9 @@ function findSimilarTypes(typeName: string, schemaTypes: string[], maxDistance =
 function isTypeComparison(
   node: OpCallNode
 ): { typeName: string; typeAccess: AccessAttributeNode } | null {
-  if (node.op !== '==') return null
+  if (node.op !== '==') {
+    return null
+  }
 
   const { left, right } = node
 
@@ -105,7 +114,7 @@ function isTypeComparison(
   return null
 }
 
-function formatTypeList(types: string[]): string {
+function formatTypeList(types: Array<string>): string {
   return `${types
     .slice(0, 5)
     .map((t) => `"${t}"`)
@@ -122,17 +131,23 @@ export const invalidTypeFilter: Rule = {
 
   check(ast, context) {
     const { schema } = context
-    if (!schema) return // Schema required
+    if (!schema) {
+      return
+    } // Schema required
 
     const resolver = new SchemaTypeResolver(schema)
     const { documentTypes } = resolver
     const documentTypeSet = new Set(documentTypes)
 
     walkScoped(ast, resolver, (node, scope) => {
-      if (node.type !== 'OpCall') return
+      if (node.type !== 'OpCall') {
+        return
+      }
 
       const typeComparison = isTypeComparison(node as OpCallNode)
-      if (!typeComparison) return
+      if (!typeComparison) {
+        return
+      }
 
       const { typeName, typeAccess } = typeComparison
 
@@ -140,7 +155,9 @@ export const invalidTypeFilter: Rule = {
       // compared are fully known; unknown contexts are skipped.
       const ownerType = typeAccess.base ? resolver.resolve(typeAccess.base, scope) : scope.type
       const possibleTypes = ownerType && resolver.possibleTypeNames(ownerType)
-      if (!possibleTypes || possibleTypes.includes(typeName)) return
+      if (!possibleTypes || possibleTypes.includes(typeName)) {
+        return
+      }
 
       if (!documentTypeSet.has(typeName) && possibleTypes.every((t) => documentTypeSet.has(t))) {
         const similarTypes = findSimilarTypes(typeName, documentTypes)
@@ -172,6 +189,6 @@ export const invalidTypeFilter: Rule = {
   },
 }
 
-function toSuggestions(types: string[]): Suggestion[] {
+function toSuggestions(types: Array<string>): Array<Suggestion> {
   return types.map((t) => ({ description: `Change to "${t}"`, replacement: t }))
 }

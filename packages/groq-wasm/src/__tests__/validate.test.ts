@@ -186,8 +186,8 @@ describe('validate', () => {
     expect(utf8BytesBefore(query, error.start)).toBe(12)
     expect(query.charCodeAt(error.start)).toBe(']'.charCodeAt(0))
     const highSurrogate = query.charCodeAt(3)
-    expect(highSurrogate).toBeGreaterThanOrEqual(0xd800)
-    expect(highSurrogate).toBeLessThanOrEqual(0xdbff)
+    expect(highSurrogate).toBeGreaterThanOrEqual(0xd8_00)
+    expect(highSurrogate).toBeLessThanOrEqual(0xdb_ff)
     expect(error.start).toBeGreaterThan(4)
   })
 

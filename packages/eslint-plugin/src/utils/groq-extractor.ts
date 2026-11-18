@@ -51,7 +51,9 @@ export function isGroqFunctionCall(node: TSESTree.CallExpression): boolean {
  */
 export function extractGroqStringFromCall(node: TSESTree.CallExpression): string | null {
   const firstArg = node.arguments[0]
-  if (!firstArg) return null
+  if (!firstArg) {
+    return null
+  }
 
   // defineQuery(`...`) - template literal
   if (firstArg.type === 'TemplateLiteral') {
@@ -97,7 +99,9 @@ export function getCallArgumentLocation(
   node: TSESTree.CallExpression
 ): TSESTree.SourceLocation | null {
   const firstArg = node.arguments[0]
-  if (!firstArg) return null
+  if (!firstArg) {
+    return null
+  }
   return firstArg.loc
 }
 

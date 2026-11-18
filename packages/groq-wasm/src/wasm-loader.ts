@@ -8,7 +8,13 @@
  * - `index.lazy.ts` does neither until `load()` or `initWasm()`.
  */
 
-import * as wasmModule from '../wasm/groq_wasm.js'
+import {
+  extractParams as wasmExtractParams,
+  format as wasmFormat,
+  initSync,
+  lint as wasmLint,
+  validate as wasmValidate,
+} from '../wasm/groq_wasm.js'
 
 import { WasmError } from './types.js'
 
@@ -39,8 +45,8 @@ export function isWasmInitialized(): boolean {
  * instantiated, or when the module is not initialized yet and `source` is a
  * `Response` that is not ok.
  */
-export function initWasm(source: ArrayBuffer | Uint8Array | WebAssembly.Module): void
 export function initWasm(source: Response): Promise<void>
+export function initWasm(source: ArrayBuffer | Uint8Array | WebAssembly.Module): void
 export function initWasm(source: WasmInitSource): void | Promise<void> {
   if (isResponse(source)) {
     return initFromResponse(source)
@@ -50,22 +56,22 @@ export function initWasm(source: WasmInitSource): void | Promise<void> {
 
 export function callLint(query: string): string {
   assertInitialized()
-  return wasmModule.lint(query)
+  return wasmLint(query)
 }
 
 export function callExtractParams(query: string): string {
   assertInitialized()
-  return wasmModule.extractParams(query)
+  return wasmExtractParams(query)
 }
 
 export function callFormat(query: string, width?: number): string {
   assertInitialized()
-  return wasmModule.format(query, width ?? null)
+  return wasmFormat(query, width ?? null)
 }
 
 export function callValidate(query: string): string {
   assertInitialized()
-  return wasmModule.validate(query)
+  return wasmValidate(query)
 }
 
 function assertInitialized(): void {
@@ -75,14 +81,16 @@ function assertInitialized(): void {
 }
 
 function isResponse(source: WasmInitSource): source is Response {
-  return typeof Response === 'function' && source instanceof Response
+  return 'arrayBuffer' in source && typeof source.arrayBuffer === 'function'
 }
 
 function initFromCompiled(source: ArrayBuffer | Uint8Array | WebAssembly.Module): void {
-  if (initialized) return
+  if (initialized) {
+    return
+  }
 
   try {
-    wasmModule.initSync({ module: source })
+    initSync({ module: source })
   } catch (error) {
     throw new WasmError(
       `Failed to initialize WASM: ${error instanceof Error ? error.message : String(error)}`,
@@ -94,7 +102,9 @@ function initFromCompiled(source: ArrayBuffer | Uint8Array | WebAssembly.Module)
 }
 
 async function initFromResponse(response: Response): Promise<void> {
-  if (initialized) return
+  if (initialized) {
+    return
+  }
 
   if (!response.ok) {
     const from = response.url ? ` from ${response.url}` : ''

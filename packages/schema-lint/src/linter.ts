@@ -3,7 +3,7 @@ import type { SchemaType, SchemaRule, SchemaLinterConfig, SchemaRuleContext } fr
 
 export interface LintOptions {
   /** Specific rules to run (if not provided, runs all) */
-  rules?: SchemaRule[]
+  rules?: Array<SchemaRule>
   /** Configuration for rules */
   config?: SchemaLinterConfig
   /** File path for context */
@@ -12,7 +12,7 @@ export interface LintOptions {
 
 export interface LintResult {
   /** The findings from all rules */
-  findings: Finding[]
+  findings: Array<Finding>
 }
 
 /**
@@ -56,14 +56,14 @@ function getEffectiveSeverity(
  */
 export function lint(
   schema: SchemaType,
-  allRules: SchemaRule[],
+  allRules: Array<SchemaRule>,
   options: LintOptions = {}
 ): LintResult {
   const { rules = allRules, config, filePath = '' } = options
 
   // Track which rules have fired (for supersedes logic)
   const firedRules = new Set<string>()
-  const allFindings: Finding[] = []
+  const allFindings: Array<Finding> = []
 
   for (const rule of rules) {
     const severity = getEffectiveSeverity(rule, config)
@@ -73,7 +73,7 @@ export function lint(
       continue
     }
 
-    const ruleFindings: Finding[] = []
+    const ruleFindings: Array<Finding> = []
     const context: SchemaRuleContext = {
       filePath,
       report: (finding) => {
@@ -89,6 +89,7 @@ export function lint(
       rule.check(schema, context)
     } catch (error) {
       // Don't let one rule crash the whole linter
+      // oxlint-disable-next-line no-console -- the linter has no logger; a throwing rule must not stop the others
       console.error(`Rule ${rule.id} threw an error:`, error)
     }
 
@@ -115,11 +116,11 @@ export function lint(
  * Lint multiple schema types
  */
 export function lintSchemas(
-  schemas: SchemaType[],
-  allRules: SchemaRule[],
+  schemas: Array<SchemaType>,
+  allRules: Array<SchemaRule>,
   options: LintOptions = {}
 ): LintResult {
-  const findings: Finding[] = []
+  const findings: Array<Finding> = []
 
   for (const schema of schemas) {
     const result = lint(schema, allRules, options)

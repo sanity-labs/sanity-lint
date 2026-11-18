@@ -37,7 +37,7 @@ import { callExtractParams } from './wasm-loader.js'
  * // ['type', 'limit']
  * ```
  */
-export function extractParams(query: string): QueryParam[] {
+export function extractParams(query: string): Array<QueryParam> {
   if (!query.trim()) {
     return []
   }
@@ -59,7 +59,7 @@ export function extractParams(query: string): QueryParam[] {
     throw new WasmError(`Extract params failed: ${message}`, 'WASM_ERROR')
   }
 
-  const wasmReferences: WasmParamReference[] = JSON.parse(resultJson)
+  const wasmReferences: Array<WasmParamReference> = JSON.parse(resultJson)
   const toPosition = createUtf8OffsetMapper(query)
   const params = new Map<string, QueryParam>()
 

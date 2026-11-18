@@ -12,7 +12,7 @@ function locationAt(query: string, index: number): SourceLocation {
   const lines = query.slice(0, index).split('\n')
   return {
     line: lines.length,
-    column: (lines[lines.length - 1]?.length ?? 0) + 1,
+    column: (lines.at(-1)?.length ?? 0) + 1,
     offset: index,
   }
 }

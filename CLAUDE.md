@@ -187,7 +187,7 @@ GitHub Actions runs on every push to `main` and on all PRs:
 
 | Job                 | What it checks                    |
 | ------------------- | --------------------------------- |
-| **Lint & Format**   | ESLint rules, Prettier formatting |
+| **Lint & Format**   | oxlint rules, Prettier formatting |
 | **Type Check**      | TypeScript compilation            |
 | **Test**            | Unit tests on Node 20 & 22        |
 | **Commit Messages** | Conventional Commits (PRs only)   |

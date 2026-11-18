@@ -127,6 +127,7 @@ function toValidateError(query: string, failure: WasmValidateFailure): ValidateE
   }
 }
 
+// oxlint-disable-next-line quality/no-unsafe-dictionary-type -- narrows unparsed WASM JSON before its fields are checked
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }

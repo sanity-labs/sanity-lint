@@ -10,7 +10,7 @@ export interface LintResult {
   /** The query that was linted */
   query: string
   /** Findings from the lint rules */
-  findings: Finding[]
+  findings: Array<Finding>
   /** Whether parsing failed */
   parseError?: string
 }
@@ -40,7 +40,7 @@ export interface LintOptions {
  */
 export function lint(query: string, options?: LintOptions): LintResult {
   const { config, schema, forceTs = false } = options ?? {}
-  const findings: Finding[] = []
+  const findings: Array<Finding> = []
 
   // Handle empty query
   if (!query.trim()) {
@@ -52,7 +52,7 @@ export function lint(query: string, options?: LintOptions): LintResult {
 
   // Split rules into WASM and TS rules
   const wasmRuleIds = new Set<string>()
-  const tsRules: Rule[] = []
+  const tsRules: Array<Rule> = []
 
   for (const rule of enabledRules) {
     if (!forceTs && isWasmRule(rule.id)) {
@@ -63,7 +63,7 @@ export function lint(query: string, options?: LintOptions): LintResult {
   }
 
   // Run WASM rules first
-  const wasmFindings: Finding[] = []
+  const wasmFindings: Array<Finding> = []
   if (wasmRuleIds.size > 0) {
     try {
       wasmFindings.push(...lintWithWasm(query, wasmRuleIds))
@@ -102,10 +102,10 @@ export function lint(query: string, options?: LintOptions): LintResult {
   }
 
   // Run TS rules
-  const tsFindings: Finding[] = []
+  const tsFindings: Array<Finding> = []
   if (ast) {
     for (const rule of tsRules) {
-      const ruleFindings: Finding[] = []
+      const ruleFindings: Array<Finding> = []
 
       const context: RuleContext = {
         query,
@@ -154,7 +154,7 @@ export function lint(query: string, options?: LintOptions): LintResult {
 /**
  * Get enabled rules based on configuration
  */
-function getEnabledRules(config?: LinterConfig, schema?: SchemaType): Rule[] {
+function getEnabledRules(config?: LinterConfig, schema?: SchemaType): Array<Rule> {
   let rules = allRules
 
   // Filter out schema-requiring rules if no schema is provided
@@ -185,6 +185,6 @@ function getEnabledRules(config?: LinterConfig, schema?: SchemaType): Rule[] {
  * @param options - Optional configuration and schema
  * @returns Array of lint results
  */
-export function lintMany(queries: string[], options?: LintOptions): LintResult[] {
+export function lintMany(queries: Array<string>, options?: LintOptions): Array<LintResult> {
   return queries.map((query) => lint(query, options))
 }

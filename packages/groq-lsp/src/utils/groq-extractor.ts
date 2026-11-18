@@ -28,7 +28,7 @@ export function extractQueries(content: string, languageId: string): ExtractionR
 /**
  * Convert a document offset to a 0-indexed line and column
  */
-function offsetToLineColumn(content: string, offset: number): { line: number; column: number } {
+function offsetToLineColumn(content: string, offset: number) {
   let line = 0
   let lineStart = 0
   for (let i = content.indexOf('\n'); i !== -1 && i < offset; i = content.indexOf('\n', i + 1)) {
@@ -81,8 +81,8 @@ const EMBEDDED_QUERY_PREFIX =
  * (nested backticks are not handled; that would need a proper parser)
  */
 function extractFromJsTs(content: string): ExtractionResult {
-  const queries: GroqQuery[] = []
-  const errors: string[] = []
+  const queries: Array<GroqQuery> = []
+  const errors: Array<string> = []
 
   EMBEDDED_QUERY_PREFIX.lastIndex = 0
 
@@ -90,7 +90,9 @@ function extractFromJsTs(content: string): ExtractionResult {
   while ((match = EMBEDDED_QUERY_PREFIX.exec(content)) !== null) {
     const queryStart = match.index + match[0].length + 1
     const queryEnd = content.indexOf('`', queryStart)
-    if (queryEnd === -1) continue
+    if (queryEnd === -1) {
+      continue
+    }
 
     queries.push({
       query: content.slice(queryStart, queryEnd),
@@ -108,7 +110,10 @@ function extractFromJsTs(content: string): ExtractionResult {
 /**
  * Find which query (if any) contains a given offset
  */
-export function findQueryAtOffset(queries: GroqQuery[], offset: number): GroqQuery | undefined {
+export function findQueryAtOffset(
+  queries: Array<GroqQuery>,
+  offset: number
+): GroqQuery | undefined {
   return queries.find((q) => offset >= q.start && offset <= q.end)
 }
 

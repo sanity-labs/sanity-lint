@@ -28,7 +28,7 @@ function property(key: string, value: TSESTree.Node): TSESTree.Property {
   } as TSESTree.Property
 }
 
-function objectExpression(properties: TSESTree.Property[]): TSESTree.ObjectExpression {
+function objectExpression(properties: Array<TSESTree.Property>): TSESTree.ObjectExpression {
   return { type: 'ObjectExpression', properties, loc } as TSESTree.ObjectExpression
 }
 
@@ -107,6 +107,7 @@ describe('extractSchemaFromDefineType — slug options.source', () => {
   })
 
   it('accepts function expression sources', () => {
+    // oxlint-disable-next-line quality/no-chained-type-assertions -- partial AST fixture; only the node type is read
     const fnSource = {
       type: 'FunctionExpression',
       params: [],

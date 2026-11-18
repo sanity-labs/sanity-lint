@@ -9,7 +9,7 @@
  */
 
 import type { Rule, RuleContext, Suggestion } from '@sanity-labs/lint-core'
-import type { ExprNode, MapNode, ObjectNode, OpCallNode, ProjectionNode } from 'groq-js'
+import type { ExprNode, MapNode, ObjectNode, OpCallNode, ProjectionNode, SchemaType } from 'groq-js'
 import { walk } from '../walker'
 
 /**
@@ -19,8 +19,12 @@ function levenshteinDistance(a: string, b: string): number {
   const m = a.length
   const n = b.length
 
-  if (m === 0) return n
-  if (n === 0) return m
+  if (m === 0) {
+    return n
+  }
+  if (n === 0) {
+    return m
+  }
 
   let prevRow = new Array<number>(n + 1)
   let currRow = new Array<number>(n + 1)
@@ -52,15 +56,14 @@ function levenshteinDistance(a: string, b: string): number {
  */
 function findSimilarFields(
   fieldName: string,
-  availableFields: string[],
+  availableFields: Array<string>,
   maxDistance = 3
-): string[] {
+): Array<string> {
   return availableFields
-    .map((f) => ({
-      field: f,
-      distance: levenshteinDistance(fieldName.toLowerCase(), f.toLowerCase()),
-    }))
-    .filter((f) => f.distance <= maxDistance && f.distance > 0)
+    .flatMap((field) => {
+      const distance = levenshteinDistance(fieldName.toLowerCase(), field.toLowerCase())
+      return distance <= maxDistance && distance > 0 ? [{ field, distance }] : []
+    })
     .sort((a, b) => a.distance - b.distance)
     .slice(0, 3)
     .map((f) => f.field)
@@ -73,7 +76,9 @@ function findSimilarFields(
 function extractTypeFromFilter(node: ExprNode): string | null {
   if (node.type === 'OpCall') {
     const opNode = node as OpCallNode
-    if (opNode.op !== '==') return null
+    if (opNode.op !== '==') {
+      return null
+    }
 
     const { left, right } = opNode
 
@@ -101,7 +106,9 @@ function extractTypeFromFilter(node: ExprNode): string | null {
   // Check for And conditions: _type == "post" && ...
   if (node.type === 'And') {
     const leftType = extractTypeFromFilter(node.left)
-    if (leftType) return leftType
+    if (leftType) {
+      return leftType
+    }
     return extractTypeFromFilter(node.right)
   }
 
@@ -121,12 +128,11 @@ function findDocumentTypeFromFilter(filterBase: ExprNode): string | null {
 /**
  * Get field names for a document type from schema
  */
-function getFieldsForType(
-  schema: { type: string; name: string; attributes?: Record<string, unknown> }[],
-  typeName: string
-): string[] {
+function getFieldsForType(schema: SchemaType, typeName: string): Array<string> {
   const doc = schema.find((item) => item.type === 'document' && item.name === typeName)
-  if (!doc?.attributes) return []
+  if (doc?.type !== 'document') {
+    return []
+  }
   return Object.keys(doc.attributes)
 }
 
@@ -142,7 +148,7 @@ function checkObjectFields(
   objNode: ObjectNode,
   documentType: string,
   availableFieldsSet: Set<string>,
-  schemaFields: string[],
+  schemaFields: Array<string>,
   context: RuleContext
 ): void {
   for (const attr of objNode.attributes) {
@@ -153,12 +159,14 @@ function checkObjectFields(
         const fieldName = value.name
 
         // Skip if it's a known field
-        if (availableFieldsSet.has(fieldName)) continue
+        if (availableFieldsSet.has(fieldName)) {
+          continue
+        }
 
         // Unknown field - report it
         const similarFields = findSimilarFields(fieldName, [...availableFieldsSet])
 
-        const suggestions: Suggestion[] = similarFields.map((f) => ({
+        const suggestions: Array<Suggestion> = similarFields.map((f) => ({
           description: `Change to "${f}"`,
           replacement: f,
         }))
@@ -187,7 +195,9 @@ export const unknownField: Rule = {
 
   check(ast, context) {
     const { schema } = context
-    if (!schema) return
+    if (!schema) {
+      return
+    }
 
     walk(ast, (node) => {
       // Handle Map nodes: *[_type == "post"]{ title }
@@ -195,22 +205,27 @@ export const unknownField: Rule = {
       if (node.type === 'Map') {
         const mapNode = node as MapNode
         const documentType = findDocumentTypeFromFilter(mapNode.base)
-        if (!documentType) return
+        if (!documentType) {
+          return
+        }
 
         // The expr should be a Projection
-        if (mapNode.expr.type !== 'Projection') return
+        if (mapNode.expr.type !== 'Projection') {
+          return
+        }
         const projection = mapNode.expr as ProjectionNode
 
         // The projection's expr should be an Object
-        if (projection.expr.type !== 'Object') return
+        if (projection.expr.type !== 'Object') {
+          return
+        }
         const objNode = projection.expr as ObjectNode
 
         // Get available fields for this type
-        const schemaFields = getFieldsForType(
-          schema as { type: string; name: string; attributes?: Record<string, unknown> }[],
-          documentType
-        )
-        if (schemaFields.length === 0) return
+        const schemaFields = getFieldsForType(schema, documentType)
+        if (schemaFields.length === 0) {
+          return
+        }
 
         const availableFields = [...schemaFields, ...BUILT_IN_FIELDS]
         const availableFieldsSet = new Set(availableFields)

@@ -48,7 +48,7 @@ export function createUtf8OffsetMapper(text: string): (byteOffset: number) => Te
         break
       }
 
-      const utf16Width = codePoint > 0xffff ? 2 : 1
+      const utf16Width = codePoint > 0xff_ff ? 2 : 1
       bytes += byteWidth
       index += utf16Width
 
@@ -71,8 +71,14 @@ export function createUtf8OffsetMapper(text: string): (byteOffset: number) => Te
  * of them with U+FFFD, which is also 3 bytes.
  */
 function utf8ByteLength(codePoint: number): number {
-  if (codePoint <= 0x7f) return 1
-  if (codePoint <= 0x7ff) return 2
-  if (codePoint <= 0xffff) return 3
+  if (codePoint <= 0x7f) {
+    return 1
+  }
+  if (codePoint <= 0x7_ff) {
+    return 2
+  }
+  if (codePoint <= 0xff_ff) {
+    return 3
+  }
   return 4
 }

@@ -18,7 +18,7 @@ const serverPath = fileURLToPath(new URL('../../dist/server.js', import.meta.url
 
 interface PublishedDiagnostics {
   uri: string
-  diagnostics: { code?: string | number; message: string }[]
+  diagnostics: Array<{ code?: string | number; message: string }>
 }
 
 const schemaWith = (typeName: string) => [
@@ -36,18 +36,22 @@ describe.skipIf(!existsSync(serverPath))('language server (stdio)', () => {
   let child: ChildProcessWithoutNullStreams
   let connection: MessageConnection
   let workspace: string
-  let published: PublishedDiagnostics[]
-  let waiters: (() => void)[]
+  let published: Array<PublishedDiagnostics>
+  let waiters: Array<() => void>
 
   const waitForDiagnostics = async (
     uri: string,
     predicate: (d: PublishedDiagnostics) => boolean
   ): Promise<PublishedDiagnostics> => {
-    const deadline = Date.now() + 4_000
+    const deadline = Date.now() + 4000
     for (;;) {
       const hit = published.filter((d) => d.uri === uri).findLast(predicate)
-      if (hit) return hit
-      if (Date.now() > deadline) throw new Error('Timed out waiting for diagnostics')
+      if (hit) {
+        return hit
+      }
+      if (Date.now() > deadline) {
+        throw new Error('Timed out waiting for diagnostics')
+      }
       await new Promise<void>((resolve) => {
         waiters.push(resolve)
         setTimeout(resolve, 200)
@@ -145,7 +149,7 @@ describe.skipIf(!existsSync(serverPath))('language server (stdio)', () => {
     })
 
     const newText = async (options: { tabSize: number; insertSpaces: boolean }) => {
-      const edits: TextEdit[] = await connection.sendRequest('textDocument/formatting', {
+      const edits: Array<TextEdit> = await connection.sendRequest('textDocument/formatting', {
         textDocument: { uri },
         options,
       })
@@ -156,10 +160,10 @@ describe.skipIf(!existsSync(serverPath))('language server (stdio)', () => {
 
     expect(await newText({ tabSize: 2, insertSpaces: true })).toEqual([expected])
     expect(await newText({ tabSize: 4, insertSpaces: true })).toEqual([
-      expected.replace(/^(?: {2})+/gm, (indent) => '    '.repeat(indent.length / 2)),
+      expected.replaceAll(/^(?: {2})+/gm, (indent) => '    '.repeat(indent.length / 2)),
     ])
     expect(await newText({ tabSize: 4, insertSpaces: false })).toEqual([
-      expected.replace(/^(?: {2})+/gm, (indent) => '\t'.repeat(indent.length / 2)),
+      expected.replaceAll(/^(?: {2})+/gm, (indent) => '\t'.repeat(indent.length / 2)),
     ])
   })
 })

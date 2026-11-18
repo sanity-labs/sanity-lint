@@ -75,7 +75,7 @@ export async function tryLoadSchema(root: string = process.cwd()): Promise<Schem
  * @param schema - The schema to extract document types from
  * @returns Array of document type names
  */
-export function getDocumentTypes(schema: SchemaType): string[] {
+export function getDocumentTypes(schema: SchemaType): Array<string> {
   return schema
     .filter((item): item is Extract<typeof item, { type: 'document' }> => item.type === 'document')
     .map((doc) => doc.name)
@@ -105,7 +105,7 @@ export function getDocumentByType(
  * @param typeName - The document type name
  * @returns Array of field names, or empty array if type not found
  */
-export function getFieldsForType(schema: SchemaType, typeName: string): string[] {
+export function getFieldsForType(schema: SchemaType, typeName: string): Array<string> {
   const doc = getDocumentByType(schema, typeName)
   if (!doc) {
     return []

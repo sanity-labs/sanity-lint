@@ -36,7 +36,7 @@ import { callLint } from './wasm-loader.js'
  * // [{ ruleId: 'join-in-filter', message: '...', severity: 'error' }]
  * ```
  */
-export function lint(query: string, config?: WasmLintConfig): Finding[] {
+export function lint(query: string, config?: WasmLintConfig): Array<Finding> {
   if (!query.trim()) {
     return []
   }
@@ -44,7 +44,7 @@ export function lint(query: string, config?: WasmLintConfig): Finding[] {
   try {
     // Call WASM function - returns JSON string
     const resultJson = callLint(query)
-    const wasmFindings: WasmFinding[] = JSON.parse(resultJson)
+    const wasmFindings: Array<WasmFinding> = JSON.parse(resultJson)
 
     // Filter by config if provided
     let findings = wasmFindings

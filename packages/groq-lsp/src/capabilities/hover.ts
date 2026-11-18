@@ -125,10 +125,7 @@ function findNodeAtPosition(_ast: unknown, position: number, queryText: string):
 /**
  * Extract the word at a position and its context
  */
-function extractWordAtPosition(
-  text: string,
-  position: number
-): { word: string | null; context: string } {
+function extractWordAtPosition(text: string, position: number) {
   // Find word boundaries
   let start = position
   let end = position
@@ -164,7 +161,9 @@ function extractWordAtPosition(
  * Check if a character is part of a word/identifier
  */
 function isWordChar(char: string | undefined): boolean {
-  if (!char) return false
+  if (!char) {
+    return false
+  }
   return /[a-zA-Z0-9_]/.test(char)
 }
 
@@ -172,48 +171,48 @@ function isWordChar(char: string | undefined): boolean {
  * Get documentation for system fields
  */
 function getSystemFieldDoc(field: string): string {
-  const docs: Record<string, string> = {
-    _id: 'Unique document identifier',
-    _type: 'Document type name',
-    _rev: 'Document revision (changes on every update)',
-    _createdAt: 'Timestamp when the document was created',
-    _updatedAt: 'Timestamp when the document was last updated',
-    _key: 'Array item key (unique within the array)',
-    _ref: 'Reference target document ID',
-    _weak: 'Whether this is a weak reference',
-  }
+  const docs = new Map<string, string>([
+    ['_id', 'Unique document identifier'],
+    ['_type', 'Document type name'],
+    ['_rev', 'Document revision (changes on every update)'],
+    ['_createdAt', 'Timestamp when the document was created'],
+    ['_updatedAt', 'Timestamp when the document was last updated'],
+    ['_key', 'Array item key (unique within the array)'],
+    ['_ref', 'Reference target document ID'],
+    ['_weak', 'Whether this is a weak reference'],
+  ])
 
-  return docs[field] ?? `System field: ${field}`
+  return docs.get(field) ?? `System field: ${field}`
 }
 
 /**
  * Get documentation for GROQ functions
  */
 function getGroqFunctionDoc(name: string): string | null {
-  const docs: Record<string, string> = {
-    count: 'count(array) - Returns the number of items in an array',
-    defined: 'defined(value) - Returns true if the value is not null',
-    coalesce: 'coalesce(a, b, ...) - Returns the first non-null value',
-    select: 'select(conditions) - Returns value based on conditions',
-    length: 'length(string|array) - Returns the length',
-    lower: 'lower(string) - Converts string to lowercase',
-    upper: 'upper(string) - Converts string to uppercase',
-    now: 'now() - Returns the current timestamp',
-    round: 'round(number, precision?) - Rounds a number',
-    string: 'string(value) - Converts value to string',
-    references: 'references(id) - Returns true if document references the ID',
-    dateTime: 'dateTime(string) - Parses an ISO 8601 date string',
-    boost: 'boost(condition, value) - Boosts score in text search',
-    score: 'score(conditions) - Returns relevance score',
-    order: 'order(field, direction?) - Sorts results',
-    pt: 'pt::text(blocks) - Extracts plain text from Portable Text',
-    geo: 'geo::distance(a, b) - Calculates distance between points',
-    math: 'math::sum(array), math::avg(array), etc. - Math operations',
-    array: 'array::unique(arr), array::compact(arr) - Array operations',
-    sanity: 'sanity::projectId(), sanity::dataset() - Sanity project info',
-  }
+  const docs = new Map<string, string>([
+    ['count', 'count(array) - Returns the number of items in an array'],
+    ['defined', 'defined(value) - Returns true if the value is not null'],
+    ['coalesce', 'coalesce(a, b, ...) - Returns the first non-null value'],
+    ['select', 'select(conditions) - Returns value based on conditions'],
+    ['length', 'length(string|array) - Returns the length'],
+    ['lower', 'lower(string) - Converts string to lowercase'],
+    ['upper', 'upper(string) - Converts string to uppercase'],
+    ['now', 'now() - Returns the current timestamp'],
+    ['round', 'round(number, precision?) - Rounds a number'],
+    ['string', 'string(value) - Converts value to string'],
+    ['references', 'references(id) - Returns true if document references the ID'],
+    ['dateTime', 'dateTime(string) - Parses an ISO 8601 date string'],
+    ['boost', 'boost(condition, value) - Boosts score in text search'],
+    ['score', 'score(conditions) - Returns relevance score'],
+    ['order', 'order(field, direction?) - Sorts results'],
+    ['pt', 'pt::text(blocks) - Extracts plain text from Portable Text'],
+    ['geo', 'geo::distance(a, b) - Calculates distance between points'],
+    ['math', 'math::sum(array), math::avg(array), etc. - Math operations'],
+    ['array', 'array::unique(arr), array::compact(arr) - Array operations'],
+    ['sanity', 'sanity::projectId(), sanity::dataset() - Sanity project info'],
+  ])
 
-  return docs[name] ?? null
+  return docs.get(name) ?? null
 }
 
 /**
@@ -264,21 +263,18 @@ function formatTypeNode(node: TypeNode): string {
  * Build hover content from node info and type info
  */
 function buildHoverContent(nodeInfo: NodeInfo, typeInfo: TypeInfo | null): MarkupContent | null {
-  const parts: string[] = []
+  const parts: Array<string> = []
 
   // Type information
   if (typeInfo) {
-    parts.push('```groq')
-    parts.push(`${nodeInfo.text}: ${typeInfo.type}`)
-    parts.push('```')
+    parts.push('```groq', `${nodeInfo.text}: ${typeInfo.type}`, '```')
   } else {
     parts.push(`**${nodeInfo.text}** (${nodeInfo.type})`)
   }
 
   // Documentation
   if (nodeInfo.documentation) {
-    parts.push('')
-    parts.push(nodeInfo.documentation)
+    parts.push('', nodeInfo.documentation)
   }
 
   if (parts.length === 0) {

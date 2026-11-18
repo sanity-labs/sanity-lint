@@ -7,6 +7,7 @@ import {
   extractSchemaFromDefineType,
   extractSchemaFromObject,
 } from './schema-extractor'
+import { asTSESTree } from './tsestree'
 
 /**
  * Create an ESLint rule from a schema lint rule.
@@ -30,7 +31,7 @@ export function createSchemaESLintRule(schemaRule: SchemaRule): ESLintRule.RuleM
         // Handle defineType() calls
         CallExpression(eslintNode: ESLintRule.Node) {
           // Cast to our TSESTree type for type-safe property access
-          const node = eslintNode as unknown as TSESTree.CallExpression
+          const node = asTSESTree<TSESTree.CallExpression>(eslintNode)
           if (!isDefineTypeCall(node)) {
             return
           }
@@ -65,7 +66,7 @@ export function createSchemaESLintRule(schemaRule: SchemaRule): ESLintRule.RuleM
         // Handle export statements with object literals (not using defineType)
         ExportNamedDeclaration(eslintNode: ESLintRule.Node) {
           // Cast to our TSESTree type for type-safe property access
-          const node = eslintNode as unknown as TSESTree.ExportNamedDeclaration
+          const node = asTSESTree<TSESTree.ExportNamedDeclaration>(eslintNode)
 
           // Only check the missing-define-type rule for non-defineType exports
           if (schemaRule.id !== 'missing-define-type') {
@@ -116,7 +117,7 @@ export function createSchemaESLintRule(schemaRule: SchemaRule): ESLintRule.RuleM
         // Handle default exports with object literals
         ExportDefaultDeclaration(eslintNode: ESLintRule.Node) {
           // Cast to our TSESTree type for type-safe property access
-          const node = eslintNode as unknown as TSESTree.ExportDefaultDeclaration
+          const node = asTSESTree<TSESTree.ExportDefaultDeclaration>(eslintNode)
 
           // Only check the missing-define-type rule for non-defineType exports
           if (schemaRule.id !== 'missing-define-type') {
@@ -169,7 +170,7 @@ function isWrappedInDefineType(_node: TSESTree.ObjectExpression): boolean {
 /**
  * Create all ESLint rules from schema lint rules.
  */
-export function createAllSchemaRules(rules: SchemaRule[]): Record<string, ESLintRule.RuleModule> {
+export function createAllSchemaRules(rules: Array<SchemaRule>) {
   const eslintRules: Record<string, ESLintRule.RuleModule> = {}
 
   for (const rule of rules) {

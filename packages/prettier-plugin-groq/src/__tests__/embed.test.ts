@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import * as prettier from 'prettier'
+import { format } from 'prettier'
 import groqPlugin from '../index.js'
 import embedPlugin from '../embed.js'
 
@@ -8,7 +8,7 @@ import embedPlugin from '../embed.js'
  */
 
 async function formatJS(code: string): Promise<string> {
-  const result = await prettier.format(code, {
+  const result = await format(code, {
     parser: 'babel',
     plugins: [groqPlugin, embedPlugin],
     printWidth: 60,

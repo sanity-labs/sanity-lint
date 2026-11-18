@@ -19,7 +19,7 @@ import { veryLargeQuery } from './very-large-query'
 /**
  * All available lint rules
  */
-export const rules: Rule[] = [
+export const rules: Array<Rule> = [
   // Performance - query size
   veryLargeQuery,
   extremelyLargeQuery,

@@ -16,11 +16,13 @@ function isSimpleAttribute(node: ExprNode): boolean {
  * - geo::distance(attribute, constant)
  */
 function isAllowedWrappedAttribute(node: ExprNode): boolean {
-  if (node.type !== 'FuncCall') return false
+  if (node.type !== 'FuncCall') {
+    return false
+  }
 
   const name = node.name as string
   const namespace = (node as { namespace?: string }).namespace
-  const args = (node as { args?: ExprNode[] }).args ?? []
+  const args = (node as { args?: Array<ExprNode> }).args ?? []
 
   // lower(attribute)
   if (name === 'lower' && namespace === 'global' && args.length === 1) {
@@ -51,10 +53,14 @@ function isAllowedWrappedAttribute(node: ExprNode): boolean {
  */
 function isValidOrderArg(node: ExprNode): boolean {
   // Direct attribute access
-  if (isSimpleAttribute(node)) return true
+  if (isSimpleAttribute(node)) {
+    return true
+  }
 
   // Allowed function wrappers
-  if (isAllowedWrappedAttribute(node)) return true
+  if (isAllowedWrappedAttribute(node)) {
+    return true
+  }
 
   // Asc/Desc wrappers - check the base
   if (node.type === 'Asc' || node.type === 'Desc') {
@@ -83,9 +89,11 @@ export const orderOnExpr: Rule = {
     walk(ast, (node) => {
       if (node.type === 'PipeFuncCall') {
         const name = (node as { name?: string }).name
-        if (name !== 'order') return
+        if (name !== 'order') {
+          return
+        }
 
-        const args = (node as { args?: ExprNode[] }).args ?? []
+        const args = (node as { args?: Array<ExprNode> }).args ?? []
 
         for (const arg of args) {
           if (!isValidOrderArg(arg)) {

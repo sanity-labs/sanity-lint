@@ -19,7 +19,9 @@ export const matchOnId: Rule = {
     walk(ast, (node) => {
       if (node.type === 'OpCall') {
         const op = (node as { op?: string }).op
-        if (op !== 'match') return
+        if (op !== 'match') {
+          return
+        }
 
         const left = (node as { left?: ExprNode }).left
 

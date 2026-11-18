@@ -68,7 +68,9 @@ export function walkScoped(
     case 'PipeFuncCall': {
       visit(node.base)
       const argScope = nestedScope(scope, elementOf(node.base))
-      for (const arg of node.args) visit(arg, argScope)
+      for (const arg of node.args) {
+        visit(arg, argScope)
+      }
       break
     }
     case 'And':
@@ -90,26 +92,36 @@ export function walkScoped(
       visit(node.base)
       break
     case 'AccessAttribute':
-      if (node.base) visit(node.base)
+      if (node.base) {
+        visit(node.base)
+      }
       break
     case 'Array':
-      for (const element of node.elements) visit(element.value)
+      for (const element of node.elements) {
+        visit(element.value)
+      }
       break
     case 'Object':
       for (const attr of node.attributes) {
-        if (attr.type === 'ObjectConditionalSplat') visit(attr.condition)
+        if (attr.type === 'ObjectConditionalSplat') {
+          visit(attr.condition)
+        }
         visit(attr.value)
       }
       break
     case 'FuncCall':
-      for (const arg of node.args) visit(arg)
+      for (const arg of node.args) {
+        visit(arg)
+      }
       break
     case 'Select':
       for (const alt of node.alternatives) {
         visit(alt.condition)
         visit(alt.value)
       }
-      if (node.fallback) visit(node.fallback)
+      if (node.fallback) {
+        visit(node.fallback)
+      }
       break
     case 'InRange':
       visit(node.base)
@@ -117,7 +129,9 @@ export function walkScoped(
       visit(node.right)
       break
     case 'Tuple':
-      for (const member of node.members) visit(member)
+      for (const member of node.members) {
+        visit(member)
+      }
       break
     default:
       // Leaf nodes and node types without type-relevant children
@@ -127,7 +141,7 @@ export function walkScoped(
 
 export class SchemaTypeResolver {
   private readonly declarations: Map<string, SchemaType[number]>
-  readonly documentTypes: string[]
+  readonly documentTypes: Array<string>
 
   constructor(schema: SchemaType) {
     this.declarations = new Map(schema.map((item) => [item.name, item]))
@@ -175,10 +189,16 @@ export class SchemaTypeResolver {
       case 'FlatMap': {
         const base = this.resolve(node.base, scope)
         const element = base && this.elementType(base)
-        if (!element) return undefined
+        if (!element) {
+          return undefined
+        }
         const inner = this.resolve(node.expr, hiddenScope(scope, element))
-        if (!inner) return undefined
-        if (node.type === 'Map') return { type: 'array', of: inner }
+        if (!inner) {
+          return undefined
+        }
+        if (node.type === 'Map') {
+          return { type: 'array', of: inner }
+        }
         const flattened = this.elementType(inner)
         return flattened && { type: 'array', of: flattened }
       }
@@ -199,13 +219,19 @@ export class SchemaTypeResolver {
   /** Type of the elements of an array type */
   elementType(type: TypeNode): TypeNode | undefined {
     const resolved = this.deref(type)
-    if (!resolved) return undefined
-    if (resolved.type === 'array') return resolved.of
+    if (!resolved) {
+      return undefined
+    }
+    if (resolved.type === 'array') {
+      return resolved.of
+    }
     if (resolved.type === 'union') {
       const members = resolved.of.filter((member) => member.type !== 'null')
       const elements = members.map((member) => this.elementType(member))
-      if (elements.length === 0 || elements.some((element) => !element)) return undefined
-      return { type: 'union', of: elements as TypeNode[] }
+      if (elements.length === 0 || elements.some((element) => !element)) {
+        return undefined
+      }
+      return { type: 'union', of: elements as Array<TypeNode> }
     }
     return undefined
   }
@@ -214,13 +240,19 @@ export class SchemaTypeResolver {
    * Possible `_type` values of a value of the given type.
    * Returns undefined when they cannot be fully determined.
    */
-  possibleTypeNames(type: TypeNode, seen = new Set<string>()): string[] | undefined {
+  possibleTypeNames(type: TypeNode, seen = new Set<string>()): Array<string> | undefined {
     switch (type.type) {
       case 'inline': {
-        if (seen.has(type.name)) return undefined
+        if (seen.has(type.name)) {
+          return undefined
+        }
         const declaration = this.declarations.get(type.name)
-        if (!declaration) return undefined
-        if (declaration.type === 'document') return [declaration.name]
+        if (!declaration) {
+          return undefined
+        }
+        if (declaration.type === 'document') {
+          return [declaration.name]
+        }
         return this.possibleTypeNames(declaration.value, new Set([...seen, type.name]))
       }
       case 'object': {
@@ -233,9 +265,13 @@ export class SchemaTypeResolver {
       case 'union': {
         const names = new Set<string>()
         for (const member of type.of) {
-          if (member.type === 'null') continue
+          if (member.type === 'null') {
+            continue
+          }
           const memberNames = this.possibleTypeNames(member, seen)
-          if (!memberNames) return undefined
+          if (!memberNames) {
+            return undefined
+          }
           memberNames.forEach((name) => names.add(name))
         }
         return names.size > 0 ? [...names] : undefined
@@ -247,20 +283,30 @@ export class SchemaTypeResolver {
 
   private attributeType(type: TypeNode, name: string): TypeNode | undefined {
     const resolved = this.deref(type)
-    if (!resolved) return undefined
+    if (!resolved) {
+      return undefined
+    }
     switch (resolved.type) {
       case 'object': {
         const attribute = resolved.attributes[name]
-        if (attribute) return attribute.value
-        if (resolved.rest) return this.attributeType(resolved.rest, name)
+        if (attribute) {
+          return attribute.value
+        }
+        if (resolved.rest) {
+          return this.attributeType(resolved.rest, name)
+        }
         return NULL_TYPE
       }
       case 'union': {
-        const members: TypeNode[] = []
+        const members: Array<TypeNode> = []
         for (const member of resolved.of) {
-          if (member.type === 'null') continue
+          if (member.type === 'null') {
+            continue
+          }
           const memberType = this.attributeType(member, name)
-          if (!memberType) return undefined
+          if (!memberType) {
+            return undefined
+          }
           members.push(memberType)
         }
         return members.length > 0 ? { type: 'union', of: members } : undefined
@@ -272,17 +318,25 @@ export class SchemaTypeResolver {
 
   private dereferencedType(type: TypeNode): TypeNode | undefined {
     const resolved = this.deref(type)
-    if (!resolved) return undefined
+    if (!resolved) {
+      return undefined
+    }
     if (resolved.type === 'object') {
-      if (resolved.dereferencesTo) return { type: 'inline', name: resolved.dereferencesTo }
+      if (resolved.dereferencesTo) {
+        return { type: 'inline', name: resolved.dereferencesTo }
+      }
       return resolved.rest ? this.dereferencedType(resolved.rest) : undefined
     }
     if (resolved.type === 'union') {
-      const members: TypeNode[] = []
+      const members: Array<TypeNode> = []
       for (const member of resolved.of) {
-        if (member.type === 'null') continue
+        if (member.type === 'null') {
+          continue
+        }
         const memberType = this.dereferencedType(member)
-        if (!memberType) return undefined
+        if (!memberType) {
+          return undefined
+        }
         members.push(memberType)
       }
       return members.length > 0 ? { type: 'union', of: members } : undefined
@@ -292,10 +346,16 @@ export class SchemaTypeResolver {
 
   /** Follow inline type references to a concrete type node */
   private deref(type: TypeNode, seen = new Set<string>()): TypeNode | undefined {
-    if (type.type !== 'inline') return type
-    if (seen.has(type.name)) return undefined
+    if (type.type !== 'inline') {
+      return type
+    }
+    if (seen.has(type.name)) {
+      return undefined
+    }
     const declaration = this.declarations.get(type.name)
-    if (!declaration) return undefined
+    if (!declaration) {
+      return undefined
+    }
     if (declaration.type === 'document') {
       return { type: 'object', attributes: declaration.attributes }
     }

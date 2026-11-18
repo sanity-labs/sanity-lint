@@ -29,7 +29,9 @@ let pendingLoad: Promise<void> | undefined
  * or instantiated.
  */
 export function load(): Promise<void> {
-  if (isWasmInitialized()) return Promise.resolve()
+  if (isWasmInitialized()) {
+    return Promise.resolve()
+  }
   if (!pendingLoad) {
     pendingLoad = fetchAndInit().finally(() => {
       pendingLoad = undefined
