@@ -29,7 +29,21 @@
  */
 
 // Schema loading
-export { SchemaLoader, getSchemaLoader } from './schema/loader.js'
+export { SchemaLoader, SchemaFileCache, getSchemaLoader } from './schema/loader.js'
+
+// groq-content-mapper settings from tsconfig.json
+export {
+  CONTENT_MAPPER_PACKAGE,
+  ContentMapperConfigs,
+  readContentMapperConfig,
+  type ContentMapperConfig,
+} from './content-mapper/config.js'
+export {
+  loadGroqFunctions,
+  withGroqFunctions,
+  type GroqFunction,
+  type LoadedGroqFunctions,
+} from './content-mapper/functions.js'
 
 // Query extraction
 export { extractQueries, findQueryAtOffset, offsetToQueryPosition } from './utils/groq-extractor.js'

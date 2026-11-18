@@ -6,7 +6,9 @@
 
 import type { Diagnostic, DiagnosticSeverity, Range, Position } from 'vscode-languageserver'
 import { lint, type Finding, type Severity } from '@sanity-labs/groq-lint'
+import type { SourceLocation } from '@sanity-labs/lint-core'
 import type { SchemaType } from 'groq-js'
+import { type GroqFunction, groqFunctionsPrelude } from '../content-mapper/functions.js'
 import type { GroqQuery } from '../types.js'
 
 /**
@@ -15,6 +17,11 @@ import type { GroqQuery } from '../types.js'
 export interface DiagnosticsOptions {
   /** Schema for schema-aware rules */
   schema?: SchemaType | undefined
+  /**
+   * Shared custom GROQ functions by `namespace::name`. A query that calls one is linted with the
+   * definitions it needs prepended, as groq-content-mapper's loaders deliver it.
+   */
+  functions?: Map<string, GroqFunction> | undefined
 }
 
 /**
@@ -36,7 +43,13 @@ export function computeQueryDiagnostics(
   query: GroqQuery,
   options: DiagnosticsOptions = {}
 ): QueryDiagnostics {
-  const result = lint(query.query, options.schema ? { schema: options.schema } : undefined)
+  const prelude = options.functions ? groqFunctionsPrelude(query.query, options.functions) : ''
+  const result = lint(
+    prelude ? `${prelude}\n${query.query}` : query.query,
+    options.schema ? { schema: options.schema } : undefined
+  )
+  // The prelude ends with a newline, so the query's own lines only shift down.
+  const preludeLines = prelude ? prelude.split('\n').length : 0
 
   if (result.parseError) {
     // Create a diagnostic for the parse error
@@ -58,7 +71,26 @@ export function computeQueryDiagnostics(
   }
 
   // Convert findings to diagnostics
-  const diagnostics = result.findings.map((finding) => findingToDiagnostic(finding, query))
+  const diagnostics = result.findings.flatMap((finding) => {
+    if (!finding.span || preludeLines === 0) {
+      return [findingToDiagnostic(finding, query)]
+    }
+    // A finding in a prepended definition belongs to its functions file, not this query.
+    if (finding.span.start.line <= preludeLines) {
+      return []
+    }
+    const shift = (location: SourceLocation): SourceLocation => ({
+      ...location,
+      line: location.line - preludeLines,
+      offset: location.offset - prelude.length - 1,
+    })
+    return [
+      findingToDiagnostic(
+        { ...finding, span: { start: shift(finding.span.start), end: shift(finding.span.end) } },
+        query
+      ),
+    ]
+  })
 
   return { query, diagnostics }
 }

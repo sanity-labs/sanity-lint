@@ -36,12 +36,16 @@
     "@sanity-labs/groq-lint": "workspace:*",
     "@sanity-labs/groq-wasm": "workspace:*",
     "@sanity-labs/lint-core": "workspace:*",
+    "get-tsconfig": "^4.14.3",
     "groq-js": "catalog:",
+    "picomatch": "^4.0.7",
     "vscode-languageserver": "^11.0.0",
     "vscode-languageserver-textdocument": "^1.0.16",
     "vscode-uri": "^3.2.0"
   },
   "devDependencies": {
+    "@sanity-labs/groq-content-mapper": "^0.6.2",
+    "@types/picomatch": "^4.0.3",
     "tsup": "^9.0.0",
     "typescript": "^6.0.3",
     "vitest": "catalog:"
