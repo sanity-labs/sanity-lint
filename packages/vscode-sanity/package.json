@@ -197,7 +197,7 @@
     "react-dom": "^19.3.1",
     "react-jason": "^1.1.2",
     "ts-node": "^10.9.2",
-    "vscode-languageclient": "^10.1.2",
+    "vscode-languageclient": "^11.0.0",
     "xdg-basedir": "^4.0.0"
   },
   "devDependencies": {
