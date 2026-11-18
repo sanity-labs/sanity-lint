@@ -100,7 +100,7 @@ export interface QueryParam {
   /** Parameter name without the `$`, e.g. `"type"` for `$type`. */
   name: string
   /** Every reference to this parameter, in source order. Never empty. */
-  references: ParamReference[]
+  references: Array<ParamReference>
 }
 
 /**
@@ -119,6 +119,7 @@ export class WasmError extends Error {
 /**
  * Rule ID mapping from Rust (snake_case) to TS (kebab-case)
  */
+// oxlint-disable-next-line quality/no-known-value-widening -- documented public contract; looked up by arbitrary Rust rule IDs
 export const RULE_ID_MAP: Record<string, string> = {
   join_in_filter: 'join-in-filter',
   join_to_get_id: 'join-to-get-id',
@@ -139,7 +140,7 @@ export const RULE_ID_MAP: Record<string, string> = {
  * Convert Rust rule ID to TS convention
  */
 export function mapRuleId(rustRuleId: string): string {
-  return RULE_ID_MAP[rustRuleId] ?? rustRuleId.replace(/_/g, '-')
+  return RULE_ID_MAP[rustRuleId] ?? rustRuleId.replaceAll('_', '-')
 }
 
 /**

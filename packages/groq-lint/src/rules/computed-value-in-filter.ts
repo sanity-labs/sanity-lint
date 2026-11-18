@@ -21,9 +21,15 @@ function containsParentRef(node: ExprNode): boolean {
  * Check if a node is a literal (Value, Parameter, now(), or arithmetic on literals)
  */
 function isLiteral(node: ExprNode): boolean {
-  if (node.type === 'Value') return true
-  if (node.type === 'Parameter') return true
-  if (node.type === 'FuncCall' && node.name === 'now') return true
+  if (node.type === 'Value') {
+    return true
+  }
+  if (node.type === 'Parameter') {
+    return true
+  }
+  if (node.type === 'FuncCall' && node.name === 'now') {
+    return true
+  }
 
   // Arithmetic on literals is still a literal
   if (node.type === 'OpCall') {
@@ -65,7 +71,9 @@ export const computedValueInFilter: Rule = {
   check(ast, context) {
     walk(ast, (node, walkContext) => {
       // Only check inside filters
-      if (!walkContext.inFilter) return
+      if (!walkContext.inFilter) {
+        return
+      }
 
       if (isArithmeticOp(node)) {
         // Exempt if either side contains a parent reference

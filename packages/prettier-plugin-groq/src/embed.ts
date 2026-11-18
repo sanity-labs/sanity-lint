@@ -52,9 +52,11 @@ function restoreExpressions(
   let unknownPlaceholder = false
 
   const restored = doc.utils.mapDoc(formatted, (part) => {
-    if (typeof part !== 'string' || !part.includes(PLACEHOLDER_PREFIX)) return part
+    if (typeof part !== 'string' || !part.includes(PLACEHOLDER_PREFIX)) {
+      return part
+    }
 
-    const pieces: Doc[] = []
+    const pieces: Array<Doc> = []
     let last = 0
     for (const match of part.matchAll(PLACEHOLDER_PATTERN)) {
       const index = Number(match[1])
@@ -73,12 +75,16 @@ function restoreExpressions(
       pieces.push('${' + printed + '}')
       last = match.index + match[0].length
     }
-    if (pieces.length === 0) return part
+    if (pieces.length === 0) {
+      return part
+    }
     pieces.push(part.slice(last))
     return pieces
   })
 
-  if (unknownPlaceholder || seen.some((count) => count !== 1)) return undefined
+  if (unknownPlaceholder || seen.some((count) => count !== 1)) {
+    return undefined
+  }
   return restored
 }
 
@@ -86,10 +92,14 @@ function restoreExpressions(
  * Get the tag name from a TaggedTemplateExpression
  */
 function getTagName(node: EstreeLikeNode): string | null {
-  if (node.type !== 'TaggedTemplateExpression') return null
+  if (node.type !== 'TaggedTemplateExpression') {
+    return null
+  }
 
   const tag = node.tag
-  if (!tag) return null
+  if (!tag) {
+    return null
+  }
 
   // groq`...`
   if (tag.type === 'Identifier' && typeof tag.name === 'string') {
@@ -108,10 +118,14 @@ function getTagName(node: EstreeLikeNode): string | null {
  * Get the function name from a CallExpression
  */
 function getCallName(node: EstreeLikeNode): string | null {
-  if (node.type !== 'CallExpression') return null
+  if (node.type !== 'CallExpression') {
+    return null
+  }
 
   const callee = node.callee
-  if (!callee) return null
+  if (!callee) {
+    return null
+  }
 
   // defineQuery("...")
   if (callee.type === 'Identifier' && typeof callee.name === 'string') {
@@ -142,7 +156,9 @@ function isGroqFunctionCall(node: EstreeLikeNode): boolean {
  */
 function extractFromTemplate(node: EstreeLikeNode): string | null {
   const quasi = node.quasi
-  if (!quasi || !quasi.quasis) return null
+  if (!quasi || !quasi.quasis) {
+    return null
+  }
 
   const quasis = quasi.quasis
   const expressions = quasi.expressions || []
@@ -150,7 +166,9 @@ function extractFromTemplate(node: EstreeLikeNode): string | null {
   // Simple case: no expressions
   if (expressions.length === 0) {
     const first = quasis[0]
-    if (!first) return null
+    if (!first) {
+      return null
+    }
     return first.value?.cooked ?? first.value?.raw ?? null
   }
 
@@ -158,7 +176,9 @@ function extractFromTemplate(node: EstreeLikeNode): string | null {
   let result = ''
   for (let i = 0; i < quasis.length; i++) {
     const q = quasis[i]
-    if (!q) continue
+    if (!q) {
+      continue
+    }
     result += q.value?.cooked ?? q.value?.raw ?? ''
     if (i < expressions.length) {
       // Use a GROQ parameter placeholder that will parse correctly
@@ -174,10 +194,14 @@ function extractFromTemplate(node: EstreeLikeNode): string | null {
  */
 function extractFromFunctionCall(node: EstreeLikeNode): string | null {
   const args = node.arguments
-  if (!args || args.length === 0) return null
+  if (!args || args.length === 0) {
+    return null
+  }
 
   const firstArg = args[0]
-  if (!firstArg) return null
+  if (!firstArg) {
+    return null
+  }
 
   // String literal: defineQuery("*[_type == 'post']")
   // Handle both ESTree (Literal) and Babel (StringLiteral) AST types
@@ -193,7 +217,9 @@ function extractFromFunctionCall(node: EstreeLikeNode): string | null {
     const quasis = firstArg.quasis
     const expressions = firstArg.expressions || []
 
-    if (!quasis || quasis.length === 0) return null
+    if (!quasis || quasis.length === 0) {
+      return null
+    }
 
     if (expressions.length === 0) {
       const first = quasis[0]
@@ -204,7 +230,9 @@ function extractFromFunctionCall(node: EstreeLikeNode): string | null {
     let result = ''
     for (let i = 0; i < quasis.length; i++) {
       const q = quasis[i]
-      if (!q) continue
+      if (!q) {
+        continue
+      }
       result += q.value?.cooked ?? q.value?.raw ?? ''
       if (i < expressions.length) {
         result += placeholder(i)
@@ -224,24 +252,24 @@ interface EstreeLikeNode {
   object?: EstreeLikeNode
   name?: string
   quasi?: {
-    quasis?: {
+    quasis?: Array<{
       value?: { cooked?: string | null; raw?: string }
-    }[]
-    expressions?: unknown[]
+    }>
+    expressions?: Array<unknown>
   }
-  arguments?: {
+  arguments?: Array<{
     type: string
     value?: unknown
-    quasis?: {
+    quasis?: Array<{
       value?: { cooked?: string | null; raw?: string }
-    }[]
-    expressions?: unknown[]
-  }[]
+    }>
+    expressions?: Array<unknown>
+  }>
 }
 
 type EmbedFn = (
   textToDoc: (text: string, options: Options) => Promise<Doc>,
-  print: (selector?: string | number | (string | number)[] | AstPath) => Doc,
+  print: (selector?: string | number | Array<string | number> | AstPath) => Doc,
   path: AstPath,
   options: Options
 ) => Promise<Doc | undefined> | Doc | undefined
@@ -271,7 +299,9 @@ function embed(path: AstPath<EstreeLikeNode>, options: Options): EmbedFn | undef
           (index) => print(['quasi', 'expressions', index]),
           options
         )
-        if (!restored) return undefined
+        if (!restored) {
+          return undefined
+        }
 
         // Get the tag printed normally
         const tag = print('tag')
@@ -304,7 +334,9 @@ function embed(path: AstPath<EstreeLikeNode>, options: Options): EmbedFn | undef
           (index) => print(['arguments', 0, 'expressions', index]),
           options
         )
-        if (!restored) return undefined
+        if (!restored) {
+          return undefined
+        }
 
         // Get the function name printed normally
         const callee = print('callee')

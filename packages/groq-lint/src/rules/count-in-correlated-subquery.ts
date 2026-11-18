@@ -32,13 +32,19 @@ export const countInCorrelatedSubquery: Rule = {
     walk(ast, (node) => {
       if (node.type === 'FuncCall') {
         const name = node.name as string
-        if (name !== 'count') return
+        if (name !== 'count') {
+          return
+        }
 
-        const args = (node as { args?: ExprNode[] }).args ?? []
-        if (args.length !== 1) return
+        const args = (node as { args?: Array<ExprNode> }).args ?? []
+        if (args.length !== 1) {
+          return
+        }
 
         const arg = args[0]
-        if (!arg) return
+        if (!arg) {
+          return
+        }
 
         // Check if the argument is a filter with a parent reference
         if (arg.type === 'Filter') {

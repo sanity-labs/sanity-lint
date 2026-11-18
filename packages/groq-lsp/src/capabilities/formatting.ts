@@ -35,7 +35,7 @@ function formatGroq(source: string, options: FormattingOptions = {}): string {
     return formatted
   }
   // groq-format escapes line breaks inside strings, so leading spaces on a line are always indentation.
-  return formatted.replace(/^(?: {2})+/gm, (indent) =>
+  return formatted.replaceAll(/^(?: {2})+/gm, (indent) =>
     unit.repeat(indent.length / GROQ_FORMAT_INDENT.length)
   )
 }
@@ -46,12 +46,13 @@ function formatGroq(source: string, options: FormattingOptions = {}): string {
 export async function formatQuery(
   query: GroqQuery,
   options: FormattingOptions = {}
-): Promise<TextEdit[]> {
+): Promise<Array<TextEdit>> {
   let formatted: string
   try {
     formatted = formatGroq(query.query, options)
   } catch (error) {
     if (!(error instanceof WasmError && error.code === 'PARSE_ERROR')) {
+      // oxlint-disable-next-line no-console -- stderr is the language server's log channel
       console.error('Formatting failed:', error)
     }
     return []
@@ -73,11 +74,11 @@ export async function formatQuery(
  * Format all queries in a document
  */
 export async function formatDocument(
-  queries: GroqQuery[],
+  queries: Array<GroqQuery>,
   _documentContent: string,
   options: FormattingOptions = {}
-): Promise<TextEdit[]> {
-  const edits: TextEdit[] = []
+): Promise<Array<TextEdit>> {
+  const edits: Array<TextEdit> = []
 
   // Process queries in reverse order so edits don't affect subsequent positions
   const sortedQueries = [...queries].sort((a, b) => b.start - a.start)
@@ -98,7 +99,7 @@ function queryToRange(query: GroqQuery): Range {
   const lines = query.query.split('\n')
   const endLine = query.line + lines.length - 1
   const endChar =
-    lines.length === 1 ? query.column + query.query.length : (lines[lines.length - 1]?.length ?? 0)
+    lines.length === 1 ? query.column + query.query.length : (lines.at(-1)?.length ?? 0)
 
   return {
     start: { line: query.line, character: query.column },
@@ -113,7 +114,7 @@ function queryToRange(query: GroqQuery): Range {
 export async function formatGroqFile(
   content: string,
   options: FormattingOptions = {}
-): Promise<TextEdit[]> {
+): Promise<Array<TextEdit>> {
   const [query] = extractQueries(content, 'groq').queries
   if (!query) {
     return []

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import * as prettier from 'prettier'
+import { format as prettierFormat, type Options } from 'prettier'
 import { assertValidGroq } from '@sanity-labs/lint-core/testing'
 import plugin from '../index.js'
 
@@ -7,8 +7,8 @@ import plugin from '../index.js'
  * Format a GROQ query and validate the output is valid GROQ syntax.
  * This ensures the formatter never produces invalid GROQ.
  */
-async function format(code: string, options: prettier.Options = {}): Promise<string> {
-  const result = await prettier.format(code, {
+async function format(code: string, options: Options = {}): Promise<string> {
+  const result = await prettierFormat(code, {
     parser: 'groq',
     plugins: [plugin],
     ...options,
@@ -25,7 +25,7 @@ async function format(code: string, options: prettier.Options = {}): Promise<str
 describe('prettier-plugin-groq', () => {
   describe('trailing newline', () => {
     it('appends a trailing newline when missing', async () => {
-      const result = await prettier.format('*[_type=="post"]{title}', {
+      const result = await prettierFormat('*[_type=="post"]{title}', {
         parser: 'groq',
         plugins: [plugin],
       })
@@ -34,7 +34,7 @@ describe('prettier-plugin-groq', () => {
     })
 
     it('does not double the trailing newline if already present', async () => {
-      const result = await prettier.format('*[_type=="post"]{title}\n', {
+      const result = await prettierFormat('*[_type=="post"]{title}\n', {
         parser: 'groq',
         plugins: [plugin],
       })
@@ -67,7 +67,7 @@ describe('prettier-plugin-groq', () => {
     })
 
     it('formats strings with escapes', async () => {
-      expect(await format('"hello\\nworld"')).toBe('"hello\\nworld"')
+      expect(await format(String.raw`"hello\nworld"`)).toBe(String.raw`"hello\nworld"`)
     })
 
     it('formats integers', async () => {

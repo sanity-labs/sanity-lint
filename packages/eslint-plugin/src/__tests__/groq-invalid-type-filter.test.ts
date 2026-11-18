@@ -45,7 +45,7 @@ const schema = [
 describe('sanity/groq-invalid-type-filter', () => {
   let dir: string
   let linter: Linter
-  let config: Linter.Config[]
+  let config: Array<Linter.Config>
 
   beforeAll(() => {
     dir = mkdtempSync(join(tmpdir(), 'sanity-eslint-'))

@@ -130,11 +130,11 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 connection.onInitialized(() => {
   if (hasConfigurationCapability) {
     // Register for configuration changes
-    connection.client.register(DidChangeConfigurationNotification.type, undefined)
+    void connection.client.register(DidChangeConfigurationNotification.type, undefined)
   }
 
   if (hasWatchedFilesDynamicRegistration) {
-    connection.client.register(DidChangeWatchedFilesNotification.type, {
+    void connection.client.register(DidChangeWatchedFilesNotification.type, {
       watchers: SCHEMA_WATCH_GLOBS.map((globPattern) => ({ globPattern })),
     })
   }
@@ -174,7 +174,9 @@ connection.onDidChangeConfiguration((change) => {
  * Schema files created, changed or deleted on disk
  */
 connection.onDidChangeWatchedFiles((params) => {
-  if (!schemaLoader.handleFileEvents(params.changes)) return
+  if (!schemaLoader.handleFileEvents(params.changes)) {
+    return
+  }
 
   const { schema, error } = schemaLoader.getState()
   connection.console.log(schema ? 'Schema reloaded' : `Schema cleared: ${error ?? 'unknown'}`)
@@ -213,7 +215,7 @@ function validateDocument(document: TextDocument): void {
 
   // Skip files in node_modules - they're external dependencies
   if (isNodeModulesPath(uri)) {
-    connection.sendDiagnostics({ uri, diagnostics: [] })
+    void connection.sendDiagnostics({ uri, diagnostics: [] })
     return
   }
 
@@ -230,7 +232,7 @@ function validateDocument(document: TextDocument): void {
 
   // No queries to validate
   if (queries.length === 0) {
-    connection.sendDiagnostics({ uri, diagnostics: [] })
+    void connection.sendDiagnostics({ uri, diagnostics: [] })
     return
   }
 
@@ -243,7 +245,7 @@ function validateDocument(document: TextDocument): void {
   const limitedDiagnostics = diagnostics.slice(0, maxDiagnostics)
 
   // Send diagnostics
-  connection.sendDiagnostics({ uri, diagnostics: limitedDiagnostics })
+  void connection.sendDiagnostics({ uri, diagnostics: limitedDiagnostics })
 }
 
 /**
@@ -254,7 +256,9 @@ function findQueryAtPosition(
   position: { line: number; character: number }
 ): GroqQuery | undefined {
   const state = documentStates.get(document.uri)
-  if (!state) return undefined
+  if (!state) {
+    return undefined
+  }
 
   // Convert LSP position to offset
   const offset = document.offsetAt(position)
@@ -266,10 +270,14 @@ function findQueryAtPosition(
  */
 connection.onHover((params: TextDocumentPositionParams) => {
   const document = documents.get(params.textDocument.uri)
-  if (!document) return null
+  if (!document) {
+    return null
+  }
 
   const query = findQueryAtPosition(document, params.position)
-  if (!query) return null
+  if (!query) {
+    return null
+  }
 
   // Get offset within the query
   const documentOffset = document.offsetAt(params.position)
@@ -284,7 +292,9 @@ connection.onHover((params: TextDocumentPositionParams) => {
  */
 connection.onCompletion((params: CompletionParams) => {
   const document = documents.get(params.textDocument.uri)
-  if (!document) return []
+  if (!document) {
+    return []
+  }
 
   const query = findQueryAtPosition(document, params.position)
   if (!query) {
@@ -309,7 +319,9 @@ connection.onDocumentFormatting(async (params: DocumentFormattingParams) => {
   }
 
   const document = documents.get(params.textDocument.uri)
-  if (!document) return []
+  if (!document) {
+    return []
+  }
 
   const content = document.getText()
   const languageId = document.languageId

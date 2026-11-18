@@ -82,7 +82,7 @@ chore: update dependencies
 
 - TypeScript with strict mode
 - Prettier for formatting
-- ESLint for linting
+- oxlint for linting (`oxlint.config.mts`, extending `@nkzw/oxlint-config`)
 - Run `pnpm format` before committing
 
 ## Questions?

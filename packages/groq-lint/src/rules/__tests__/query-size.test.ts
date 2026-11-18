@@ -13,7 +13,7 @@ function makeQuery(bytes: number): string {
   const overhead = base.length + end.length
 
   // Fill with field names
-  const fields: string[] = []
+  const fields: Array<string> = []
   let currentSize = overhead
   let fieldNum = 0
 

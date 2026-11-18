@@ -23,17 +23,17 @@ const PRESENTATION_PATTERNS = [
 /**
  * Semantic alternatives for common presentation names
  */
-const SUGGESTIONS: Record<string, string> = {
-  bigText: 'headline, title, heading',
-  smallText: 'caption, subtitle, description',
-  redButton: 'primaryAction, callToAction',
-  heroSection: 'featuredContent, highlight',
-  leftColumn: 'primaryContent, mainContent',
-  rightColumn: 'secondaryContent, sidebar',
-  threeColumnRow: 'featuresGrid, comparisonSection',
-  headerImage: 'featuredImage, coverImage',
-  bannerText: 'announcement, promotion',
-}
+const SUGGESTIONS = new Map<string, string>([
+  ['bigText', 'headline, title, heading'],
+  ['smallText', 'caption, subtitle, description'],
+  ['redButton', 'primaryAction, callToAction'],
+  ['heroSection', 'featuredContent, highlight'],
+  ['leftColumn', 'primaryContent, mainContent'],
+  ['rightColumn', 'secondaryContent, sidebar'],
+  ['threeColumnRow', 'featuresGrid, comparisonSection'],
+  ['headerImage', 'featuredImage, coverImage'],
+  ['bannerText', 'announcement, promotion'],
+])
 
 /**
  * Rule: presentation-field-name
@@ -57,7 +57,8 @@ export const presentationFieldName: SchemaRule = {
 
       for (const pattern of PRESENTATION_PATTERNS) {
         if (pattern.test(name)) {
-          const suggestion = SUGGESTIONS[name] || 'a semantic name describing the content purpose'
+          const suggestion =
+            SUGGESTIONS.get(name) ?? 'a semantic name describing the content purpose'
 
           context.report({
             message: `Field "${name}" uses presentation-focused naming`,

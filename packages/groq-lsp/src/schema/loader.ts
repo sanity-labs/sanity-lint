@@ -56,7 +56,7 @@ export class SchemaLoader {
         return this.state
       }
 
-      const content = readFileSync(schemaPath, 'utf-8')
+      const content = readFileSync(schemaPath, 'utf8')
       const schema = JSON.parse(content) as SchemaType
       const stats = statSync(schemaPath)
 
@@ -67,10 +67,10 @@ export class SchemaLoader {
       }
 
       return this.state
-    } catch (e) {
+    } catch (error) {
       this.state = {
         path: schemaPath,
-        error: `Failed to load schema: ${e instanceof Error ? e.message : String(e)}`,
+        error: `Failed to load schema: ${error instanceof Error ? error.message : String(error)}`,
       }
       return this.state
     }
@@ -141,7 +141,7 @@ export class SchemaLoader {
    * well-known schema file when none is loaded yet.
    * Returns true when the schema state changed.
    */
-  handleFileEvents(events: readonly FileEvent[]): boolean {
+  handleFileEvents(events: ReadonlyArray<FileEvent>): boolean {
     let changed = false
 
     for (const event of events) {
@@ -189,9 +189,10 @@ export class SchemaLoader {
           this.onChangeCallback?.(this.state.schema)
         }
       })
-    } catch (e) {
+    } catch (error) {
       // Watching may fail on some file systems
-      console.error(`Failed to watch schema file: ${e}`)
+      // oxlint-disable-next-line no-console -- stderr is the language server's log channel
+      console.error(`Failed to watch schema file: ${error}`)
     }
   }
 

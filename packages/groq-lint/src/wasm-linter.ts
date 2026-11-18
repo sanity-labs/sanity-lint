@@ -40,8 +40,10 @@ export function isWasmRule(ruleId: string): boolean {
  * @param enabledRules - Optional set of rule IDs to enable (all if not provided)
  * @returns Array of findings from WASM linter
  */
-export function lintWithWasm(query: string, enabledRules?: Set<string>): Finding[] {
+export function lintWithWasm(query: string, enabledRules?: Set<string>): Array<Finding> {
   const findings = wasmLint(query)
-  if (!enabledRules) return findings
+  if (!enabledRules) {
+    return findings
+  }
   return findings.filter((f) => enabledRules.has(f.ruleId))
 }

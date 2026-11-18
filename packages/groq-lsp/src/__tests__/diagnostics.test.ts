@@ -26,15 +26,15 @@ const sampleSchema: SchemaType = [
   },
 ]
 
-describe('computeQueryDiagnostics', () => {
-  const makeQuery = (query: string): GroqQuery => ({
-    query,
-    start: 0,
-    end: query.length,
-    line: 0,
-    column: 0,
-  })
+const makeQuery = (query: string): GroqQuery => ({
+  query,
+  start: 0,
+  end: query.length,
+  line: 0,
+  column: 0,
+})
 
+describe('computeQueryDiagnostics', () => {
   describe('without schema', () => {
     it('should return empty for valid query', () => {
       const query = makeQuery('*[_type == "post"]')
@@ -119,7 +119,7 @@ describe('computeQueryDiagnostics', () => {
 
 describe('computeDocumentDiagnostics', () => {
   it('should compute diagnostics for multiple queries', () => {
-    const queries: GroqQuery[] = [
+    const queries: Array<GroqQuery> = [
       { query: '*[author->name == "Bob"]', start: 0, end: 24, line: 0, column: 0 },
       { query: '*[_type == "psot"]', start: 50, end: 68, line: 2, column: 0 },
     ]
@@ -136,7 +136,7 @@ describe('computeDocumentDiagnostics', () => {
   })
 
   it('should return empty for valid queries', () => {
-    const queries: GroqQuery[] = [
+    const queries: Array<GroqQuery> = [
       { query: '*[_type == "post"]', start: 0, end: 18, line: 0, column: 0 },
     ]
 

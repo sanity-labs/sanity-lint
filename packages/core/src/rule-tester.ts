@@ -39,7 +39,7 @@ export interface InvalidTestCase {
   /** Optional name for the test */
   name?: string
   /** Expected errors */
-  errors: ExpectedError[]
+  errors: Array<ExpectedError>
   /** Per-test timeout in milliseconds */
   timeout?: number
 }
@@ -49,16 +49,16 @@ export interface InvalidTestCase {
  */
 export interface RuleTests {
   /** Queries that should produce no findings */
-  valid: (string | ValidTestCase)[]
+  valid: Array<string | ValidTestCase>
   /** Queries that should produce findings */
-  invalid: InvalidTestCase[]
+  invalid: Array<InvalidTestCase>
 }
 
 /**
  * Run a single rule against a query and collect findings
  */
-function runRule(rule: Rule, query: string): Finding[] {
-  const findings: Finding[] = []
+function runRule(rule: Rule, query: string): Array<Finding> {
+  const findings: Array<Finding> = []
 
   let ast
   try {
@@ -197,7 +197,7 @@ export class RuleTester {
    * Truncate a string for display
    */
   private truncate(str: string, maxLength: number): string {
-    const oneLine = str.replace(/\s+/g, ' ').trim()
+    const oneLine = str.replaceAll(/\s+/g, ' ').trim()
     if (oneLine.length <= maxLength) {
       return oneLine
     }

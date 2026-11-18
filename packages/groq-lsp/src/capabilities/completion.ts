@@ -39,7 +39,7 @@ export function getCompletions(
   query: GroqQuery,
   positionInQuery: number,
   options: CompletionOptions = {}
-): CompletionItem[] {
+): Array<CompletionItem> {
   const context = analyzeCompletionContext(query.query, positionInQuery)
 
   switch (context.kind) {
@@ -69,7 +69,7 @@ function analyzeCompletionContext(query: string, position: number): CompletionCo
   // Check if we're completing a _type value
   // Patterns: _type == ", _type == ', _type != "
   if (/_type\s*[=!]=\s*["']$/.test(before) || /_type\s*[=!]=\s*["'][a-zA-Z0-9]*$/.test(before)) {
-    return { kind: 'type-value', prefix: prefix.replace(/["']/g, '') }
+    return { kind: 'type-value', prefix: prefix.replaceAll(/["']/g, '') }
   }
 
   // Try to find document type from earlier in the query
@@ -101,7 +101,10 @@ function extractPrefix(text: string): string {
 /**
  * Get completions for _type values from schema
  */
-function getTypeValueCompletions(schema: SchemaType | undefined, prefix: string): CompletionItem[] {
+function getTypeValueCompletions(
+  schema: SchemaType | undefined,
+  prefix: string
+): Array<CompletionItem> {
   if (!schema || !Array.isArray(schema)) {
     return []
   }
@@ -126,8 +129,8 @@ function getFieldCompletions(
   schema: SchemaType | undefined,
   documentType: string | undefined,
   prefix: string
-): CompletionItem[] {
-  const completions: CompletionItem[] = []
+): Array<CompletionItem> {
+  const completions: Array<CompletionItem> = []
 
   // Add system fields
   completions.push(...getSystemFieldCompletions(prefix))
@@ -155,7 +158,7 @@ function getFieldCompletions(
 /**
  * Get completions for system fields
  */
-function getSystemFieldCompletions(prefix: string): CompletionItem[] {
+function getSystemFieldCompletions(prefix: string): Array<CompletionItem> {
   const systemFields = [
     { name: '_id', doc: 'Unique document identifier' },
     { name: '_type', doc: 'Document type name' },
@@ -166,21 +169,26 @@ function getSystemFieldCompletions(prefix: string): CompletionItem[] {
     { name: '_ref', doc: 'Reference target ID' },
   ]
 
-  return systemFields
-    .filter((f) => f.name.toLowerCase().includes(prefix.toLowerCase()))
-    .map((f) => ({
-      label: f.name,
-      kind: 5 as CompletionItemKind, // Field
-      detail: 'System field',
-      documentation: f.doc,
-      insertText: f.name,
-    }))
+  const needle = prefix.toLowerCase()
+  return systemFields.flatMap((f) =>
+    f.name.toLowerCase().includes(needle)
+      ? [
+          {
+            label: f.name,
+            kind: 5 as CompletionItemKind, // Field
+            detail: 'System field',
+            documentation: f.doc,
+            insertText: f.name,
+          },
+        ]
+      : []
+  )
 }
 
 /**
  * Get completions for GROQ functions
  */
-function getFunctionCompletions(prefix: string): CompletionItem[] {
+function getFunctionCompletions(prefix: string): Array<CompletionItem> {
   const functions = [
     { name: 'count', sig: 'count(array)', doc: 'Returns the number of items' },
     { name: 'defined', sig: 'defined(value)', doc: 'Returns true if value is not null' },
@@ -213,21 +221,26 @@ function getFunctionCompletions(prefix: string): CompletionItem[] {
     { name: 'sanity::dataset', sig: 'sanity::dataset()', doc: 'Current dataset' },
   ]
 
-  return functions
-    .filter((f) => f.name.toLowerCase().includes(prefix.toLowerCase()))
-    .map((f) => ({
-      label: f.name,
-      kind: 3 as CompletionItemKind, // Function
-      detail: f.sig,
-      documentation: f.doc,
-      insertText: f.name.includes('::') ? f.name : `${f.name}($1)`,
-      insertTextFormat: 2, // Snippet
-    }))
+  const needle = prefix.toLowerCase()
+  return functions.flatMap((f) =>
+    f.name.toLowerCase().includes(needle)
+      ? [
+          {
+            label: f.name,
+            kind: 3 as CompletionItemKind, // Function
+            detail: f.sig,
+            documentation: f.doc,
+            insertText: f.name.includes('::') ? f.name : `${f.name}($1)`,
+            insertTextFormat: 2, // Snippet
+          },
+        ]
+      : []
+  )
 }
 
 /**
  * Get trigger characters for completion
  */
-export function getCompletionTriggerCharacters(): string[] {
+export function getCompletionTriggerCharacters(): Array<string> {
   return ['.', '"', "'", '[', '{', ':']
 }

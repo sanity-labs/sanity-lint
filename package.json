@@ -11,8 +11,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:rust-parity": "vitest run --project rust-parity",
-    "lint": "eslint . --max-warnings 0",
-    "lint:fix": "eslint . --fix",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -23,7 +23,7 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
+      "oxlint --fix",
       "prettier --write"
     ],
     "*.{json,md,yml,yaml}": [
@@ -35,20 +35,17 @@
     "@changesets/cli": "^3.0.3",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
-    "@eslint/js": "^10.0.1",
+    "@nkzw/oxlint-config": "^3.0.0",
     "@types/node": "^26.6.6",
-    "@typescript-eslint/eslint-plugin": "^8.73.0",
-    "@typescript-eslint/parser": "^8.73.0",
     "@vitest/coverage-v8": "^5.1.0",
-    "eslint": "^10.15.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.1",
     "oxlint": "^1.94.0",
     "prettier": "^3.10.1",
+    "tsrs": "0.25.0-ts7.1.0-beta",
     "tsup": "^9.0.0",
     "turbo": "^2.11.11",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.73.0",
     "vitest": "catalog:"
   },
   "packageManager": "pnpm@12.21.0",

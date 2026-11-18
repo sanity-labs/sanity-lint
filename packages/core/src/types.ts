@@ -55,7 +55,7 @@ export interface Finding {
   /** Additional help text */
   help?: string
   /** Suggested fixes */
-  suggestions?: Suggestion[]
+  suggestions?: Array<Suggestion>
 }
 
 /**
@@ -87,7 +87,7 @@ export interface Rule {
   /** Rule category */
   category: Category
   /** Rule IDs that this rule supersedes */
-  supersedes?: string[]
+  supersedes?: Array<string>
   /** Whether this rule requires a schema to function */
   requiresSchema?: boolean
 
@@ -108,6 +108,7 @@ export interface RuleConfig {
   /** Override severity */
   severity?: Severity
   /** Rule-specific options */
+  // oxlint-disable-next-line quality/no-unsafe-dictionary-type -- each rule defines its own options shape
   options?: Record<string, unknown>
 }
 

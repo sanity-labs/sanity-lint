@@ -55,7 +55,7 @@ export interface DocumentState {
   /** Document content */
   content: string
   /** Extracted GROQ queries */
-  queries: GroqQuery[]
+  queries: Array<GroqQuery>
   /** Document version for incremental updates */
   version: number
 }
@@ -65,9 +65,9 @@ export interface DocumentState {
  */
 export interface ExtractionResult {
   /** Extracted queries with positions */
-  queries: GroqQuery[]
+  queries: Array<GroqQuery>
   /** Any extraction errors */
-  errors: string[]
+  errors: Array<string>
 }
 
 /**

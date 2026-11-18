@@ -33,7 +33,7 @@ export interface InvalidSchemaTestCase {
   /** Optional name for the test */
   name?: string
   /** Expected errors */
-  errors: ExpectedSchemaError[]
+  errors: Array<ExpectedSchemaError>
 }
 
 /**
@@ -41,16 +41,16 @@ export interface InvalidSchemaTestCase {
  */
 export interface SchemaRuleTests {
   /** Schemas that should produce no findings */
-  valid: (SchemaType | ValidSchemaTestCase)[]
+  valid: Array<SchemaType | ValidSchemaTestCase>
   /** Schemas that should produce findings */
-  invalid: InvalidSchemaTestCase[]
+  invalid: Array<InvalidSchemaTestCase>
 }
 
 /**
  * Run a single schema rule against a schema and collect findings
  */
-function runSchemaRule(rule: SchemaRule, schema: SchemaType): Finding[] {
-  const findings: Finding[] = []
+function runSchemaRule(rule: SchemaRule, schema: SchemaType): Array<Finding> {
+  const findings: Array<Finding> = []
 
   const context: SchemaRuleContext = {
     filePath: 'test.ts',

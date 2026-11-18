@@ -22,7 +22,7 @@ import { unnecessaryReference } from './unnecessary-reference'
 /**
  * All available schema lint rules (13 total)
  */
-export const rules: SchemaRule[] = [
+export const rules: Array<SchemaRule> = [
   // Core rules
   missingDefineType,
   missingDefineField,

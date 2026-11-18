@@ -3,7 +3,7 @@ import type { Parser, Plugin, Printer, SupportLanguage } from 'prettier'
 import { groqParser, type GroqAst } from './parser.js'
 import { groqPrinter } from './wasm-printer.js'
 
-const languages: SupportLanguage[] = [
+const languages: Array<SupportLanguage> = [
   {
     name: 'GROQ',
     parsers: ['groq'],
@@ -12,13 +12,13 @@ const languages: SupportLanguage[] = [
   },
 ]
 
-const parsers: Record<string, Parser<GroqAst>> = {
+const parsers = {
   groq: groqParser,
-}
+} satisfies Record<string, Parser<GroqAst>>
 
-const printers: Record<string, Printer<GroqAst>> = {
+const printers = {
   'groq-ast': groqPrinter,
-}
+} satisfies Record<string, Printer<GroqAst>>
 
 const plugin: Plugin = {
   languages,

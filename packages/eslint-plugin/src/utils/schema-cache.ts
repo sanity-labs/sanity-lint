@@ -62,7 +62,7 @@ export function loadSchemaSync(absolutePath: string): SchemaType | null {
       return null
     }
 
-    const content = readFileSync(absolutePath, 'utf-8')
+    const content = readFileSync(absolutePath, 'utf8')
     const schema = JSON.parse(content) as SchemaType
     schemaCache.set(absolutePath, schema)
     return schema
@@ -83,12 +83,11 @@ export function loadSchemaSync(absolutePath: string): SchemaType | null {
  * @returns The schema if configured and loadable, null otherwise
  */
 export function getSchemaFromSettings(
-  settings: Record<string, unknown> | undefined,
+  settings: unknown,
   filename: string,
   cwd: string
 ): SchemaType | null {
-  const sanitySettings = settings?.['sanity'] as Record<string, unknown> | undefined
-  const schemaPath = sanitySettings?.['schemaPath'] as string | undefined
+  const schemaPath = readSchemaPath(settings)
 
   if (!schemaPath) {
     return null
@@ -96,6 +95,17 @@ export function getSchemaFromSettings(
 
   const absolutePath = resolveSchemaPath(schemaPath, filename, cwd)
   return loadSchemaSync(absolutePath)
+}
+
+function readSchemaPath(settings: unknown): string | undefined {
+  if (typeof settings !== 'object' || settings === null || !('sanity' in settings)) {
+    return undefined
+  }
+  const { sanity } = settings
+  if (typeof sanity !== 'object' || sanity === null || !('schemaPath' in sanity)) {
+    return undefined
+  }
+  return typeof sanity.schemaPath === 'string' ? sanity.schemaPath : undefined
 }
 
 /**

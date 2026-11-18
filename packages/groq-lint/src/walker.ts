@@ -9,7 +9,7 @@ export interface WalkContext {
   /** Whether we're currently inside a projection */
   inProjection: boolean
   /** Parent node stack */
-  parents: ExprNode[]
+  parents: Array<ExprNode>
 }
 
 /**

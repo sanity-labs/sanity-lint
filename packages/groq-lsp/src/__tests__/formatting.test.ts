@@ -78,11 +78,12 @@ describe('formatDocument', () => {
   })
 })
 
+const reindent = (text: string, unit: string) =>
+  text.replaceAll(/^(?: {2})+/gm, (indent) => unit.repeat(indent.length / 2))
+
 describe('formatting matches groq-wasm format', () => {
   const query =
     '*[_type == "post"]{title, "author": author->{name, "slug": slug.current}, "long": select(a == 1 => "one one one one one one", a == 2 => "two two two two two", "x")}'
-  const reindent = (text: string, unit: string) =>
-    text.replace(/^(?: {2})+/gm, (indent) => unit.repeat(indent.length / 2))
 
   const cases = [
     { options: {}, unit: '  ' },

@@ -66,7 +66,9 @@ describe('@sanity-labs/groq-wasm/lazy', () => {
     let fetches = 0
     vi.stubGlobal('fetch', async () => {
       fetches += 1
-      if (fetches === 1) return wasmResponse(new Uint8Array(), 503, 'unavailable')
+      if (fetches === 1) {
+        return wasmResponse(new Uint8Array(), 503, 'unavailable')
+      }
       return wasmResponse()
     })
 
@@ -86,7 +88,9 @@ describe('@sanity-labs/groq-wasm/lazy', () => {
     let fetches = 0
     vi.stubGlobal('fetch', async () => {
       fetches += 1
-      if (fetches === 1) throw new Error('network down')
+      if (fetches === 1) {
+        throw new Error('network down')
+      }
       return wasmResponse()
     })
 
@@ -205,7 +209,7 @@ describe('@sanity-labs/groq-wasm/lazy', () => {
   )
 })
 
-function expectNotInitialized(call: () => unknown): void {
+function expectNotInitialized(call: () => void): void {
   try {
     call()
   } catch (error) {
@@ -240,7 +244,9 @@ function hasTopLevelAwait(code: string): boolean {
   let found = false
 
   const visit = (node: ts.Node, insideFunction: boolean): void => {
-    if (found) return
+    if (found) {
+      return
+    }
     const topLevelAwait =
       !insideFunction &&
       (ts.isAwaitExpression(node) ||
@@ -260,20 +266,24 @@ function hasTopLevelAwait(code: string): boolean {
   return found
 }
 
-function readModuleGraph(entry: URL): { path: string; code: string }[] {
+function readModuleGraph(entry: URL): Array<{ path: string; code: string }> {
   const seen = new Set<string>()
-  const files: { path: string; code: string }[] = []
+  const files: Array<{ path: string; code: string }> = []
 
   const visit = (url: URL): void => {
     const path = fileURLToPath(url)
-    if (seen.has(path)) return
+    if (seen.has(path)) {
+      return
+    }
     seen.add(path)
     const code = readFileSync(path, 'utf8')
     files.push({ path, code })
     const base = new URL('./', url)
     for (const match of code.matchAll(/from\s*["'](\.[^"']+)["']/g)) {
       const specifier = match[1]
-      if (!specifier) continue
+      if (!specifier) {
+        continue
+      }
       visit(new URL(specifier, base))
     }
   }

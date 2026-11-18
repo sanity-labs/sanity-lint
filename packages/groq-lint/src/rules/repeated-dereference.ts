@@ -7,10 +7,14 @@ import { walk } from '../walker'
  * e.g., author->name returns "author"
  */
 function getDerefBaseName(node: ExprNode): string | null {
-  if (node.type !== 'Deref') return null
+  if (node.type !== 'Deref') {
+    return null
+  }
 
   const base = (node as { base?: ExprNode }).base
-  if (!base) return null
+  if (!base) {
+    return null
+  }
 
   // Walk down to find the root AccessAttribute
   let current = base
@@ -41,10 +45,14 @@ export const repeatedDereference: Rule = {
   check(ast, context) {
     walk(ast, (node, _walkContext) => {
       // Only check Projection nodes
-      if (node.type !== 'Projection') return
+      if (node.type !== 'Projection') {
+        return
+      }
 
       const projectionExpr = (node as { expr?: ExprNode }).expr
-      if (!projectionExpr) return
+      if (!projectionExpr) {
+        return
+      }
 
       // Track dereferenced attributes in this projection
       const derefCounts = new Map<string, number>()

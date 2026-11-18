@@ -24,7 +24,7 @@ export interface QueryDiagnostics {
   /** The query that was analyzed */
   query: GroqQuery
   /** Diagnostics found */
-  diagnostics: Diagnostic[]
+  diagnostics: Array<Diagnostic>
   /** Parse error if query was invalid */
   parseError?: string
 }
@@ -67,10 +67,10 @@ export function computeQueryDiagnostics(
  * Compute diagnostics for multiple queries in a document
  */
 export function computeDocumentDiagnostics(
-  queries: GroqQuery[],
+  queries: Array<GroqQuery>,
   options: DiagnosticsOptions = {}
-): Diagnostic[] {
-  const allDiagnostics: Diagnostic[] = []
+): Array<Diagnostic> {
+  const allDiagnostics: Array<Diagnostic> = []
 
   for (const query of queries) {
     const result = computeQueryDiagnostics(query, options)
@@ -158,7 +158,7 @@ function severityToLsp(severity: Severity): DiagnosticSeverity {
 export function positionToQueryOffset(
   position: Position,
   query: GroqQuery,
-  _documentLines: string[]
+  _documentLines: Array<string>
 ): number | null {
   // Check if position is within the query
   const queryLines = query.query.split('\n')

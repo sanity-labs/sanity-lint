@@ -37,15 +37,15 @@ export function parseGroq(query: string): ExprNode {
 
   try {
     return parse(trimmed)
-  } catch (e) {
+  } catch (error_) {
     const error: GroqParseError = {
-      message: e instanceof Error ? e.message : String(e),
+      message: error_ instanceof Error ? error_.message : String(error_),
       query,
     }
     // Extract position from groq-js error message if available
     const posMatch = error.message.match(/position (\d+)/)
     if (posMatch && posMatch[1]) {
-      error.position = parseInt(posMatch[1], 10)
+      error.position = Number.parseInt(posMatch[1], 10)
     }
     throw error
   }
@@ -73,8 +73,8 @@ export function isValidGroq(query: string): boolean {
 export function assertValidGroq(query: string, context?: string): void {
   try {
     parseGroq(query)
-  } catch (e) {
-    const error = e as GroqParseError
+  } catch (error_) {
+    const error = error_ as GroqParseError
     let message = `Invalid GROQ syntax: ${error.message}`
     if (context) {
       message = `${context}: ${message}`
@@ -98,6 +98,6 @@ export function assertValidGroq(query: string, context?: string): void {
       message += `\n\nQuery:\n${error.query}`
     }
 
-    throw new Error(message, { cause: e })
+    throw new Error(message, { cause: error_ })
   }
 }

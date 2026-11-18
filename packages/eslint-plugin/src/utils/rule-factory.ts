@@ -9,11 +9,12 @@ import {
   extractGroqStringFromCall,
 } from './groq-extractor'
 import { getSchemaFromSettings } from './schema-cache'
+import { asTSESTree } from './tsestree'
 
 /**
  * Build a config that enables only the specified rule
  */
-function buildSingleRuleConfig(ruleId: string): Record<string, boolean> {
+function buildSingleRuleConfig(ruleId: string) {
   const config: Record<string, boolean> = {}
   for (const rule of allGroqRules) {
     config[rule.id] = rule.id === ruleId
@@ -40,11 +41,7 @@ export function createESLintRule(groqRule: GroqRule): ESLintRule.RuleModule {
 
     create(context) {
       // Load schema from settings if configured (for schema-aware rules)
-      const schema = getSchemaFromSettings(
-        context.settings as Record<string, unknown> | undefined,
-        context.filename,
-        context.cwd
-      )
+      const schema = getSchemaFromSettings(context.settings, context.filename, context.cwd)
 
       // Skip schema-requiring rules if no schema is available
       if (groqRule.requiresSchema && !schema) {
@@ -80,7 +77,7 @@ export function createESLintRule(groqRule: GroqRule): ESLintRule.RuleModule {
       return {
         // Handle groq`...` tagged template literals
         TaggedTemplateExpression(eslintNode: ESLintRule.Node) {
-          const node = eslintNode as unknown as TSESTree.TaggedTemplateExpression
+          const node = asTSESTree<TSESTree.TaggedTemplateExpression>(eslintNode)
           if (!isGroqTaggedTemplate(node)) {
             return
           }
@@ -91,7 +88,7 @@ export function createESLintRule(groqRule: GroqRule): ESLintRule.RuleModule {
 
         // Handle defineQuery(`...`) and defineQuery("...") function calls
         CallExpression(eslintNode: ESLintRule.Node) {
-          const node = eslintNode as unknown as TSESTree.CallExpression
+          const node = asTSESTree<TSESTree.CallExpression>(eslintNode)
           if (!isGroqFunctionCall(node)) {
             return
           }
@@ -109,7 +106,7 @@ export function createESLintRule(groqRule: GroqRule): ESLintRule.RuleModule {
 /**
  * Create all ESLint rules from GROQ lint rules.
  */
-export function createAllRules(groqRules: GroqRule[]): Record<string, ESLintRule.RuleModule> {
+export function createAllRules(groqRules: Array<GroqRule>) {
   const eslintRules: Record<string, ESLintRule.RuleModule> = {}
 
   for (const rule of groqRules) {

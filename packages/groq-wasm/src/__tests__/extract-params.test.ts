@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { extractParams, format, lint, WasmError } from '../index.js'
 
-function names(query: string): string[] {
+function names(query: string): Array<string> {
   return extractParams(query).map((param) => param.name)
 }
 
 /** Every reference's text, so spans are checked against the query itself. */
-function referencedText(query: string): string[] {
+function referencedText(query: string): Array<string> {
   return extractParams(query).flatMap((param) =>
     param.references.map((reference) => query.slice(reference.start, reference.end))
   )

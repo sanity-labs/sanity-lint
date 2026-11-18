@@ -24,18 +24,19 @@ export interface SchemaField {
   /** Whether the field is readOnly */
   readOnly?: boolean
   /** Field options (e.g., source for slug, list for string) */
+  // oxlint-disable-next-line quality/no-unsafe-dictionary-type -- Sanity field options are open-ended per field type
   options?: {
     /** Matches Sanity `SlugOptions.source`: field path, Path, or source function */
     source?: string | Path | SlugSourceFn
-    list?: unknown[]
+    list?: Array<unknown>
     hotspot?: boolean
     layout?: string
     [key: string]: unknown
   }
   /** For array fields, the types allowed in the array */
-  of?: SchemaField[]
+  of?: Array<SchemaField>
   /** For reference fields, the types that can be referenced */
-  to?: { type: string }[]
+  to?: Array<{ type: string }>
   /** Location in source for error reporting */
   span?: SourceSpan
 }
@@ -57,9 +58,9 @@ export interface SchemaType {
   /** Whether the type has a preview configuration */
   hasPreview?: boolean
   /** Fields defined on this type */
-  fields?: SchemaField[]
+  fields?: Array<SchemaField>
   /** Groups for organizing fields in the Studio */
-  groups?: { name: string; title?: string }[]
+  groups?: Array<{ name: string; title?: string }>
   /** Location in source for error reporting */
   span?: SourceSpan
   /** Whether defineType() was used */
@@ -93,7 +94,7 @@ export interface SchemaRule {
   /** Rule category */
   category: Category
   /** Rule IDs that this rule supersedes */
-  supersedes?: string[]
+  supersedes?: Array<string>
 
   /**
    * Check the schema for violations
@@ -112,6 +113,7 @@ export interface SchemaRuleConfig {
   /** Override severity */
   severity?: Severity
   /** Rule-specific options */
+  // oxlint-disable-next-line quality/no-unsafe-dictionary-type -- each rule defines its own options shape
   options?: Record<string, unknown>
 }
 

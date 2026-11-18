@@ -22,11 +22,17 @@ function containsParentRef(node: ExprNode): boolean {
  * Literals include: Value, Parameter, now()
  */
 function isLiteral(node: ExprNode): boolean {
-  if (node.type === 'Value') return true
-  if (node.type === 'Parameter') return true
+  if (node.type === 'Value') {
+    return true
+  }
+  if (node.type === 'Parameter') {
+    return true
+  }
 
   // now() is considered a literal (computed at query time, not per-document)
-  if (node.type === 'FuncCall' && node.name === 'now') return true
+  if (node.type === 'FuncCall' && node.name === 'now') {
+    return true
+  }
 
   // Arithmetic on literals is still a literal (e.g., 2+1)
   if (node.type === 'OpCall') {
@@ -59,19 +65,27 @@ export const nonLiteralComparison: Rule = {
   check(ast, context) {
     walk(ast, (node, walkContext) => {
       // Only check inside filters
-      if (!walkContext.inFilter) return
+      if (!walkContext.inFilter) {
+        return
+      }
 
       if (node.type === 'OpCall') {
         const op = (node as { op?: string }).op
-        if (!COMPARISON_OPS.includes(op ?? '')) return
+        if (!COMPARISON_OPS.includes(op ?? '')) {
+          return
+        }
 
         const left = (node as { left?: ExprNode }).left
         const right = (node as { right?: ExprNode }).right
 
-        if (!left || !right) return
+        if (!left || !right) {
+          return
+        }
 
         // Exempt if either side references parent scope
-        if (containsParentRef(left) || containsParentRef(right)) return
+        if (containsParentRef(left) || containsParentRef(right)) {
+          return
+        }
 
         // Flag if both sides are non-literals
         if (!isLiteral(left) && !isLiteral(right)) {

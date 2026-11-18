@@ -14,10 +14,10 @@ interface CliOptions {
   format: 'pretty' | 'json'
   query?: string
   schema?: string
-  files: string[]
+  files: Array<string>
 }
 
-function parseArgs(args: string[]): CliOptions {
+function parseArgs(args: Array<string>): CliOptions {
   const options: CliOptions = {
     format: 'pretty',
     files: [],
@@ -25,7 +25,9 @@ function parseArgs(args: string[]): CliOptions {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
-    if (!arg) continue
+    if (!arg) {
+      continue
+    }
 
     if (arg === '--json' || arg === '-j') {
       options.format = 'json'
@@ -90,10 +92,10 @@ function loadSchema(path: string): SchemaType | undefined {
       console.error(`Schema file not found: ${path}`)
       process.exit(1)
     }
-    const content = readFileSync(path, 'utf-8')
+    const content = readFileSync(path, 'utf8')
     return JSON.parse(content) as SchemaType
-  } catch (e) {
-    console.error(`Error loading schema: ${e instanceof Error ? e.message : e}`)
+  } catch (error) {
+    console.error(`Error loading schema: ${error instanceof Error ? error.message : error}`)
     process.exit(1)
   }
 }
@@ -102,8 +104,8 @@ function loadSchema(path: string): SchemaType | undefined {
  * Extract GROQ queries from a TypeScript/JavaScript file
  * Looks for groq`...` tagged template literals
  */
-function extractQueriesFromSource(content: string): string[] {
-  const queries: string[] = []
+function extractQueriesFromSource(content: string): Array<string> {
+  const queries: Array<string> = []
 
   // Match groq`...` template literals (simple regex, handles most cases)
   const groqTagRegex = /groq\s*`([^`]*)`/g
@@ -118,18 +120,18 @@ function extractQueriesFromSource(content: string): string[] {
 }
 
 async function readStdin(): Promise<string> {
-  const chunks: Buffer[] = []
+  const chunks: Array<Buffer> = []
   for await (const chunk of process.stdin) {
     chunks.push(chunk)
   }
-  return Buffer.concat(chunks).toString('utf-8')
+  return Buffer.concat(chunks).toString('utf8')
 }
 
 /**
  * Expand glob patterns into file paths
  */
-async function expandGlobs(patterns: string[]): Promise<string[]> {
-  const files: string[] = []
+async function expandGlobs(patterns: Array<string>): Promise<Array<string>> {
+  const files: Array<string> = []
 
   for (const pattern of patterns) {
     // Check if it's a glob pattern
@@ -161,7 +163,7 @@ async function main(): Promise<void> {
     console.log(`Using schema: ${options.schema}\n`)
   }
 
-  const queries: { source: string; query: string }[] = []
+  const queries: Array<{ source: string; query: string }> = []
 
   // Get queries from various sources
   if (options.query) {
@@ -173,7 +175,7 @@ async function main(): Promise<void> {
 
     for (const file of expandedFiles) {
       try {
-        const content = readFileSync(file, 'utf-8')
+        const content = readFileSync(file, 'utf8')
 
         // Check if it's a TS/JS file - extract GROQ from template literals
         if (
@@ -193,8 +195,10 @@ async function main(): Promise<void> {
           // Treat as raw GROQ file
           queries.push({ source: file, query: content })
         }
-      } catch (e) {
-        console.error(`Error reading file ${file}: ${e instanceof Error ? e.message : e}`)
+      } catch (error) {
+        console.error(
+          `Error reading file ${file}: ${error instanceof Error ? error.message : error}`
+        )
         process.exit(1)
       }
     }
@@ -214,11 +218,11 @@ async function main(): Promise<void> {
   }
 
   // Lint all queries
-  const allFindings: {
+  const allFindings: Array<{
     source: string
     query: string
     findings: ReturnType<typeof lint>['findings']
-  }[] = []
+  }> = []
   let hasErrors = false
 
   for (const { source, query } of queries) {
@@ -268,7 +272,9 @@ async function main(): Promise<void> {
   process.exit(hasErrors ? 1 : 0)
 }
 
-main().catch((error) => {
+try {
+  await main()
+} catch (error) {
   console.error(error)
   process.exit(1)
-})
+}

@@ -58,7 +58,9 @@ function toSourceSpan(loc: TSESTree.SourceLocation): SourceSpan {
  * Extract a string value from an AST node
  */
 function extractStringValue(node: TSESTree.Node | undefined): string | undefined {
-  if (!node) return undefined
+  if (!node) {
+    return undefined
+  }
 
   if (node.type === 'Literal' && typeof node.value === 'string') {
     return node.value
@@ -76,7 +78,9 @@ function extractStringValue(node: TSESTree.Node | undefined): string | undefined
  * Extract a boolean value from an AST node
  */
 function extractBooleanValue(node: TSESTree.Node | undefined): boolean | undefined {
-  if (!node) return undefined
+  if (!node) {
+    return undefined
+  }
 
   if (node.type === 'Literal' && typeof node.value === 'boolean') {
     return node.value
@@ -148,14 +152,22 @@ function extractFieldOptions(
         }
       } else if (name === 'hotspot') {
         const hotspot = extractBooleanValue(prop.value)
-        if (hotspot !== undefined) options.hotspot = hotspot
+        if (hotspot !== undefined) {
+          options.hotspot = hotspot
+        }
       } else if (name === 'layout') {
         const layout = extractStringValue(prop.value)
-        if (layout !== undefined) options.layout = layout
+        if (layout !== undefined) {
+          options.layout = layout
+        }
       } else if (name === 'list' && prop.value.type === 'ArrayExpression') {
         options.list = prop.value.elements.map((el) => {
-          if (!el) return null
-          if (el.type === 'Literal') return el.value
+          if (!el) {
+            return null
+          }
+          if (el.type === 'Literal') {
+            return el.value
+          }
           if (el.type === 'ObjectExpression') {
             const value = extractStringValue(getProperty(el, 'value'))
             return { value }
@@ -189,12 +201,16 @@ function extractField(
     usesDefineField.value = false // At least one field doesn't use defineField
   }
 
-  if (!fieldObj) return undefined
+  if (!fieldObj) {
+    return undefined
+  }
 
   const name = extractStringValue(getProperty(fieldObj, 'name'))
   const type = extractStringValue(getProperty(fieldObj, 'type'))
 
-  if (!name || !type) return undefined
+  if (!name || !type) {
+    return undefined
+  }
 
   const title = extractStringValue(getProperty(fieldObj, 'title'))
   const description = extractStringValue(getProperty(fieldObj, 'description'))
@@ -225,11 +241,8 @@ function extractField(
 /**
  * Extract fields from an array expression
  */
-function extractFields(node: TSESTree.Node | undefined): {
-  fields: SchemaField[]
-  usesDefineField: boolean
-} {
-  const result = { fields: [] as SchemaField[], usesDefineField: true }
+function extractFields(node: TSESTree.Node | undefined) {
+  const result = { fields: [] as Array<SchemaField>, usesDefineField: true }
 
   if (!node || node.type !== 'ArrayExpression') {
     return result

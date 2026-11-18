@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+// oxlint-disable-next-line import/no-namespace -- the test asserts on the module's full export list
 import * as publicApi from '../index.js'
 import {
   DEFAULT_WIDTH,

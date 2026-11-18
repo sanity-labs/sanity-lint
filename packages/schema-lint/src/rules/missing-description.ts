@@ -17,7 +17,7 @@ export const missingDescription: SchemaRule = {
       return
     }
 
-    const fieldsWithoutDescription: SchemaField[] = []
+    const fieldsWithoutDescription: Array<SchemaField> = []
 
     for (const field of schema.fields) {
       // Skip hidden fields

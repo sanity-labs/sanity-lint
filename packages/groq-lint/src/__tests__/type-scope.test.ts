@@ -67,6 +67,8 @@ const schema: SchemaType = [
 ]
 
 const resolver = new SchemaTypeResolver(schema)
+
+const possible = (type: TypeNode) => resolver.possibleTypeNames(type)
 const docScope = nestedScope(ROOT_SCOPE, inline('doc'))
 const resolve = (query: string, scope: TypeScope = docScope) =>
   resolver.resolve(parse(query), scope)
@@ -146,7 +148,6 @@ describe('SchemaTypeResolver', () => {
   })
 
   it('computes possible type names', () => {
-    const possible = (type: TypeNode) => resolver.possibleTypeNames(type)
     expect(possible(inline('a'))).toEqual(['a'])
     expect(possible(inline('alias'))).toEqual(['a'])
     expect(possible(inline('missing'))).toBeUndefined()
@@ -170,17 +171,18 @@ describe('SchemaTypeResolver', () => {
   })
 })
 
-describe('walkScoped', () => {
-  const scopesOf = (query: string) => {
-    const seen: { node: ExprNode; scope: TypeScope }[] = []
-    walkScoped(parse(query), resolver, (node, scope) => seen.push({ node, scope }))
-    return seen
-  }
-  const typeAccessScopes = (query: string) =>
-    scopesOf(query)
-      .filter(({ node }) => node.type === 'AccessAttribute' && node.name === '_type' && !node.base)
-      .map(({ scope }) => scope.type && resolver.possibleTypeNames(scope.type))
+const scopesOf = (query: string) => {
+  const seen: Array<{ node: ExprNode; scope: TypeScope }> = []
+  walkScoped(parse(query), resolver, (node, scope) => seen.push({ node, scope }))
+  return seen
+}
 
+const typeAccessScopes = (query: string) =>
+  scopesOf(query)
+    .filter(({ node }) => node.type === 'AccessAttribute' && node.name === '_type' && !node.base)
+    .map(({ scope }) => scope.type && resolver.possibleTypeNames(scope.type))
+
+describe('walkScoped', () => {
   it('visits every child node type', () => {
     const query = `*[_type == "doc" && !(_type == "x") || -count > +count]{
       "arr": [_type, ...items],
