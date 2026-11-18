@@ -1,5 +1,22 @@
 # @sanity-labs/groq-wasm
 
+## 1.2.1
+
+### Patch Changes
+
+- fe24ad9: Update Rust dependencies in `Cargo.lock`:
+
+  - `bumpalo` 3.20.3 -> 3.20.4
+  - `errno` 0.3.14 -> 0.3.15
+
+- 52296ca: Update Rust dependencies in `Cargo.lock`:
+
+  - `clap` 4.6.7 -> 4.6.8
+  - `clap_derive` 4.6.7 -> 4.6.8
+  - `clap_lex` 1.1.1 -> 1.1.2
+  - `groq-format` (git) 1abd1ed -> 7413a01
+  - `smallvec` 1.16.5 -> 1.16.6
+
 ## 1.2.0
 
 ### Minor Changes
