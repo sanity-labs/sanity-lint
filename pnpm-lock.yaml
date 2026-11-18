@@ -213,8 +213,8 @@ snapshots:
 					"version": "10.0.1",
 				},
 				"@types/node": {
-					"specifier": "^24.19.2",
-					"version": "24.19.2",
+					"specifier": "^26.6.6",
+					"version": "26.6.6",
 				},
 				"@typescript-eslint/eslint-plugin": {
 					"specifier": "^8.73.0",
@@ -3552,7 +3552,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3571,7 +3571,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3589,7 +3589,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3605,7 +3605,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3621,7 +3621,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3643,7 +3643,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3664,7 +3664,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3681,7 +3681,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3698,7 +3698,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3715,7 +3715,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3731,7 +3731,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3747,7 +3747,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3773,7 +3773,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3789,7 +3789,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3805,7 +3805,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3821,7 +3821,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3837,7 +3837,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3854,7 +3854,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3871,7 +3871,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3895,7 +3895,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3919,7 +3919,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3936,7 +3936,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3952,7 +3952,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3970,7 +3970,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -3987,7 +3987,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -4006,7 +4006,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -4024,7 +4024,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -4036,7 +4036,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": ">=18",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 			},
@@ -4460,7 +4460,7 @@ snapshots:
 			"engines": {"node": ">=18.0.0"},
 			"peerDependencies": {
 				"@types/node": {
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"below": true,
 				},
 			},
@@ -5499,7 +5499,7 @@ snapshots:
 					"below": true,
 				},
 				"@types/node": {
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"below": true,
 				},
 				"@types/react": {
@@ -5594,7 +5594,7 @@ snapshots:
 					"below": true,
 				},
 				"@types/node": {
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"below": true,
 				},
 				"babel-plugin-react-compiler": {
@@ -5672,7 +5672,7 @@ snapshots:
 					"below": true,
 				},
 				"@types/node": {
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"below": true,
 				},
 				"@types/react": {
@@ -6209,7 +6209,7 @@ snapshots:
 					"below": true,
 				},
 				"@types/node": {
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"below": true,
 				},
 				"@types/react": {
@@ -6732,7 +6732,7 @@ snapshots:
 					"below": true,
 				},
 				"@types/node": {
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"below": true,
 				},
 				"@types/react": {
@@ -7111,10 +7111,10 @@ snapshots:
 			"integrity": "sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==",
 		},
 
-		"@types/node@24.19.2": {
-			"integrity": "sha512-93d49wCWJkCyN87MxLpNN6KXPCwFw7bVUg79mGUV1OS40JGWwVCr8n61DXCSqz7CV6/VfPkb7xec7uP2M+QHWQ==",
+		"@types/node@26.6.6": {
+			"integrity": "sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog==",
 			"dependencies": {
-				"undici-types": "7.24.6",
+				"undici-types": "8.9.0",
 			},
 		},
 
@@ -11474,7 +11474,7 @@ snapshots:
 					"below": true,
 				},
 				"@types/node": {
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"below": true,
 				},
 				"@types/react": {
@@ -12365,8 +12365,8 @@ snapshots:
 			"integrity": "sha512-JFNbkD1Svwe0KvGi8GOeLcP4kAWQ609twvCdcHxq1oSL8svv39ZuSvajcD8B+5D0eL4+s1Is2D/O6KN3qcTeRA==",
 		},
 
-		"undici-types@7.24.6": {
-			"integrity": "sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==",
+		"undici-types@8.9.0": {
+			"integrity": "sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==",
 		},
 
 		"undici@7.30.1": {
@@ -12589,7 +12589,7 @@ snapshots:
 			"peerDependencies": {
 				"@types/node": {
 					"specifier": "^20.19.0 || >=22.12.0",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 				"@vitejs/devtools": {
@@ -12668,7 +12668,7 @@ snapshots:
 				},
 				"@types/node": {
 					"specifier": "^22.0.0 || >=24.0.0",
-					"version": "24.19.2",
+					"version": "26.6.6",
 					"optional": true,
 				},
 				"@vitest/browser-playwright": {
