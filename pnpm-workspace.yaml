@@ -7,7 +7,7 @@ allowBuilds:
   keytar: false
   sharp: false
 catalog:
-  vitest: ^5.0.5
+  vitest: ^5.1.0
   groq-js: ^2.0.1
 minimumReleaseAgeExclude:
   - '@sanity/client@8.10.1'
@@ -23,7 +23,7 @@ minimumReleaseAgeExclude:
   - turbo@2.11.10
   - vite@8.3.5
 overrides:
-  vitest>vite: ^8.3.5
-  ws@8.19.0: ^8.22.0
+  vitest>vite: ^8.3.8
+  ws@8.19.0: ^8.23.0
 lockfile:
   format: v13
