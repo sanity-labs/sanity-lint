@@ -4,12 +4,14 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { format as groqWasmFormat } from '@sanity-labs/groq-wasm'
 import {
   createMessageConnection,
   FileChangeType,
   StreamMessageReader,
   StreamMessageWriter,
   type MessageConnection,
+  type TextEdit,
 } from 'vscode-languageserver/node'
 
 const serverPath = fileURLToPath(new URL('../../dist/server.js', import.meta.url))
@@ -132,5 +134,32 @@ describe.skipIf(!existsSync(serverPath))('language server (stdio)', () => {
 
     const result = await waitForDiagnostics(uri, (d) => d.diagnostics.length >= 2)
     expect(result.diagnostics).toHaveLength(2)
+  })
+
+  it('formats with groq-wasm, indented per the tab size and spaces or tabs', async () => {
+    const query =
+      '*[_type == "post"]{title, "author": author->{name, "slug": slug.current}, "long": select(a == 1 => "one one one one one one", a == 2 => "two two two two two", "x")}'
+    const uri = pathToFileURL(join(workspace, 'format.groq')).toString()
+    await connection.sendNotification('textDocument/didOpen', {
+      textDocument: { uri, languageId: 'groq', version: 1, text: `${query}\n` },
+    })
+
+    const newText = async (options: { tabSize: number; insertSpaces: boolean }) => {
+      const edits: TextEdit[] = await connection.sendRequest('textDocument/formatting', {
+        textDocument: { uri },
+        options,
+      })
+      return edits.map((edit) => edit.newText)
+    }
+    const expected = groqWasmFormat(query).trimEnd()
+    expect(expected).toContain('\n    a == 2')
+
+    expect(await newText({ tabSize: 2, insertSpaces: true })).toEqual([expected])
+    expect(await newText({ tabSize: 4, insertSpaces: true })).toEqual([
+      expected.replace(/^(?: {2})+/gm, (indent) => '    '.repeat(indent.length / 2)),
+    ])
+    expect(await newText({ tabSize: 4, insertSpaces: false })).toEqual([
+      expected.replace(/^(?: {2})+/gm, (indent) => '\t'.repeat(indent.length / 2)),
+    ])
   })
 })

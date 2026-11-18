@@ -178,6 +178,7 @@ flowchart TB
     prettier --> wasm
 
     lsp --> groqlint
+    lsp --> wasm
 
     groqlint --> core
     schemalint --> core
@@ -191,7 +192,7 @@ The core libraries are decoupled from integrations. The LSP server provides IDE 
 
 ### WASM Acceleration
 
-For maximum performance, `@sanity-labs/groq-lint` and `prettier-plugin-groq` use WASM-compiled Rust for core operations:
+For maximum performance, `@sanity-labs/groq-lint`, `@sanity-labs/groq-lsp` and `prettier-plugin-groq` use WASM-compiled Rust for core operations:
 
 - **Linting**: Pure GROQ rules run via Rust/WASM (~5-10x faster)
 - **Formatting**: GROQ formatting via Rust/WASM
