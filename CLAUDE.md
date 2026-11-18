@@ -14,16 +14,15 @@ Sanity Developer Experience Suite - linting, formatting, and static analysis for
 
 ### Packages
 
-| Package                         | npm Name                            | Purpose                                          |
-| ------------------------------- | ----------------------------------- | ------------------------------------------------ |
-| `packages/core`                 | `@sanity-labs/lint-core`            | Shared types, RuleTester, reporters              |
-| `packages/groq-wasm`            | `@sanity-labs/groq-wasm`            | WASM bindings for Rust groq-lint/groq-format     |
-| `packages/groq-lint`            | `@sanity-labs/groq-lint`            | GROQ query linting rules + CLI                   |
-| `packages/schema-lint`          | `@sanity-labs/schema-lint`          | Sanity schema linting rules                      |
-| `packages/groq-lsp`             | `@sanity-labs/groq-lsp`             | Language Server Protocol for GROQ                |
-| `packages/eslint-plugin`        | `@sanity-labs/eslint-plugin`        | ESLint integration                               |
-| `packages/vscode-sanity`        | `vscode-sanity`                     | VS Code/Cursor extension (query execution + LSP) |
-| `packages/prettier-plugin-groq` | `@sanity-labs/prettier-plugin-groq` | Prettier plugin for GROQ formatting              |
+| Package                         | npm Name                            | Purpose                                      |
+| ------------------------------- | ----------------------------------- | -------------------------------------------- |
+| `packages/core`                 | `@sanity-labs/lint-core`            | Shared types, RuleTester, reporters          |
+| `packages/groq-wasm`            | `@sanity-labs/groq-wasm`            | WASM bindings for Rust groq-lint/groq-format |
+| `packages/groq-lint`            | `@sanity-labs/groq-lint`            | GROQ query linting rules + CLI               |
+| `packages/schema-lint`          | `@sanity-labs/schema-lint`          | Sanity schema linting rules                  |
+| `packages/groq-lsp`             | `@sanity-labs/groq-lsp`             | Language Server Protocol for GROQ            |
+| `packages/eslint-plugin`        | `@sanity-labs/eslint-plugin`        | ESLint integration                           |
+| `packages/prettier-plugin-groq` | `@sanity-labs/prettier-plugin-groq` | Prettier plugin for GROQ formatting          |
 
 ### Dependency Graph
 
@@ -43,8 +42,10 @@ groq-lint (Rust)              groq-format (Rust)
 groq-lint     prettier-plugin-groq eslint-plugin
     │
     ▼
-@sanity-labs/groq-lsp → vscode-sanity
+@sanity-labs/groq-lsp
 ```
+
+The VS Code/Cursor extension (`sanity-io.vscode-sanity`) lives in [sanity-io/vscode-sanity](https://github.com/sanity-io/vscode-sanity) and consumes `@sanity-labs/groq-lsp` from npm.
 
 ## Development
 
@@ -239,7 +240,6 @@ gh release list --limit 5
 - **CI on the version PR shows "action required".** The PR is authored by `github-actions[bot]`, so GitHub holds its CI run for manual approval. Either approve the run in the Actions tab or merge anyway. There is no branch protection on `main`, and the Release workflow re-runs build and tests before publishing.
 - **The version PR accumulates.** It is updated every time another changeset lands on `main`, so one merge can release several packages at once. Check its description for the list.
 - **Bumping a package bumps its dependents.** `updateInternalDependencies: patch` in `.changeset/config.json` means a `schema-lint` change also patch-bumps `eslint-plugin`.
-- **`vscode-sanity` is ignored** by Changesets and is released separately to the VS Code Marketplace.
 
 #### Manual fallback
 

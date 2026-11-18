@@ -797,10 +797,6 @@ cargo install wasm-pack
 - GitHub Actions builds WASM automatically
 - All 372 tests passing
 
-### Next Up
-
-- Stage 7: Import vscode-sanity, add LSP features, merge grammars
-
 ### Optional Future Work
 
 - Parity tests (verify TS vs WASM output matches)
@@ -853,7 +849,7 @@ cargo install wasm-pack
 
 **Goal**: Import `sanity-io/vscode-sanity` into this monorepo and enhance it with our LSP features (linting, formatting, completions). This is preparation work only - publishing will be coordinated separately with the Sanity team.
 
-**Status**: Complete
+**Status**: Complete. The extension has since moved back to [sanity-io/vscode-sanity](https://github.com/sanity-io/vscode-sanity) and `packages/vscode-sanity` was removed from this repo; this section is kept as history.
 
 ### 7.1 Background
 
