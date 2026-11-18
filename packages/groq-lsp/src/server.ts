@@ -16,6 +16,7 @@ import {
   TextDocumentSyncKind,
   InitializeResult,
   DidChangeConfigurationNotification,
+  DidChangeWatchedFilesNotification,
   type InitializeParams,
   type TextDocumentPositionParams,
   type DocumentFormattingParams,
@@ -24,7 +25,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
 
-import { SchemaLoader } from './schema/loader.js'
+import { SchemaLoader, SCHEMA_WATCH_GLOBS } from './schema/loader.js'
 import { extractQueries, findQueryAtOffset, offsetToQueryPosition } from './utils/groq-extractor.js'
 import { computeDocumentDiagnostics } from './capabilities/diagnostics.js'
 import { getHoverInfo } from './capabilities/hover.js'
@@ -47,6 +48,7 @@ const documentStates = new Map<string, DocumentState>()
 // Server capabilities
 let hasConfigurationCapability = false
 let hasWorkspaceFolderCapability = false
+let hasWatchedFilesDynamicRegistration = false
 
 /**
  * Server settings
@@ -82,6 +84,9 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
   hasWorkspaceFolderCapability = !!(
     capabilities.workspace && !!capabilities.workspace.workspaceFolders
   )
+
+  hasWatchedFilesDynamicRegistration =
+    !!capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration
 
   // Try to discover schema in workspace
   if (params.workspaceFolders && params.workspaceFolders.length > 0) {
@@ -128,6 +133,12 @@ connection.onInitialized(() => {
     connection.client.register(DidChangeConfigurationNotification.type, undefined)
   }
 
+  if (hasWatchedFilesDynamicRegistration) {
+    connection.client.register(DidChangeWatchedFilesNotification.type, {
+      watchers: SCHEMA_WATCH_GLOBS.map((globPattern) => ({ globPattern })),
+    })
+  }
+
   // Start watching schema for changes
   schemaLoader.startWatching((schema) => {
     connection.console.log(`Schema ${schema ? 'reloaded' : 'cleared'}`)
@@ -156,6 +167,17 @@ connection.onDidChangeConfiguration((change) => {
   }
 
   // Re-validate all documents
+  documents.all().forEach(validateDocument)
+})
+
+/**
+ * Schema files created, changed or deleted on disk
+ */
+connection.onDidChangeWatchedFiles((params) => {
+  if (!schemaLoader.handleFileEvents(params.changes)) return
+
+  const { schema, error } = schemaLoader.getState()
+  connection.console.log(schema ? 'Schema reloaded' : `Schema cleared: ${error ?? 'unknown'}`)
   documents.all().forEach(validateDocument)
 })
 

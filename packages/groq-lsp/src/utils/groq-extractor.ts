@@ -3,7 +3,7 @@
  *
  * Supports:
  * - .groq files (entire content is GROQ)
- * - .ts/.tsx/.js/.jsx files (groq`...` template literals)
+ * - .ts/.tsx/.js/.jsx files (groq`...`, defineQuery(`...`) and /* groq *\/ `...` templates)
  */
 
 import type { ExtractionResult, GroqQuery } from '../types.js'
@@ -26,6 +26,19 @@ export function extractQueries(content: string, languageId: string): ExtractionR
 }
 
 /**
+ * Convert a document offset to a 0-indexed line and column
+ */
+function offsetToLineColumn(content: string, offset: number): { line: number; column: number } {
+  let line = 0
+  let lineStart = 0
+  for (let i = content.indexOf('\n'); i !== -1 && i < offset; i = content.indexOf('\n', i + 1)) {
+    line++
+    lineStart = i + 1
+  }
+  return { line, column: offset - lineStart }
+}
+
+/**
  * Extract from a .groq file - the entire content is a GROQ query
  */
 function extractFromGroqFile(content: string): ExtractionResult {
@@ -34,14 +47,15 @@ function extractFromGroqFile(content: string): ExtractionResult {
     return { queries: [], errors: [] }
   }
 
+  const start = content.indexOf(trimmed)
+
   return {
     queries: [
       {
         query: trimmed,
-        start: content.indexOf(trimmed),
-        end: content.indexOf(trimmed) + trimmed.length,
-        line: 0,
-        column: 0,
+        start,
+        end: start + trimmed.length,
+        ...offsetToLineColumn(content, start),
       },
     ],
     errors: [],
@@ -49,42 +63,43 @@ function extractFromGroqFile(content: string): ExtractionResult {
 }
 
 /**
+ * Matches the text that introduces an embedded GROQ template literal. The
+ * lookahead leaves the opening backtick for the caller to consume.
+ * - groq`...`
+ * - defineQuery(`...`)
+ * - /* groq *\/ `...`
+ *
+ * Only template literals are recognised: quoted strings may contain escapes
+ * that shift offsets, and formatting them would break the surrounding code.
+ */
+const EMBEDDED_QUERY_PREFIX =
+  /\bgroq\s*(?=`)|\bdefineQuery\s*\(\s*(?=`)|\/\*\s*groq\s*\*\/\s*(?=`)/g
+
+/**
  * Extract GROQ from JavaScript/TypeScript files
- * Looks for groq`...` tagged template literals
+ * Looks for groq`...`, defineQuery(`...`) and /* groq *\/ `...` templates
+ * (nested backticks are not handled; that would need a proper parser)
  */
 function extractFromJsTs(content: string): ExtractionResult {
   const queries: GroqQuery[] = []
   const errors: string[] = []
 
-  // Match groq`...` template literals
-  // This regex handles:
-  // - groq`query`
-  // - groq `query` (with space)
-  // - Nested backticks are not handled (would need a proper parser)
-  const groqTagRegex = /\bgroq\s*`([^`]*)`/g
+  EMBEDDED_QUERY_PREFIX.lastIndex = 0
 
   let match
-  while ((match = groqTagRegex.exec(content)) !== null) {
-    const queryContent = match[1]
-    if (queryContent === undefined) continue
-
-    const fullMatchStart = match.index
-    // The query content starts after "groq`"
-    const queryStart = fullMatchStart + match[0].indexOf('`') + 1
-
-    // Calculate line and column
-    const beforeMatch = content.slice(0, queryStart)
-    const lines = beforeMatch.split('\n')
-    const line = lines.length - 1
-    const column = lines[lines.length - 1]?.length ?? 0
+  while ((match = EMBEDDED_QUERY_PREFIX.exec(content)) !== null) {
+    const queryStart = match.index + match[0].length + 1
+    const queryEnd = content.indexOf('`', queryStart)
+    if (queryEnd === -1) continue
 
     queries.push({
-      query: queryContent,
+      query: content.slice(queryStart, queryEnd),
       start: queryStart,
-      end: queryStart + queryContent.length,
-      line,
-      column,
+      end: queryEnd,
+      ...offsetToLineColumn(content, queryStart),
     })
+
+    EMBEDDED_QUERY_PREFIX.lastIndex = queryEnd + 1
   }
 
   return { queries, errors }

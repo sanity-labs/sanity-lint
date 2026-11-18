@@ -6,6 +6,7 @@
 
 import type { TextEdit, Range } from 'vscode-languageserver'
 import type { GroqQuery } from '../types.js'
+import { extractQueries } from '../utils/groq-extractor.js'
 
 /**
  * Options for formatting
@@ -108,12 +109,9 @@ export async function formatGroqFile(
   content: string,
   options: FormattingOptions = {}
 ): Promise<TextEdit[]> {
-  const query: GroqQuery = {
-    query: content.trim(),
-    start: 0,
-    end: content.length,
-    line: 0,
-    column: 0,
+  const [query] = extractQueries(content, 'groq').queries
+  if (!query) {
+    return []
   }
 
   return formatQuery(query, options)

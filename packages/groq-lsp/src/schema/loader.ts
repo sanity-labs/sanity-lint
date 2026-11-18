@@ -9,7 +9,9 @@
  */
 
 import { readFileSync, existsSync, statSync, watch, type FSWatcher } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
+import { FileChangeType, type FileEvent } from 'vscode-languageserver'
+import { URI } from 'vscode-uri'
 import type { SchemaType } from 'groq-js'
 import type { SchemaState } from '../types.js'
 
@@ -22,6 +24,16 @@ const SCHEMA_CANDIDATES = [
   '.sanity/schema.json',
   'studio/schema.json',
 ]
+
+/**
+ * Glob patterns matching the well-known schema locations, for file watchers
+ */
+export const SCHEMA_WATCH_GLOBS = SCHEMA_CANDIDATES.map((candidate) => `**/${candidate}`)
+
+function isCandidatePath(filePath: string): boolean {
+  const normalized = filePath.replaceAll('\\', '/')
+  return SCHEMA_CANDIDATES.some((candidate) => normalized.endsWith(`/${candidate}`))
+}
 
 /**
  * SchemaLoader manages schema state for the LSP server
@@ -120,6 +132,44 @@ export class SchemaLoader {
       return true
     }
     return false
+  }
+
+  /**
+   * Apply workspace/didChangeWatchedFiles events to the schema state.
+   *
+   * Reloads or clears the active schema file, and picks up a newly created
+   * well-known schema file when none is loaded yet.
+   * Returns true when the schema state changed.
+   */
+  handleFileEvents(events: readonly FileEvent[]): boolean {
+    let changed = false
+
+    for (const event of events) {
+      const filePath = URI.parse(event.uri).fsPath
+      const isActive = !!this.state.path && resolve(this.state.path) === resolve(filePath)
+
+      switch (event.type) {
+        case FileChangeType.Created:
+        case FileChangeType.Changed:
+          if (isActive || (!this.state.schema && isCandidatePath(filePath))) {
+            this.loadFromPath(isActive && this.state.path ? this.state.path : filePath)
+            changed = true
+          }
+          break
+        case FileChangeType.Deleted:
+          if (isActive && this.state.path) {
+            this.loadFromPath(this.state.path)
+            changed = true
+          }
+          break
+        default: {
+          const unhandled: never = event.type
+          throw new Error(`Unhandled file change type: ${String(unhandled)}`)
+        }
+      }
+    }
+
+    return changed
   }
 
   /**
