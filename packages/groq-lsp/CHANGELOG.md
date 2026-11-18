@@ -1,5 +1,17 @@
 # @sanity/groq-lsp
 
+## 1.1.0
+
+### Minor Changes
+
+- 5cd98c5: Read groq-content-mapper's settings from the `tsconfig.json` nearest each document. When neither the `schemaPath` setting nor a well-known schema file in the workspace gives a schema, the mapper's `schema` or `schemas` option does. Queries in `.groq` files that call shared custom GROQ functions from the mapper's `functions` option are linted and hovered with the definitions they need prepended, as the mapper's loaders deliver them, instead of failing to parse.
+
+### Patch Changes
+
+- Updated dependencies [4d12bab]
+  - @sanity-labs/groq-wasm@1.2.2
+  - @sanity-labs/groq-lint@1.0.9
+
 ## 1.0.11
 
 ### Patch Changes
