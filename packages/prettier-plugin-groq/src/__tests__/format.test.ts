@@ -154,6 +154,32 @@ describe('prettier-plugin-groq', () => {
     })
   })
 
+  describe('bracket attribute access', () => {
+    const cases: [string, string][] = [
+      ['*[title["en-US"] == "Hello"]', '*[title["en-US"] == "Hello"]'],
+      ['*[@["b-c"] == 1]', '*[@["b-c"] == 1]'],
+      ['author->["b-c"]', 'author->["b-c"]'],
+      ['person["Full Name"]', 'person["Full Name"]'],
+      ['*[@["1"] == 1]', '*[@["1"] == 1]'],
+      ['*[@[""] == "bar"]', '*[@[""] == "bar"]'],
+      ['a["say \\"hi\\""]', 'a["say \\"hi\\""]'],
+      ['a["back\\\\slash"]', 'a["back\\\\slash"]'],
+      ['a["x-y"].z["q r"]', 'a["x-y"].z["q r"]'],
+      ['a->["x-y"]["z"]', 'a->["x-y"].z'],
+      ['a["b"]', 'a.b'],
+      ['a->["b_1"]', 'a->b_1'],
+    ]
+
+    it.each(cases)('formats %s', async (input, expected) => {
+      expect(await format(input)).toBe(expected)
+    })
+
+    it.each(cases)('is idempotent for %s', async (input) => {
+      const once = await format(input)
+      expect(await format(once)).toBe(once)
+    })
+  })
+
   describe('functions', () => {
     it('formats function call', async () => {
       expect(await format('count(*[_type == "post"])')).toBe('count(*[_type == "post"])')

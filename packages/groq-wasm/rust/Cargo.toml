@@ -11,7 +11,9 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 # GROQ tools from atombender
 groq-lint = { git = "https://github.com/atombender/groq-lint.git" }
-groq-format = { git = "https://github.com/atombender/groq-format.git" }
+# Fork pin for the bracket-attribute fix (atombender/groq-format#3).
+# Switch back to atombender/groq-format once that PR merges.
+groq-format = { git = "https://github.com/stipsan/groq-format.git", rev = "e7e795bc0042492914d8172ff3a83af24a7eff28" }
 # Direct parser access (`ParseResult::referenced_params`, and structured
 # `ParseError`s with UTF-8 byte spans for `validate`). Same git source
 # groq-lint and groq-format use, so Cargo resolves a single revision.
