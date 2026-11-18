@@ -24,6 +24,6 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
-    "next-sanity": "^13.5.0"
+    "next-sanity": "^13.5.1"
   }
 }
