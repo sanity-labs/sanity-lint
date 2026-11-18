@@ -17,8 +17,9 @@ This monorepo contains linting tools for Sanity, with integrations for different
 | Package                                                    | Description                                   |
 | ---------------------------------------------------------- | --------------------------------------------- |
 | **[@sanity-labs/eslint-plugin](./packages/eslint-plugin)** | ESLint plugin - lint rules in your IDE and CI |
-| **[vscode-sanity](./packages/vscode-sanity)**              | VS Code/Cursor extension with LSP support     |
 | **[@sanity-labs/groq-lint](./packages/groq-lint)**         | Standalone CLI for linting GROQ queries       |
+
+The VS Code/Cursor extension, which bundles `@sanity-labs/groq-lsp`, lives in [sanity-io/vscode-sanity](https://github.com/sanity-io/vscode-sanity).
 
 ### Core Libraries
 
@@ -144,7 +145,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on adding new lint rules.
 flowchart TB
     subgraph Integrations
         eslint["@sanity-labs/eslint-plugin"]
-        vscode[vscode-sanity]
         cli["CLI (@sanity-labs/groq-lint)"]
         prettier["@sanity-labs/prettier-plugin-groq"]
     end
@@ -173,7 +173,6 @@ flowchart TB
 
     eslint --> groqlint
     eslint --> schemalint
-    vscode --> lsp
     cli --> groqlint
     prettier --> wasm
 
