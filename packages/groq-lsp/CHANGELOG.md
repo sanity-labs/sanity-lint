@@ -1,5 +1,17 @@
 # @sanity/groq-lsp
 
+## 1.0.11
+
+### Patch Changes
+
+- 526e05f: Fix three language server bugs:
+
+  - Formatting a `.groq` file that starts with blank lines (or indentation) now replaces the correct range, and diagnostics for such files report correct line and column positions.
+  - Queries wrapped in `defineQuery(`...`)` and preceded by a `/* groq */` comment are now linted, hovered, completed and formatted, in addition to `groq` tagged templates.
+  - The server now handles `workspace/didChangeWatchedFiles` for schema files: it reloads or clears the schema and re-lints open documents, and registers watchers for well-known schema locations when the client supports dynamic registration.
+
+- af8ce20: Format GROQ by calling `format` from `@sanity-labs/groq-wasm` directly instead of going through Prettier and `@sanity-labs/prettier-plugin-groq`. Formatting now follows the editor's `tabSize`, and uses tabs when `insertSpaces` is `false`; before, it always indented with two spaces. `printWidth` is passed to groq-format as the line width. `prettier` and `@sanity-labs/prettier-plugin-groq` are no longer dependencies.
+
 ## 1.0.10
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @sanity/prettier-plugin-groq
 
+## 1.0.10
+
+### Patch Changes
+
+- 61fad7c: Fix the embed plugin leaving `$__exprN__` placeholders in the output when a `groq` or `defineQuery` template literal contains `${...}` interpolations. Interpolations are now restored exactly, and the template is left untouched if they cannot be.
+
 ## 1.0.9
 
 ### Patch Changes
