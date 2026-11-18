@@ -14,7 +14,7 @@
  * ```
  */
 
-import type { AstPath, Doc, Options, Plugin, Printer } from 'prettier'
+import { doc, type AstPath, type Doc, type Options, type Plugin, type Printer } from 'prettier'
 // @ts-expect-error - Prettier internal module
 import { printers as estreePrinters } from 'prettier/plugins/estree.mjs'
 import { parsers } from './index.js'
@@ -25,6 +25,62 @@ const defaultEmbed = defaultEstreePrinter.embed
 
 // Tags and function names that indicate GROQ content
 const GROQ_IDENTIFIERS = ['groq', 'defineQuery']
+
+const PLACEHOLDER_PREFIX = '$__expr'
+const PLACEHOLDER_SUFFIX = '__'
+const PLACEHOLDER_PATTERN = /\$__expr(\d+)__/g
+
+function placeholder(index: number): string {
+  return `${PLACEHOLDER_PREFIX}${index}${PLACEHOLDER_SUFFIX}`
+}
+
+/**
+ * Replace the placeholders that stand in for `${expr}` interpolations with the
+ * printed JavaScript expressions, so the template literal round-trips exactly.
+ *
+ * Returns `undefined` when the formatted GROQ does not contain every
+ * placeholder exactly once; callers should then leave the code untouched
+ * instead of emitting a corrupted template.
+ */
+function restoreExpressions(
+  formatted: Doc,
+  expressionCount: number,
+  printExpression: (index: number) => Doc,
+  options: Options
+): Doc | undefined {
+  const seen = new Array<number>(expressionCount).fill(0)
+  let unknownPlaceholder = false
+
+  const restored = doc.utils.mapDoc(formatted, (part) => {
+    if (typeof part !== 'string' || !part.includes(PLACEHOLDER_PREFIX)) return part
+
+    const pieces: Doc[] = []
+    let last = 0
+    for (const match of part.matchAll(PLACEHOLDER_PATTERN)) {
+      const index = Number(match[1])
+      if (index >= expressionCount) {
+        unknownPlaceholder = true
+        continue
+      }
+      seen[index] = (seen[index] ?? 0) + 1
+      pieces.push(part.slice(last, match.index))
+      // Print on a single line so the interpolation is never reflowed
+      const printed = doc.printer.printDocToString(printExpression(index), {
+        printWidth: Number.POSITIVE_INFINITY,
+        tabWidth: options.tabWidth ?? 2,
+        useTabs: options.useTabs ?? false,
+      }).formatted
+      pieces.push('${' + printed + '}')
+      last = match.index + match[0].length
+    }
+    if (pieces.length === 0) return part
+    pieces.push(part.slice(last))
+    return pieces
+  })
+
+  if (unknownPlaceholder || seen.some((count) => count !== 1)) return undefined
+  return restored
+}
 
 /**
  * Get the tag name from a TaggedTemplateExpression
@@ -106,7 +162,7 @@ function extractFromTemplate(node: EstreeLikeNode): string | null {
     result += q.value?.cooked ?? q.value?.raw ?? ''
     if (i < expressions.length) {
       // Use a GROQ parameter placeholder that will parse correctly
-      result += `$__expr${i}__`
+      result += placeholder(i)
     }
   }
 
@@ -151,7 +207,7 @@ function extractFromFunctionCall(node: EstreeLikeNode): string | null {
       if (!q) continue
       result += q.value?.cooked ?? q.value?.raw ?? ''
       if (i < expressions.length) {
-        result += `$__expr${i}__`
+        result += placeholder(i)
       }
     }
     return result
@@ -209,11 +265,19 @@ function embed(path: AstPath<EstreeLikeNode>, options: Options): EmbedFn | undef
         // Format the GROQ content
         const formattedGroq = await textToDoc(content.trim(), { parser: 'groq' })
 
+        const restored = restoreExpressions(
+          formattedGroq,
+          node.quasi?.expressions?.length ?? 0,
+          (index) => print(['quasi', 'expressions', index]),
+          options
+        )
+        if (!restored) return undefined
+
         // Get the tag printed normally
         const tag = print('tag')
 
         // Return the tag followed by formatted template literal
-        return [tag, '`', formattedGroq, '`']
+        return [tag, '`', restored, '`']
       } catch {
         // If GROQ formatting fails, return undefined to use default printing
         return undefined
@@ -234,11 +298,19 @@ function embed(path: AstPath<EstreeLikeNode>, options: Options): EmbedFn | undef
         // Format the GROQ content
         const formattedGroq = await textToDoc(content.trim(), { parser: 'groq' })
 
+        const restored = restoreExpressions(
+          formattedGroq,
+          node.arguments?.[0]?.expressions?.length ?? 0,
+          (index) => print(['arguments', 0, 'expressions', index]),
+          options
+        )
+        if (!restored) return undefined
+
         // Get the function name printed normally
         const callee = print('callee')
 
         // Return the function call with formatted GROQ
-        return [callee, '(`', formattedGroq, '`)']
+        return [callee, '(`', restored, '`)']
       } catch {
         // If GROQ formatting fails, return undefined to use default printing
         return undefined
