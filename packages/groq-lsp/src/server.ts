@@ -6,7 +6,7 @@
  * - Diagnostics (linting)
  * - Hover (type information)
  * - Completion (fields, functions, types)
- * - Formatting (via prettier-plugin-groq)
+ * - Formatting (via groq-format in @sanity-labs/groq-wasm)
  */
 
 import {

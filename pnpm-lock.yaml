@@ -434,13 +434,9 @@ snapshots:
 			"name": "@sanity-labs/groq-lsp",
 			"dependencies": {
 				"@sanity-labs/groq-lint": "workspace:*",
+				"@sanity-labs/groq-wasm": "workspace:*",
 				"@sanity-labs/lint-core": "workspace:*",
-				"@sanity-labs/prettier-plugin-groq": "workspace:*",
 				"groq-js": "catalog:",
-				"prettier": {
-					"specifier": "^3.10.1",
-					"version": "3.10.1",
-				},
 				"vscode-languageserver": {
 					"specifier": "^11.0.0",
 					"version": "11.0.0",

@@ -4,12 +4,12 @@ Language Server Protocol (LSP) implementation for GROQ - provides IDE features f
 
 ## Features
 
-| Feature         | Description                               |
-| --------------- | ----------------------------------------- |
-| **Diagnostics** | Real-time linting via `@sanity/groq-lint` |
-| **Hover**       | Type information and documentation        |
-| **Completion**  | Field names, functions, document types    |
-| **Formatting**  | Via `prettier-plugin-groq`                |
+| Feature         | Description                                |
+| --------------- | ------------------------------------------ |
+| **Diagnostics** | Real-time linting via `@sanity/groq-lint`  |
+| **Hover**       | Type information and documentation         |
+| **Completion**  | Field names, functions, document types     |
+| **Formatting**  | Via `@sanity-labs/groq-wasm` (groq-format) |
 
 ## Installation
 
@@ -217,7 +217,7 @@ Document type name
 
 ### Formatting
 
-Formats GROQ queries using `prettier-plugin-groq`:
+Formats GROQ queries with [groq-format](https://github.com/atombender/groq-format) through `@sanity-labs/groq-wasm`, wrapped to `printWidth` (default 80) and indented with `tabSize` spaces, or tabs when `insertSpaces` is `false`:
 
 ```groq
 // Before
@@ -297,7 +297,7 @@ const hover = getHoverInfo(query, cursorOffset, { schema })
 
 ### `formatQuery` / `formatDocument`
 
-Formats GROQ queries using Prettier.
+Formats GROQ queries with groq-format through `@sanity-labs/groq-wasm`. Queries that do not parse produce no edits.
 
 ```typescript
 const edits = await formatQuery(query, { tabSize: 2 })
@@ -323,6 +323,7 @@ pnpm dev
 ## Related Packages
 
 - [`@sanity/groq-lint`](../groq-lint) - GROQ linting rules
+- [`groq-wasm`](../groq-wasm) - WASM bindings for groq-lint and groq-format
 - [`prettier-plugin-groq`](../prettier-plugin-groq) - Prettier plugin for GROQ
 - [`@sanity/eslint-plugin`](../eslint-plugin) - ESLint plugin for Sanity
 

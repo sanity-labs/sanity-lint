@@ -5,7 +5,7 @@
  * - Diagnostics (via @sanity/groq-lint)
  * - Hover information
  * - Auto-completion
- * - Formatting (via prettier-plugin-groq)
+ * - Formatting (via groq-format in @sanity-labs/groq-wasm)
  *
  * ## Usage
  *

@@ -1,9 +1,10 @@
 /**
  * Formatting capability for the GROQ Language Server
  *
- * Uses prettier-plugin-groq for GROQ formatting
+ * Uses groq-format through @sanity-labs/groq-wasm
  */
 
+import { DEFAULT_WIDTH, format, WasmError } from '@sanity-labs/groq-wasm'
 import type { TextEdit, Range } from 'vscode-languageserver'
 import type { GroqQuery } from '../types.js'
 import { extractQueries } from '../utils/groq-extractor.js'
@@ -20,48 +21,52 @@ export interface FormattingOptions {
   printWidth?: number
 }
 
+/** groq-format always indents with two spaces per level. */
+const GROQ_FORMAT_INDENT = '  '
+
 /**
- * Format a GROQ query using prettier
+ * Format GROQ source with groq-wasm's `format`, indented with `tabSize` spaces (default 2) or,
+ * when `insertSpaces` is false, a tab per level. Throws a `WasmError` if the query cannot be parsed.
+ */
+function formatGroq(source: string, options: FormattingOptions = {}): string {
+  const formatted = format(source, { width: options.printWidth ?? DEFAULT_WIDTH }).trimEnd()
+  const unit = (options.insertSpaces ?? true) ? ' '.repeat(options.tabSize ?? 2) : '\t'
+  if (unit === GROQ_FORMAT_INDENT) {
+    return formatted
+  }
+  // groq-format escapes line breaks inside strings, so leading spaces on a line are always indentation.
+  return formatted.replace(/^(?: {2})+/gm, (indent) =>
+    unit.repeat(indent.length / GROQ_FORMAT_INDENT.length)
+  )
+}
+
+/**
+ * Format a GROQ query with groq-format
  */
 export async function formatQuery(
   query: GroqQuery,
   options: FormattingOptions = {}
 ): Promise<TextEdit[]> {
+  let formatted: string
   try {
-    // Dynamic import to avoid bundling issues
-    const prettier = await import('prettier')
-    const groqPlugin = await import('@sanity-labs/prettier-plugin-groq')
-
-    const formatted = await prettier.format(query.query, {
-      parser: 'groq',
-      plugins: [groqPlugin.default ?? groqPlugin],
-      tabWidth: options.tabSize ?? 2,
-      useTabs: !(options.insertSpaces ?? true),
-      printWidth: options.printWidth ?? 80,
-    })
-
-    // Trim trailing newline that prettier adds
-    const trimmedFormatted = formatted.trimEnd()
-
-    // No changes needed
-    if (trimmedFormatted === query.query) {
-      return []
-    }
-
-    // Calculate the range to replace
-    const range = queryToRange(query)
-
-    return [
-      {
-        range,
-        newText: trimmedFormatted,
-      },
-    ]
+    formatted = formatGroq(query.query, options)
   } catch (error) {
-    // Formatting failed (likely parse error), return empty edits
-    console.error('Formatting failed:', error)
+    if (!(error instanceof WasmError && error.code === 'PARSE_ERROR')) {
+      console.error('Formatting failed:', error)
+    }
     return []
   }
+
+  if (formatted === query.query) {
+    return []
+  }
+
+  return [
+    {
+      range: queryToRange(query),
+      newText: formatted,
+    },
+  ]
 }
 
 /**
