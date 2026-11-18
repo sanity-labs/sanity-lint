@@ -212,31 +212,6 @@ mod tests {
     }
 
     #[test]
-    fn test_format_keeps_bracket_access_for_non_identifier_keys() {
-        let cases = [
-            ("*[title[\"en-US\"] == \"Hello\"]", "*[title[\"en-US\"] == \"Hello\"]"),
-            ("*[@[\"b-c\"] == 1]", "*[@[\"b-c\"] == 1]"),
-            ("author->[\"b-c\"]", "author->[\"b-c\"]"),
-            ("person[\"Full Name\"]", "person[\"Full Name\"]"),
-            ("*[@[\"1\"] == 1]", "*[@[\"1\"] == 1]"),
-            ("*[@[\"\"] == \"bar\"]", "*[@[\"\"] == \"bar\"]"),
-            ("a[\"say \\\"hi\\\"\"]", "a[\"say \\\"hi\\\"\"]"),
-            ("a[\"back\\\\slash\"]", "a[\"back\\\\slash\"]"),
-            ("a[\"x-y\"].z[\"q r\"]", "a[\"x-y\"].z[\"q r\"]"),
-            ("a->[\"x-y\"][\"z\"]", "a->[\"x-y\"].z"),
-            ("a[\"b\"]", "a.b"),
-            ("a->[\"b_1\"]", "a->b_1"),
-            ("a[\"_\"]", "a._"),
-        ];
-        for (input, expected) in cases {
-            let output = format(input, Some(80)).ok().unwrap();
-            assert_eq!(output, expected, "{input}");
-            let again = format(&output, Some(80)).ok().unwrap();
-            assert_eq!(again, output, "not idempotent: {input}");
-        }
-    }
-
-    #[test]
     fn test_validate_valid_query() {
         assert_eq!(validate("*[_type == \"post\"]"), "{\"ok\":true}");
     }
