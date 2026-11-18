@@ -2,7 +2,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { writeFileSync, rmSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { SchemaLoader } from '../schema/loader'
+import { pathToFileURL } from 'node:url'
+import { FileChangeType } from 'vscode-languageserver'
+import { SchemaLoader, SCHEMA_WATCH_GLOBS } from '../schema/loader'
 
 describe('SchemaLoader', () => {
   let loader: SchemaLoader
@@ -212,5 +214,119 @@ describe('SchemaLoader', () => {
       expect(loader.getSchema()).toBeUndefined()
       expect(loader.getState().path).toBeUndefined()
     })
+  })
+})
+
+describe('SchemaLoader.handleFileEvents', () => {
+  let loader: SchemaLoader
+  let tempDir: string
+  let schemaPath: string
+
+  const post = [{ type: 'document', name: 'post', attributes: {} }]
+  const article = [{ type: 'document', name: 'article', attributes: {} }]
+
+  beforeEach(() => {
+    loader = new SchemaLoader()
+    tempDir = join(tmpdir(), `groq-lsp-events-${Date.now()}-${Math.random().toString(16).slice(2)}`)
+    mkdirSync(tempDir, { recursive: true })
+    schemaPath = join(tempDir, 'schema.json')
+  })
+
+  afterEach(() => {
+    loader.clear()
+    rmSync(tempDir, { recursive: true, force: true })
+  })
+
+  it('reloads the active schema on a Changed event', () => {
+    writeFileSync(schemaPath, JSON.stringify(post))
+    loader.loadFromPath(schemaPath)
+    writeFileSync(schemaPath, JSON.stringify(article))
+
+    const changed = loader.handleFileEvents([
+      { uri: pathToFileURL(schemaPath).toString(), type: FileChangeType.Changed },
+    ])
+
+    expect(changed).toBe(true)
+    expect(loader.getSchema()).toEqual(article)
+  })
+
+  it('clears the active schema on a Deleted event', () => {
+    writeFileSync(schemaPath, JSON.stringify(post))
+    loader.loadFromPath(schemaPath)
+    rmSync(schemaPath)
+
+    const changed = loader.handleFileEvents([
+      { uri: pathToFileURL(schemaPath).toString(), type: FileChangeType.Deleted },
+    ])
+
+    expect(changed).toBe(true)
+    expect(loader.getSchema()).toBeUndefined()
+    expect(loader.getState().error).toContain('not found')
+  })
+
+  it('loads a well-known schema file created after startup when none is loaded', () => {
+    loader.discoverSchema(tempDir)
+    expect(loader.getSchema()).toBeUndefined()
+    writeFileSync(schemaPath, JSON.stringify(post))
+
+    const changed = loader.handleFileEvents([
+      { uri: pathToFileURL(schemaPath).toString(), type: FileChangeType.Created },
+    ])
+
+    expect(changed).toBe(true)
+    expect(loader.getSchema()).toEqual(post)
+    expect(loader.getState().path).toBe(schemaPath)
+  })
+
+  it('does not replace a loaded schema with a different candidate file', () => {
+    writeFileSync(schemaPath, JSON.stringify(post))
+    loader.loadFromPath(schemaPath)
+    mkdirSync(join(tempDir, '.sanity'))
+    const other = join(tempDir, '.sanity', 'schema.json')
+    writeFileSync(other, JSON.stringify(article))
+
+    const changed = loader.handleFileEvents([
+      { uri: pathToFileURL(other).toString(), type: FileChangeType.Created },
+    ])
+
+    expect(changed).toBe(false)
+    expect(loader.getSchema()).toEqual(post)
+  })
+
+  it('ignores unrelated files', () => {
+    writeFileSync(schemaPath, JSON.stringify(post))
+    loader.loadFromPath(schemaPath)
+    const unrelated = join(tempDir, 'package.json')
+    writeFileSync(unrelated, '{}')
+
+    const changed = loader.handleFileEvents([
+      { uri: pathToFileURL(unrelated).toString(), type: FileChangeType.Changed },
+      { uri: pathToFileURL(unrelated).toString(), type: FileChangeType.Deleted },
+    ])
+
+    expect(changed).toBe(false)
+    expect(loader.getSchema()).toEqual(post)
+  })
+
+  it('ignores a Deleted event for a file that is not the active schema', () => {
+    const other = join(tempDir, 'sanity.schema.json')
+    writeFileSync(schemaPath, JSON.stringify(post))
+    loader.loadFromPath(schemaPath)
+
+    const changed = loader.handleFileEvents([
+      { uri: pathToFileURL(other).toString(), type: FileChangeType.Deleted },
+    ])
+
+    expect(changed).toBe(false)
+    expect(loader.getSchema()).toEqual(post)
+  })
+
+  it('exposes watch globs for every schema candidate', () => {
+    expect(SCHEMA_WATCH_GLOBS).toEqual([
+      '**/schema.json',
+      '**/sanity.schema.json',
+      '**/.sanity/schema.json',
+      '**/studio/schema.json',
+    ])
   })
 })

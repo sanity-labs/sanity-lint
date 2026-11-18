@@ -144,6 +144,8 @@ The server automatically searches for schema files in these locations:
 3. `.sanity/schema.json`
 4. `studio/schema.json`
 
+The server reloads the schema when it receives `workspace/didChangeWatchedFiles` events for these files (it registers watchers itself when the client supports dynamic registration), and re-lints open documents.
+
 Generate a schema file from your Sanity project:
 
 ```bash
@@ -179,11 +181,11 @@ In VS Code, configure via `settings.json`:
 
 The server provides features for:
 
-| Language   | File Types    | Query Detection               |
-| ---------- | ------------- | ----------------------------- |
-| GROQ       | `.groq`       | Entire file                   |
-| TypeScript | `.ts`, `.tsx` | `groq`...`` template literals |
-| JavaScript | `.js`, `.jsx` | `groq`...`` template literals |
+| Language   | File Types    | Query Detection                                                            |
+| ---------- | ------------- | -------------------------------------------------------------------------- |
+| GROQ       | `.groq`       | Entire file                                                                |
+| TypeScript | `.ts`, `.tsx` | `groq`...``, `defineQuery(`...`)` and `/* groq */ `...`` template literals |
+| JavaScript | `.js`, `.jsx` | `groq`...``, `defineQuery(`...`)` and `/* groq */ `...`` template literals |
 
 ## LSP Capabilities
 

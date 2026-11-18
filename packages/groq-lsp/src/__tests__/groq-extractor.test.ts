@@ -178,3 +178,97 @@ describe('offsetToQueryPosition', () => {
     expect(result).toBe(18)
   })
 })
+
+describe('extractQueries positions for .groq files', () => {
+  it('reports line and column after leading blank lines', () => {
+    const content = '\n\n  *[_type == "post"]\n'
+    const result = extractQueries(content, 'groq')
+
+    expect(result.queries).toHaveLength(1)
+    expect(result.queries[0]?.start).toBe(4)
+    expect(result.queries[0]?.line).toBe(2)
+    expect(result.queries[0]?.column).toBe(2)
+  })
+})
+
+describe('extractQueries: defineQuery and /* groq */ comments', () => {
+  it('extracts defineQuery template literals', () => {
+    const content = 'const q = defineQuery(`*[_type == "post"]`)'
+    const result = extractQueries(content, 'typescript')
+
+    expect(result.queries).toHaveLength(1)
+    expect(result.queries[0]?.query).toBe('*[_type == "post"]')
+    expect(result.queries[0]?.start).toBe(content.indexOf('*['))
+    expect(result.queries[0]?.line).toBe(0)
+    expect(result.queries[0]?.column).toBe(content.indexOf('*['))
+  })
+
+  it('extracts defineQuery with whitespace and newlines before the template', () => {
+    const content = 'export const q = defineQuery(\n  `*[_type == "post"]`\n)'
+    const result = extractQueries(content, 'typescript')
+
+    expect(result.queries).toHaveLength(1)
+    expect(result.queries[0]?.query).toBe('*[_type == "post"]')
+    expect(result.queries[0]?.line).toBe(1)
+    expect(result.queries[0]?.column).toBe(3)
+  })
+
+  it('extracts multi-line defineQuery templates in tsx files', () => {
+    const content = 'const q = defineQuery(`\n*[_type == "post"]{\n  title\n}\n`)'
+    const result = extractQueries(content, 'typescriptreact')
+
+    expect(result.queries).toHaveLength(1)
+    expect(result.queries[0]?.query).toContain('title')
+  })
+
+  it('extracts templates preceded by a /* groq */ comment', () => {
+    const content = 'const q = /* groq */ `*[_type == "post"]`'
+    const result = extractQueries(content, 'javascript')
+
+    expect(result.queries).toHaveLength(1)
+    expect(result.queries[0]?.query).toBe('*[_type == "post"]')
+    expect(result.queries[0]?.start).toBe(content.indexOf('*['))
+  })
+
+  it('accepts /*groq*/ without inner spaces', () => {
+    const result = extractQueries('const q = /*groq*/`*[_type == "post"]`', 'typescript')
+
+    expect(result.queries).toHaveLength(1)
+  })
+
+  it('returns all query forms in document order', () => {
+    const content = [
+      'const a = defineQuery(`*[_type == "a"]`)',
+      'const b = groq`*[_type == "b"]`',
+      'const c = /* groq */ `*[_type == "c"]`',
+    ].join('\n')
+    const result = extractQueries(content, 'typescript')
+
+    expect(result.queries.map((q) => q.query)).toEqual([
+      '*[_type == "a"]',
+      '*[_type == "b"]',
+      '*[_type == "c"]',
+    ])
+    expect(result.queries.map((q) => q.line)).toEqual([0, 1, 2])
+  })
+
+  it('ignores unrelated template literals and non-groq comments', () => {
+    const content =
+      'const a = `*[_type == "a"]`\nconst b = /* sql */ `select 1`\nconst c = defineQuery'
+    const result = extractQueries(content, 'typescript')
+
+    expect(result.queries).toHaveLength(0)
+  })
+
+  it('ignores defineQuery with a non-template argument', () => {
+    const result = extractQueries('const q = defineQuery(query)', 'typescript')
+
+    expect(result.queries).toHaveLength(0)
+  })
+
+  it('ignores an unterminated template', () => {
+    const result = extractQueries('const q = defineQuery(`*[_type == "a"]', 'typescript')
+
+    expect(result.queries).toHaveLength(0)
+  })
+})
