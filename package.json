@@ -51,5 +51,14 @@
   "packageManager": "pnpm@12.21.0",
   "engines": {
     "node": "^22.22.1 || ^24.0.0 || >=26.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanity-labs/sanity-lint.git"
+  },
+  "homepage": "https://github.com/sanity-labs/sanity-lint#readme",
+  "bugs": {
+    "url": "https://github.com/sanity-labs/sanity-lint/issues"
   }
 }
