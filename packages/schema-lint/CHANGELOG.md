@@ -1,5 +1,12 @@
 # @sanity/schema-lint
 
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies [a202095]
+  - @sanity-labs/lint-core@1.0.3
+
 ## 1.0.3
 
 ### Patch Changes

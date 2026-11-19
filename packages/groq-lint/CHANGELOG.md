@@ -1,5 +1,15 @@
 # @sanity/groq-lint
 
+## 1.3.1
+
+### Patch Changes
+
+- a202095: Update `groq-js` to ^2.0.2. A field the schema makes nullable is now typed as non-null under a `defined(field)` or `field != null` filter even when the filter has terms that cannot be decided, such as `_type == $type`, and `defined(path.to.field)` narrows a path through a named type.
+- 644a1ac: Update `@sanity/codegen` to ^8.3.2, which depends on `groq-js` ^2.0.2, so installs no longer pull in a second, older `groq-js` without `defined()` filter narrowing.
+- Updated dependencies [a202095]
+  - @sanity-labs/lint-core@1.0.3
+  - @sanity-labs/groq-wasm@1.2.4
+
 ## 1.3.0
 
 ### Minor Changes
