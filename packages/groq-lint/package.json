@@ -9,6 +9,10 @@
     "url": "git+https://github.com/sanity-labs/sanity-lint.git",
     "directory": "packages/groq-lint"
   },
+  "homepage": "https://github.com/sanity-labs/sanity-lint/tree/main/packages/groq-lint#readme",
+  "bugs": {
+    "url": "https://github.com/sanity-labs/sanity-lint/issues"
+  },
   "type": "module",
   "exports": {
     ".": {

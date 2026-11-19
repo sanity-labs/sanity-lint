@@ -9,7 +9,7 @@
     "url": "git+https://github.com/sanity-labs/sanity-lint.git",
     "directory": "packages/eslint-plugin"
   },
-  "homepage": "https://github.com/sanity-labs/sanity-lint#readme",
+  "homepage": "https://github.com/sanity-labs/sanity-lint/tree/main/packages/eslint-plugin#readme",
   "bugs": {
     "url": "https://github.com/sanity-labs/sanity-lint/issues"
   },

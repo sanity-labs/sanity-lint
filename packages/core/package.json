@@ -9,6 +9,10 @@
     "url": "git+https://github.com/sanity-labs/sanity-lint.git",
     "directory": "packages/core"
   },
+  "homepage": "https://github.com/sanity-labs/sanity-lint/tree/main/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/sanity-labs/sanity-lint/issues"
+  },
   "keywords": [
     "sanity",
     "lint",
