@@ -2,14 +2,17 @@
  * Format a groq-js type for a hover: objects are printed with their attributes, recursively, as
  * `name?: type;` lines, so a hover shows what a value holds rather than the word `object`.
  *
- * Named types are expanded from the schema. Output is bounded: objects nested deeper than
+ * Types print as `@sanity/codegen` generates them, with named types expanded from the schema:
+ * literals as literals, an empty union as `never`, an array of named types with the `_key` its
+ * `ArrayOf<…>` adds, and a type the schema does not name, or an object whose other attributes
+ * groq-js cannot tell, as `unknown`. Output is bounded: objects nested deeper than
  * {@link MAX_DEPTH}, objects past the {@link MAX_ATTRIBUTES_PER_OBJECT} cut-off, and everything
  * past a total of {@link MAX_TOTAL_ATTRIBUTES} printed attributes are cut short, and a recursive
  * type is printed by name where it repeats. {@link FormattedType.notes} says which of those
  * happened so the hover can tell the reader.
  */
 
-import type { ObjectAttribute, ObjectTypeNode, SchemaType, TypeNode } from 'groq-js'
+import type { ArrayTypeNode, ObjectAttribute, ObjectTypeNode, SchemaType, TypeNode } from 'groq-js'
 
 /** How many objects may be nested in one another before the next one is printed as `{ … }`. */
 export const MAX_DEPTH = 6
@@ -90,23 +93,33 @@ function unionMembers(type: TypeNode): Array<TypeNode> {
   return type.type === 'union' ? type.of.flatMap(unionMembers) : [type]
 }
 
+/**
+ * `keyed` adds the `_key: string` that codegen's `ArrayOf<…>` gives each item of an array of
+ * named types.
+ */
 function formatUnion(
   types: Array<TypeNode>,
   state: State,
   depth: number,
   seen: Array<string>,
-  bareLiterals: boolean
+  bareLiterals: boolean,
+  keyed = false
 ): string {
   const members = types.flatMap(unionMembers)
+  if (members.length === 0) {
+    return 'never'
+  }
   const nullable = members.some((member) => member.type === 'null')
   const parts = [
     ...new Set(
       members.flatMap((member) =>
-        member.type === 'null' ? [] : [formatMember(member, state, depth, seen, bareLiterals)]
+        member.type === 'null'
+          ? []
+          : [formatMember(member, state, depth, seen, bareLiterals, keyed)]
       )
     ),
   ]
-  if (nullable || parts.length === 0) {
+  if (nullable) {
     parts.push('null')
   }
   return parts.join(' | ')
@@ -117,43 +130,73 @@ function formatMember(
   state: State,
   depth: number,
   seen: Array<string>,
-  bareLiterals: boolean
+  bareLiterals: boolean,
+  keyed: boolean
 ): string {
   switch (type.type) {
     case 'null':
-    case 'boolean':
-    case 'number':
     case 'unknown':
       return type.type
+    case 'boolean':
+    case 'number':
+      return type.value === undefined ? type.type : String(type.value)
     case 'string':
       if (type.value === undefined) {
         return 'string'
       }
       return bareLiterals ? type.value : JSON.stringify(type.value)
     case 'array':
-      return `Array<${formatUnion([type.of], state, depth, seen, false)}>`
+      return formatArray(type, state, depth, seen)
     case 'union':
-      return formatUnion([type], state, depth, seen, bareLiterals)
+      return formatUnion([type], state, depth, seen, bareLiterals, keyed)
     case 'inline': {
       const declared = state.schema.find((entry) => entry.name === type.name)
       if (!declared) {
-        return type.name
+        return 'unknown'
       }
       if (seen.includes(type.name)) {
         state.recursive = true
-        return type.name
+        return keyed
+          ? `${type.name} & ${formatObject({ type: 'object', attributes: {} }, state, depth, seen, true)}`
+          : type.name
       }
       const inner: TypeNode =
         declared.type === 'document'
           ? { type: 'object', attributes: declared.attributes }
           : declared.value
-      return formatUnion([inner], state, depth, [...seen, type.name], bareLiterals)
+      return formatUnion([inner], state, depth, [...seen, type.name], bareLiterals, keyed)
     }
     case 'object':
-      return formatObject(type, state, depth, seen)
+      return formatObject(type, state, depth, seen, keyed)
     default:
       return assertNever(type)
   }
+}
+
+/**
+ * An array as codegen types it: an array of named types is an `ArrayOf<…>`, whose items have a
+ * `_key`, and an array of named types and other types is split into one array of each.
+ */
+function formatArray(
+  type: ArrayTypeNode,
+  state: State,
+  depth: number,
+  seen: Array<string>
+): string {
+  const of = type.of
+  if (of.type !== 'union') {
+    return `Array<${formatUnion([of], state, depth, seen, false, of.type === 'inline')}>`
+  }
+  const named = of.of.filter((member) => member.type === 'inline')
+  if (named.length === 0 || named.length === of.of.length) {
+    return `Array<${formatUnion([of], state, depth, seen, false, named.length > 0)}>`
+  }
+  const others = of.of.filter((member) => member.type !== 'inline')
+  return [others, named]
+    .map((members) =>
+      formatArray({ type: 'array', of: { type: 'union', of: members } }, state, depth, seen)
+    )
+    .join(' | ')
 }
 
 export interface ObjectShape {
@@ -192,9 +235,13 @@ export function objectShape(
       }
       visited.push(name)
       const declared = schema.find((entry) => entry.name === name)
-      if (declared?.type === 'document') {
+      if (!declared) {
+        open = true
+        break
+      }
+      if (declared.type === 'document') {
         object = { type: 'object', attributes: declared.attributes }
-      } else if (declared?.type === 'type' && declared.value.type === 'object') {
+      } else if (declared.value.type === 'object') {
         object = declared.value
       }
     } else {
@@ -214,14 +261,29 @@ export function objectShape(
   return { attributes, open }
 }
 
+/** An identifier name, which a TypeScript property can have without quotes. */
+const IDENTIFIER = /^[\p{ID_Start}$_][\p{ID_Continue}$\u200C\u200D]*$/u
+
 function formatObject(
   type: ObjectTypeNode,
   state: State,
   depth: number,
-  seen: Array<string>
+  seen: Array<string>,
+  keyed: boolean
 ): string {
   const { attributes, open } = objectShape(type, state.schema, seen)
-  if (attributes.length === 0 && !open) {
+  if (open) {
+    return 'unknown'
+  }
+  if (keyed) {
+    const key = attributes.find(([name]) => name === '_key')
+    if (key) {
+      key[1] = { ...key[1], optional: false }
+    } else {
+      attributes.unshift(['_key', { type: 'objectAttribute', value: { type: 'string' } }])
+    }
+  }
+  if (attributes.length === 0) {
     return '{}'
   }
   if (depth >= MAX_DEPTH) {
@@ -242,19 +304,14 @@ function formatObject(
     }
     state.printed++
     const value = formatUnion([attribute.value], state, depth + 1, seen, false)
-    lines.push(`${name}${attribute.optional ? '?' : ''}: ${value};`)
+    const key = IDENTIFIER.test(name) ? name : JSON.stringify(name)
+    lines.push(`${key}${attribute.optional ? '?' : ''}: ${value};`)
   }
   if (attributes.length > MAX_ATTRIBUTES_PER_OBJECT) {
     state.tooWide = true
     lines.push(`… ${attributes.length - MAX_ATTRIBUTES_PER_OBJECT} more`)
   }
-  if (open) {
-    lines.push('[key: string]: unknown;')
-  }
 
-  if (lines.length === 0) {
-    return '{}'
-  }
   const inner = INDENT.repeat(depth + 1)
   const body = lines
     .map((line) =>

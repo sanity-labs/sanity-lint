@@ -56,7 +56,37 @@ describe('formatType', () => {
     expect(formatType({ type: 'array', of: object({}) }, []).text).toBe('Array<{}>')
   })
 
-  it('expands named types from the schema and keeps the name of an unknown one', () => {
+  it('prints number and boolean literals as literals, as codegen does', () => {
+    expect(formatType({ type: 'number', value: 3 }, []).text).toBe('3')
+    expect(formatType({ type: 'boolean', value: false }, []).text).toBe('false')
+    const union: TypeNode = {
+      type: 'union',
+      of: [{ type: 'number', value: 1 }, { type: 'number', value: 2 }, { type: 'null' }],
+    }
+    expect(formatType(union, []).text).toBe('1 | 2 | null')
+  })
+
+  it('prints an empty union as never, as codegen does', () => {
+    const never: TypeNode = { type: 'union', of: [] }
+    expect(formatType(never, []).text).toBe('never')
+    expect(formatType({ type: 'array', of: never }, []).text).toBe('Array<never>')
+    expect(formatType(object({ listItem: attribute(never, true) }), []).text).toBe(
+      '{\n  listItem?: never;\n}'
+    )
+  })
+
+  it('quotes a key that is not an identifier, as codegen does', () => {
+    const type = object({
+      'my title': attribute(string),
+      título: attribute(string),
+      $id: attribute(string),
+    })
+    expect(formatType(type, []).text).toBe(
+      '{\n  "my title": string;\n  título: string;\n  $id: string;\n}'
+    )
+  })
+
+  it('expands named types from the schema and prints one it does not have as unknown', () => {
     const schema: SchemaType = [
       { type: 'type', name: 'seo', value: object({ description: attribute(string) }) },
       { type: 'document', name: 'page', attributes: { title: attribute(string) } },
@@ -65,7 +95,44 @@ describe('formatType', () => {
       '{\n  description: string;\n}'
     )
     expect(formatType({ type: 'inline', name: 'page' }, schema).text).toBe('{\n  title: string;\n}')
-    expect(formatType({ type: 'inline', name: 'missing' }, schema).text).toBe('missing')
+    expect(formatType({ type: 'inline', name: 'missing' }, schema).text).toBe('unknown')
+  })
+
+  it('gives the items of an array of named types the _key of ArrayOf, as codegen does', () => {
+    const schema: SchemaType = [
+      {
+        type: 'type',
+        name: 'link',
+        value: object({ href: attribute(string), _key: attribute(string, true) }),
+      },
+      {
+        type: 'type',
+        name: 'reference',
+        value: object({
+          _ref: attribute(string),
+          _type: attribute({ type: 'string', value: 'reference' }),
+        }),
+      },
+    ]
+    const link: TypeNode = { type: 'inline', name: 'link' }
+    const reference: TypeNode = { type: 'inline', name: 'reference' }
+    expect(formatType({ type: 'array', of: reference }, schema).text).toBe(
+      'Array<{\n  _key: string;\n  _ref: string;\n  _type: "reference";\n}>'
+    )
+    expect(
+      formatType({ type: 'array', of: { type: 'union', of: [link, reference] } }, schema).text
+    ).toBe(
+      'Array<{\n  href: string;\n  _key: string;\n} | {\n  _key: string;\n  _ref: string;\n  _type: "reference";\n}>'
+    )
+    expect(
+      formatType(
+        { type: 'array', of: { type: 'union', of: [object({ a: attribute(string) }), link] } },
+        schema
+      ).text
+    ).toBe('Array<{\n  a: string;\n}> | Array<{\n  href: string;\n  _key: string;\n}>')
+    expect(formatType(object({ items: attribute({ type: 'array', of: link }) }), schema).text).toBe(
+      '{\n  items: Array<{\n    href: string;\n    _key: string;\n  }>;\n}'
+    )
   })
 
   it('folds the attributes of the rest of an object into it', () => {
@@ -107,15 +174,22 @@ describe('formatType', () => {
       rest: object({ a: attribute(string) }),
     }
     expect(formatType(inline, schema).text).toBe('{\n  a: string;\n}')
-    const open: TypeNode = { type: 'object', attributes: {}, rest: { type: 'unknown' } }
-    expect(formatType(open, schema).text).toBe('{\n  [key: string]: unknown;\n}')
     expect(formatType({ type: 'inline', name: 'loop' }, schema).text).toBe('{}')
+  })
+
+  it('prints an object whose other attributes are unknown as unknown, as codegen does', () => {
+    const open: TypeNode = {
+      type: 'object',
+      attributes: { title: attribute(string) },
+      rest: { type: 'unknown' },
+    }
+    expect(formatType(open, []).text).toBe('unknown')
     const missing: TypeNode = {
       type: 'object',
-      attributes: {},
+      attributes: { title: attribute(string) },
       rest: { type: 'inline', name: 'nope' },
     }
-    expect(formatType(missing, schema).text).toBe('{}')
+    expect(formatType(missing, []).text).toBe('unknown')
   })
 
   it('breaks a type that contains itself and says so', () => {
@@ -132,6 +206,22 @@ describe('formatType', () => {
     const { text, notes } = formatType({ type: 'inline', name: 'category' }, schema)
     expect(text).toBe('{\n  title: string;\n  parent?: category;\n}')
     expect(notes).toEqual(['A type that contains itself is shown by name where it repeats.'])
+  })
+
+  it('keeps the _key of ArrayOf on an item shown by name where its type repeats', () => {
+    const schema: SchemaType = [
+      {
+        type: 'type',
+        name: 'category',
+        value: object({
+          title: attribute(string),
+          children: attribute({ type: 'array', of: { type: 'inline', name: 'category' } }, true),
+        }),
+      },
+    ]
+    expect(formatType({ type: 'inline', name: 'category' }, schema).text).toBe(
+      '{\n  title: string;\n  children?: Array<category & {\n    _key: string;\n  }>;\n}'
+    )
   })
 
   it('collapses objects nested past the depth cap and says so', () => {
