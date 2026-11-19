@@ -414,6 +414,40 @@ describe('hover types read from the syntax tree', () => {
   })
 })
 
+describe('hover the start of a chain that goes on', () => {
+  it('hovers an attribute of each document a filter gives', () => {
+    expect(hoverText('*[_type == "page"].slug.current', 'slug')).toBe(
+      fenced('slug: Array<{\n  _type: "slug";\n  current?: string;\n} | null>')
+    )
+  })
+
+  it('hovers an attribute of each document an array of references leads to', () => {
+    const query = '*[_type == "home"][0]{"slugs": showcaseProjects[]->slug.current}'
+    expect(hoverText(query, 'slug.current')).toBe(
+      fenced('slug: Array<{\n  current?: string;\n} | null> | null')
+    )
+  })
+
+  it('hovers a pipe function that a projection or a slice follows', () => {
+    const posts = fenced(
+      'order: Array<{\n  _id: string;\n  _type: "post";\n  title: number;\n  views: number;\n}>'
+    )
+    expect(hoverText('*[_type == "post"] | order(views desc) {views}', 'order')).toContain(posts)
+    expect(hoverText('*[_type == "post"] | order(views desc)[0...2].views', 'order')).toContain(
+      posts
+    )
+  })
+
+  it('hovers a field that a shorthand attribute indexes, maps or projects', () => {
+    const tags = fenced('tags: Array<string> | null')
+    expect(hoverText('*[_type == "page"]{tags[0]}', 'tags')).toBe(tags)
+    expect(hoverText('*[_type == "page"]{tags[]}', 'tags')).toBe(tags)
+    expect(
+      hoverText('*[_type == "home"][0]{showcaseProjects[]->{title}.title}', 'showcaseProjects')
+    ).toBe(fenced('showcaseProjects: Array<{\n  title: string | null;\n}> | null'))
+  })
+})
+
 const COVER_QUERY = `*[_type == "page"][0]{
   "coverImage": image::field(coverImage),
   "plain": image::richText(body),

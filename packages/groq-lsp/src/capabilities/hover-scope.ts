@@ -18,6 +18,7 @@
 
 import type { ExprNode, SchemaType, SyntaxNode, TypeNode } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
+import { leadingDefinitions } from '../content-mapper/groq-scanner.js'
 import {
   mapElements,
   nested,
@@ -42,6 +43,11 @@ export interface MarkedRange {
   start: number
   end: number
   as: 'expression' | 'attribute' | 'key'
+  /**
+   * The operand chain an expression starts, when the chain goes on after it, as
+   * `*[…].slug.current` does after `*[…].slug`.
+   */
+  chain?: MarkedRange | undefined
 }
 
 const MARKER = '__groqLspHover'
@@ -54,23 +60,57 @@ export function typeOfRange(
 ): TypeNode | undefined {
   const prepare = (text: string) =>
     options.functions ? withGroqFunctions(text, options.functions) : text
-  let original: ExprNode
-  let marked: ExprNode
-  try {
-    original = parseQuery(prepare(query))
-    marked = parseQuery(prepare(withMarker(query, range)))
-  } catch {
+  const original = parsed(prepare(query))
+  if (!original) {
     return undefined
   }
 
-  const types: Array<TypeNode> = []
-  for (const path of markerPaths(original, marked, range.as === 'expression')) {
-    const type = typeAlong(original, path, options.schema)
-    if (type) {
-      types.push(type)
+  let types = typesAt(original, prepare(withMarker(query, range)), range.as, (node, scope) =>
+    isExpression(node) ? typeInScope(scope, node, options.schema) : undefined
+  )
+  // Marking only the start of a chain can change how the rest of it parses: `*[…].slug.current`
+  // gives each document's `slug.current`, but `$marker.current` reads one attribute. The chain
+  // is found instead, and its start read on its own in the chain's scope.
+  const { chain } = range
+  if (types.length === 0 && chain) {
+    const preamble = query.slice(0, leadingDefinitions(query).at(-1)?.end ?? 0)
+    const start = parsed(prepare(`${preamble}${query.slice(range.start, range.end)}`))
+    if (start) {
+      types = typesAt(original, prepare(withMarker(query, chain)), chain.as, (_node, scope) =>
+        typeInScope(scope, start, options.schema)
+      )
     }
   }
   return types.length > 0 ? union(types) : undefined
+}
+
+function parsed(query: string): ExprNode | undefined {
+  try {
+    return parseQuery(query)
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * What `read` makes of each node of `original` the marker in `marked` leads to, in the scope the
+ * node is read in. `marked` is the query with a range marked as `as`.
+ */
+function typesAt(
+  original: ExprNode,
+  marked: string,
+  as: MarkedRange['as'],
+  read: (node: SyntaxNode, scope: Scope) => TypeNode | undefined
+): Array<TypeNode> {
+  const markedRoot = parsed(marked)
+  if (!markedRoot) {
+    return []
+  }
+  return markerPaths(original, markedRoot, as === 'expression').flatMap((path) => {
+    const found = along(original, path)
+    const type = found && read(found.node, found.scope)
+    return type ? [type] : []
+  })
 }
 
 function withMarker(query: string, { start, end, as }: MarkedRange): string {
@@ -154,8 +194,8 @@ function isSyntaxNode(value: unknown): value is SyntaxNode {
   )
 }
 
-/** The type of the expression at the end of `path`, in the scopes the path goes through. */
-function typeAlong(root: ExprNode, path: Array<Step>, schema: SchemaType): TypeNode | undefined {
+/** The node at the end of `path`, and the scope it is read in. */
+function along(root: ExprNode, path: Array<Step>): { node: SyntaxNode; scope: Scope } | undefined {
   let scope: Scope = ROOT_SCOPE
   let node: SyntaxNode = root
   for (const [position, step] of path.entries()) {
@@ -166,7 +206,7 @@ function typeAlong(root: ExprNode, path: Array<Step>, schema: SchemaType): TypeN
     }
     node = child
   }
-  return isExpression(node) ? typeInScope(scope, node, schema) : undefined
+  return { node, scope }
 }
 
 /** The scope the child of `node` at `step` is read in, inside `scope`, the one `node` is read in. */
