@@ -43,9 +43,14 @@ export function computeQueryDiagnostics(
   query: GroqQuery,
   options: DiagnosticsOptions = {}
 ): QueryDiagnostics {
-  const prelude = options.functions ? groqFunctionsPrelude(query.query, options.functions) : ''
+  if (query.interpolated && !query.resolved) {
+    // Until its `${}` fragments are inlined, the template is not GROQ.
+    return { query, diagnostics: [] }
+  }
+  const text = query.resolved ?? query.query
+  const prelude = options.functions ? groqFunctionsPrelude(text, options.functions) : ''
   const result = lint(
-    prelude ? `${prelude}\n${query.query}` : query.query,
+    prelude ? `${prelude}\n${text}` : text,
     options.schema ? { schema: options.schema } : undefined
   )
   // The prelude ends with a newline, so the query's own lines only shift down.
@@ -139,7 +144,8 @@ function findingToDiagnostic(finding: Finding, query: GroqQuery): Diagnostic {
  * Adjusts positions based on query location in document
  */
 function findingToRange(finding: Finding, query: GroqQuery): Range {
-  if (finding.span) {
+  // Offsets in a resolved query do not match the template as written.
+  if (finding.span && !query.resolved) {
     // Adjust line and column based on query position in document
     const startLine = query.line + finding.span.start.line - 1
     const endLine = query.line + finding.span.end.line - 1

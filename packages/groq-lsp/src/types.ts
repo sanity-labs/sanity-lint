@@ -18,6 +18,13 @@ export interface GroqQuery {
   line: number
   /** Column number (0-indexed) */
   column: number
+  /** Whether the query is a template literal with `${}` interpolations. */
+  interpolated?: boolean
+  /**
+   * The query with its `${}` fragments inlined, from `resolveQueryFragments()`. Diagnostics lint
+   * this text and report what they find on the whole template as written.
+   */
+  resolved?: string
 }
 
 /**

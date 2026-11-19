@@ -48,6 +48,10 @@ export {
 // Query extraction
 export { extractQueries, findQueryAtOffset, offsetToQueryPosition } from './utils/groq-extractor.js'
 
+// Fragments interpolated into queries (`${fragment}`)
+export { resolveQueryFragments, type FragmentHost } from './fragments/index.js'
+export { FragmentFiles } from './fragments/files.js'
+
 // Capabilities
 export {
   computeQueryDiagnostics,

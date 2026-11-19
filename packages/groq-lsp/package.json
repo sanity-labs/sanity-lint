@@ -14,6 +14,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./fragments": {
+      "types": "./dist/fragments.d.ts",
+      "default": "./dist/fragments.js"
     }
   },
   "main": "./dist/index.js",

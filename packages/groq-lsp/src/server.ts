@@ -33,6 +33,7 @@ import type { GroqFunction } from './content-mapper/functions.js'
 import { SchemaFileCache, SchemaLoader, SCHEMA_WATCH_GLOBS } from './schema/loader.js'
 import { extractQueries, findQueryAtOffset, offsetToQueryPosition } from './utils/groq-extractor.js'
 import { computeDocumentDiagnostics } from './capabilities/diagnostics.js'
+import { FragmentFiles } from './fragments/files.js'
 import { getHoverInfo } from './capabilities/hover.js'
 import { getCompletions, getCompletionTriggerCharacters } from './capabilities/completion.js'
 import { formatDocument, formatGroqFile } from './capabilities/formatting.js'
@@ -150,7 +151,7 @@ connection.onInitialized(() => {
   schemaLoader.startWatching((schema) => {
     connection.console.log(`Schema ${schema ? 'reloaded' : 'cleared'}`)
     // Re-validate all open documents
-    documents.all().forEach(validateDocument)
+    documents.all().forEach((document) => void validateDocument(document))
   })
 
   connection.console.log('GROQ Language Server initialized')
@@ -174,7 +175,7 @@ connection.onDidChangeConfiguration((change) => {
   }
 
   // Re-validate all documents
-  documents.all().forEach(validateDocument)
+  documents.all().forEach((document) => void validateDocument(document))
 })
 
 /**
@@ -208,7 +209,7 @@ connection.onDidChangeWatchedFiles((params) => {
   }
 
   if (schemaChanged || mapperChanged) {
-    documents.all().forEach(validateDocument)
+    documents.all().forEach((document) => void validateDocument(document))
   }
 })
 
@@ -271,11 +272,37 @@ function contextFor(uri: string): DocumentContext {
   }
 }
 
+// Fragments interpolated into queries are read from open documents first, so unsaved edits to
+// them are used.
+const fragmentFiles = new FragmentFiles((file) =>
+  documents
+    .all()
+    .find((document) => filePath(document.uri) === file)
+    ?.getText()
+)
+
+function filePath(uri: string): string | undefined {
+  const parsed = URI.parse(uri)
+  return parsed.scheme === 'file' ? parsed.fsPath : undefined
+}
+
+/** Re-validates the open documents whose queries use fragments from the document at `uri`. */
+function validateDependents(uri: string): void {
+  const file = filePath(uri)
+  for (const dependent of file ? fragmentFiles.dependents(file) : []) {
+    const document = documents.all().find((each) => filePath(each.uri) === dependent)
+    if (document && document.uri !== uri) {
+      void validateDocument(document)
+    }
+  }
+}
+
 /**
  * Document opened or changed
  */
 documents.onDidChangeContent((change) => {
-  validateDocument(change.document)
+  void validateDocument(change.document)
+  validateDependents(change.document.uri)
 })
 
 /**
@@ -284,6 +311,12 @@ documents.onDidChangeContent((change) => {
 documents.onDidClose((e) => {
   documentSettings.delete(e.document.uri)
   documentStates.delete(e.document.uri)
+  const file = filePath(e.document.uri)
+  if (file) {
+    fragmentFiles.forget(file)
+  }
+  // Their fragments are read from disk now, without the closed document's unsaved edits.
+  validateDependents(e.document.uri)
 })
 
 /**
@@ -296,7 +329,7 @@ function isNodeModulesPath(uri: string): boolean {
 /**
  * Validate a document and send diagnostics
  */
-function validateDocument(document: TextDocument): void {
+async function validateDocument(document: TextDocument): Promise<void> {
   const content = document.getText()
   const languageId = document.languageId
   const uri = document.uri
@@ -324,8 +357,22 @@ function validateDocument(document: TextDocument): void {
     return
   }
 
+  // Lint interpolated queries with their `${}` fragments inlined. Hover and completion keep
+  // working on the template as written.
+  const file = filePath(uri)
+  let linted = queries
+  try {
+    linted = file ? await fragmentFiles.resolve(file, content, queries) : queries
+  } catch (error) {
+    connection.console.warn(`Could not resolve GROQ fragments in ${uri}: ${String(error)}`)
+  }
+  if (documents.get(uri)?.version !== document.version) {
+    // The document changed or closed while its fragments were read.
+    return
+  }
+
   // Compute diagnostics
-  const diagnostics = computeDocumentDiagnostics(queries, contextFor(uri))
+  const diagnostics = computeDocumentDiagnostics(linted, contextFor(uri))
 
   // Apply limit
   const maxDiagnostics = globalSettings.maxDiagnostics ?? 100

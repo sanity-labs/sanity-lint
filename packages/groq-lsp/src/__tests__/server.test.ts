@@ -140,6 +140,41 @@ describe.skipIf(!existsSync(serverPath))('language server (stdio)', () => {
     expect(result.diagnostics).toHaveLength(2)
   })
 
+  it('lints queries with their fragments inlined, and again when a fragment changes', async () => {
+    const fragmentPath = join(workspace, 'fragments.ts')
+    writeFileSync(fragmentPath, 'export const author = defineQuery(`{ name }`)')
+    const uri = pathToFileURL(join(workspace, 'article.ts')).toString()
+    await connection.sendNotification('textDocument/didOpen', {
+      textDocument: {
+        uri,
+        languageId: 'typescript',
+        version: 1,
+        text: [
+          "import {author} from './fragments'",
+          'const query = defineQuery(`*[_type == "article"]{ author->${author} }`)',
+        ].join('\n'),
+      },
+    })
+    const clean = await waitForDiagnostics(uri, () => true)
+    expect(clean.diagnostics).toEqual([])
+
+    const fragmentUri = pathToFileURL(fragmentPath).toString()
+    await connection.sendNotification('textDocument/didOpen', {
+      textDocument: {
+        uri: fragmentUri,
+        languageId: 'typescript',
+        version: 1,
+        text: 'export const author = defineQuery(`{ name }`)',
+      },
+    })
+    await connection.sendNotification('textDocument/didChange', {
+      textDocument: { uri: fragmentUri, version: 2 },
+      contentChanges: [{ text: 'export const author = defineQuery(`{ name,, }`)' }],
+    })
+    const broken = await waitForDiagnostics(uri, (d) => d.diagnostics.length > 0)
+    expect(broken.diagnostics[0]?.message).toContain('Parse error')
+  })
+
   it('formats with groq-wasm, indented per the tab size and spaces or tabs', async () => {
     const query =
       '*[_type == "post"]{title, "author": author->{name, "slug": slug.current}, "long": select(a == 1 => "one one one one one one", a == 2 => "two two two two two", "x")}'
