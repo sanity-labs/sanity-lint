@@ -47,6 +47,16 @@ export function lint(query: string, options?: LintOptions): LintResult {
     return { query, findings }
   }
 
+  if (isDefinitionsOnly(query)) {
+    const result = lint(`${query}\n${DEFINITIONS_SENTINEL}`, options)
+    return {
+      query,
+      findings: result.findings.filter(
+        (finding) => !finding.span || finding.span.start.offset < query.length
+      ),
+    }
+  }
+
   // Get enabled rules, filtering out schema-requiring rules if no schema provided
   const enabledRules = getEnabledRules(config, schema)
 
@@ -149,6 +159,33 @@ export function lint(query: string, options?: LintOptions): LintResult {
   }
 
   return { query, findings }
+}
+
+const DEFINITIONS_SENTINEL = 'null'
+
+/**
+ * Whether `query` is only `fn` definitions (and comments), like a file of shared custom functions.
+ *
+ * GROQ's parsers, groq-js and the Rust parser behind groq-wasm, require a query to end with an
+ * expression. Definitions followed by `null` parse, and since groq-js inlines functions where they
+ * are called, `null` is then the whole syntax tree. Anything else before `null` would show in it.
+ */
+function isDefinitionsOnly(query: string): boolean {
+  if (!/^fn\s/.test(query.replace(/^(?:\s|\/\/[^\n]*)*/, ''))) {
+    return false
+  }
+  try {
+    parse(query)
+    return false
+  } catch {
+    // Expected when nothing follows the definitions
+  }
+  try {
+    const ast = parse(`${query}\n${DEFINITIONS_SENTINEL}`)
+    return ast.type === 'Value' && ast.value === null
+  } catch {
+    return false
+  }
 }
 
 /**
