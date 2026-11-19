@@ -15,6 +15,7 @@ import {
   type TypeNode,
 } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
+import { leadingDefinitions } from '../content-mapper/groq-scanner.js'
 
 export interface FieldTypeOptions {
   schema: SchemaType
@@ -72,6 +73,66 @@ export function resolveFieldType(
 
   const formatted = unique(found.map((type) => formatSchemaType(type, word.text === '_type')))
   return formatted.length > 0 ? formatted.join(' | ') : null
+}
+
+export interface CallType {
+  /** `namespace::name`. */
+  name: string
+  type: string
+}
+
+const NAMESPACED_CALL = /([A-Za-z_]\w*)\s*::\s*([A-Za-z_]\w*)\s*\(/g
+
+/**
+ * Describe what the custom function call under `position` returns, or `null` when `position` is
+ * not on the name or the parentheses of a call to a function the query defines or `functions`
+ * holds, or the schema does not say. The arguments of the call are left to
+ * {@link resolveFieldType}.
+ */
+export function resolveCallType(
+  query: string,
+  position: number,
+  options: FieldTypeOptions
+): CallType | null {
+  const masked = maskStrings(query)
+  const definitions = leadingDefinitions(query)
+  const defined = new Set(definitions.map((definition) => definition.name))
+  const preamble = query.slice(0, definitions.at(-1)?.end ?? 0)
+
+  let hovered: { name: string; start: number; close: number } | undefined
+  for (const match of masked.matchAll(NAMESPACED_CALL)) {
+    const name = `${match[1]}::${match[2]}`
+    const open = match.index + match[0].length - 1
+    const close = matchingClose(masked, open)
+    if (
+      close === undefined ||
+      match.index < preamble.length ||
+      /\bfn\s*$/.test(masked.slice(0, match.index)) ||
+      !(defined.has(name) || options.functions?.has(name))
+    ) {
+      continue
+    }
+    if ((position >= match.index && position <= open) || position === close) {
+      hovered = { name, start: match.index, close }
+      break
+    }
+  }
+  if (!hovered) {
+    return null
+  }
+
+  const call = query.slice(hovered.start, hovered.close + 1)
+  const frames = enclosingFrames(masked, hovered.start)
+  const type = scopeTypesAt(query, masked, frames, call, options, preamble)
+  if (!type) {
+    return null
+  }
+  const members = unionMembers(type)
+  const present = members.filter((member) => member.type !== 'null')
+  const formatted = unique(
+    (present.length > 0 ? present : members).map((member) => formatSchemaType(member, false))
+  ).join(' | ')
+  return formatted ? { name: hovered.name, type: formatted } : null
 }
 
 interface Word {
@@ -286,7 +347,8 @@ function scopeTypesAt(
   masked: string,
   frames: Array<Frame>,
   prefix: string,
-  options: FieldTypeOptions
+  options: FieldTypeOptions,
+  preamble = ''
 ): TypeNode | undefined {
   const bases: Array<string> = []
   for (const frame of frames) {
@@ -300,7 +362,8 @@ function scopeTypesAt(
     return undefined
   }
 
-  const composed = bases.reduceRight((inner, base) => `${base}{"${SCOPE_KEY}": ${inner}}`, prefix)
+  const body = bases.reduceRight((inner, base) => `${base}{"${SCOPE_KEY}": ${inner}}`, prefix)
+  const composed = preamble ? `${preamble}\n${body}` : body
 
   try {
     let type: TypeNode = typeEvaluate(parseQuery(composed, options), options.schema)
