@@ -9,7 +9,7 @@
  * `QueryParams` gives it. {@link typeOfRange} describes the scope each part is read in.
  */
 
-import type { SchemaType, TypeNode } from 'groq-js'
+import { parse, type SchemaType, type TypeNode } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
 import { leadingDefinitions } from '../content-mapper/groq-scanner.js'
 import { withoutLiterals } from './groq-probe.js'
@@ -58,8 +58,8 @@ function markedRange(masked: string, start: number, end: number): MarkedRange {
 }
 
 export interface StringLiteral {
-  /** The literal as written, quotes included. */
-  text: string
+  /** The string the literal stands for, its escapes read: `'It\'s'` stands for `It's`. */
+  value: string
   /** The name the literal gives a projection or object attribute, when it is the key of one. */
   key?: string
   /** The type of the value given to that key, when the schema says. */
@@ -83,16 +83,15 @@ export function resolveStringLiteral(
   if (!range) {
     return null
   }
-  const text = query.slice(range.start, range.end)
+  const value = stringValue(query.slice(range.start, range.end))
   if (!/^\s*:(?!:)/.test(masked.slice(range.end))) {
-    return { text, keyType: null }
+    return { value, keyType: null }
   }
-  const key = keyName(text)
   const keyType =
     options && range.start >= preambleEnd(query)
       ? formatted(typeOfRange(query, { ...range, as: 'key' }, options), options.schema)
       : null
-  return { text, key, keyType }
+  return { value, key: value, keyType }
 }
 
 interface StringRange {
@@ -123,16 +122,36 @@ function stringRangeAt(masked: string, position: number): StringRange | null {
   return null
 }
 
-function keyName(literal: string): string {
+function stringValue(literal: string): string {
   try {
-    const value: unknown = JSON.parse(literal)
-    if (typeof value === 'string') {
-      return value
+    const node = parse(literal)
+    if (node.type === 'Value' && typeof node.value === 'string') {
+      return node.value
     }
   } catch {
-    // A single-quoted literal is not JSON; its text is the key.
+    // A literal that is still being typed stands for what is written in it so far.
   }
   return literal.slice(1, -1)
+}
+
+const NUMBER = /\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g
+
+/**
+ * The number literal at `position`, as the generated types print its type (`2.50` is `2.5`), or
+ * `null` when `position` is not on one.
+ */
+export function resolveNumberLiteral(query: string, position: number): string | null {
+  const masked = withoutLiterals(query)
+  for (const match of masked.matchAll(NUMBER)) {
+    if (
+      position >= match.index &&
+      position <= match.index + match[0].length &&
+      !/[\w$]/.test(masked.charAt(match.index - 1))
+    ) {
+      return String(Number(match[0]))
+    }
+  }
+  return null
 }
 
 export interface ParamType {
