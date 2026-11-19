@@ -174,8 +174,8 @@ snapshots:
 		"catalogs": {
 			"default": {
 				"groq-js": {
-					"specifier": "^2.0.1",
-					"version": "2.0.1",
+					"specifier": "^2.0.2",
+					"version": "2.0.2",
 				},
 				"vitest": {
 					"specifier": "^5.1.1",
@@ -5488,7 +5488,7 @@ snapshots:
 				"@babel/types": "8.1.2",
 				"@sanity/codegen": "8.3.1",
 				"get-tsconfig": "4.14.3",
-				"groq-js": "2.0.1",
+				"groq-js": "2.0.2",
 				"picomatch": "4.0.7",
 				"valibot": "1.5.0",
 			},
@@ -6019,7 +6019,7 @@ snapshots:
 				"execa": "10.2.1",
 				"form-data": "4.0.6",
 				"get-latest-version": "6.0.1",
-				"groq-js": "2.0.1",
+				"groq-js": "2.0.2",
 				"gunzip-maybe": "1.4.2",
 				"import-meta-resolve": "4.2.0",
 				"is-installed-globally": "1.0.1",
@@ -6246,7 +6246,7 @@ snapshots:
 				"chokidar": "3.6.0",
 				"globby": "11.1.0",
 				"groq": "6.24.0",
-				"groq-js": "2.0.1",
+				"groq-js": "2.0.2",
 				"json5": "2.2.3",
 				"lodash-es": "4.18.1",
 				"obug": "3.0.0",
@@ -6495,7 +6495,7 @@ snapshots:
 				"@sanity/util": "6.24.0",
 				"arrify": "3.0.0",
 				"get-it": "9.7.0",
-				"groq-js": "2.0.1",
+				"groq-js": "2.0.2",
 				"modern-tar": "0.8.6",
 				"obug": "3.0.0",
 				"p-map": "7.1.1",
@@ -6659,7 +6659,7 @@ snapshots:
 				"cardinal": "2.1.1",
 				"empathic": "2.1.0",
 				"eventsource": "5.1.5",
-				"groq-js": "2.0.1",
+				"groq-js": "2.0.2",
 				"jiti": "2.7.0",
 				"mime-types": "3.0.2",
 				"ora": "9.4.1",
@@ -6788,7 +6788,7 @@ snapshots:
 				"arrify": "3.0.0",
 				"dequal": "2.0.3",
 				"get-it": "9.7.0",
-				"groq-js": "2.0.1",
+				"groq-js": "2.0.2",
 				"humanize-list": "1.0.1",
 				"leven": "4.1.0",
 				"lodash-es": "4.18.1",
@@ -6874,7 +6874,7 @@ snapshots:
 				"@sanity/types": "6.24.0",
 				"@sentry/browser": "11.14.0",
 				"groq": "6.24.0",
-				"groq-js": "2.0.1",
+				"groq-js": "2.0.2",
 				"reselect": "5.3.0",
 				"rxjs": "7.8.2",
 				"zustand": "5.1.0",
@@ -10087,8 +10087,8 @@ snapshots:
 			},
 		},
 
-		"groq-js@2.0.1": {
-			"integrity": "sha512-v4GZDlS8T2hNQqnBRisdpMI8GnN7HMQ6bxfpEdz11rNbBUzyhM3aT8fwKbvl1gYVm+Lb1RN0phYdHh1liUzdGA==",
+		"groq-js@2.0.2": {
+			"integrity": "sha512-XAsn6lLSWOuuuxXjNpFs5CDEvjQBYI3fId28zxPe40bgEeNzztFOlauWsUxd7f9Rt8lKb8LINGGZ1FpOxh6R2A==",
 			"engines": {"node": ">=22.12"},
 			"dependencies": {
 				"obug": "2.2.1",
@@ -12463,7 +12463,7 @@ snapshots:
 				"date-fns": "4.4.0",
 				"dequal": "2.0.3",
 				"exif-component": "1.0.1",
-				"groq-js": "2.0.1",
+				"groq-js": "2.0.2",
 				"history": "5.3.0",
 				"i18next": "26.7.2",
 				"is-hotkey-esm": "1.0.0",
