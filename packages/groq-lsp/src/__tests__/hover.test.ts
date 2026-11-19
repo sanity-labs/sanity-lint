@@ -846,6 +846,39 @@ describe('hover custom function calls', () => {
   })
 })
 
+describe('hover select() the way groq-js types it', () => {
+  it('types alternatives that can be true when select() is the root of a query', () => {
+    const guaranteed = '{"v": select(true => "many", "few")}'
+    expect(hoverText(guaranteed, 'select')).toContain(fenced('select: "many"'))
+    expect(hoverText(guaranteed, '"v"')).toBe(fenced('v: "many"'))
+
+    const fallback = '{"v": select(false => "many", "few")}'
+    expect(hoverText(fallback, 'select')).toContain(fenced('select: "few"'))
+    expect(hoverText(fallback, '"v"')).toBe(fenced('v: "few"'))
+
+    expect(hoverText('select($x == 1 => "a", "b")', 'select')).toContain(
+      fenced('select: "a" | "b"')
+    )
+    const either = '{"v": select($flag => "many", "few")}'
+    expect(hoverText(either, 'select')).toContain(fenced('select: "few" | "many"'))
+    expect(hoverText(either, '"v"')).toBe(fenced('v: "few" | "many"'))
+  })
+
+  it('types select() with no fallback as null unless an alternative is guaranteed', () => {
+    expect(hoverText('*[_type == "post"]{"v": select(views > 10 => "many")}', 'select')).toContain(
+      fenced('select: "many" | null')
+    )
+    expect(hoverText('*[_type == "post"]{"v": select(views > 10 => "many")}', '"v"')).toBe(
+      fenced('v: "many" | null')
+    )
+    expect(hoverText('*[_type == "post"]{"v": select(true => "many")}', 'select')).toContain(
+      fenced('select: "many"')
+    )
+    expect(hoverText('select($x == 1 => "a")', 'select')).toContain(fenced('select: "a" | null'))
+    expect(hoverText('select(false => "a")', 'select')).toContain(fenced('select: null'))
+  })
+})
+
 const HOME_QUERY = `*[_type == "home"][0] {
   showcaseProjects[] {
     _key,

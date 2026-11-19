@@ -7,7 +7,7 @@ allowBuilds:
   sharp: false
 catalog:
   vitest: ^5.1.1
-  groq-js: ^2.0.2
+  groq-js: ^2.0.3
 minimumReleaseAgeExclude:
   - '@sanity/client@8.10.1 || 8.11.0'
   - '@sanity/codegen@8.3.2'
@@ -21,7 +21,7 @@ minimumReleaseAgeExclude:
   - '@sanity/util@6.24.0'
   - '@sanity/validation@6.24.0'
   - sanity@6.24.0
-  - groq-js@2.0.2
+  - groq-js@2.0.3
   - '@turbo/darwin-64@2.11.10'
   - '@turbo/darwin-arm64@2.11.10'
   - '@turbo/linux-64@2.11.10'
