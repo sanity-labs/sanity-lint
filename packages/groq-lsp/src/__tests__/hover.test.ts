@@ -541,11 +541,50 @@ describe('hover parameters', () => {
     expect(hoverText('*[_type == "page" && $tag in tags]', '$tag')).toBe(fenced('$tag: string'))
   })
 
-  it('makes a match operand a string and a subscript or slice bound a number', () => {
+  it('makes a match operand a string and a slice bound a number', () => {
     expect(hoverText('*[title match $q]', '$q')).toBe(fenced('$q: string'))
     expect(hoverText('*[_type == "page"][0...$n]', '$n')).toBe(fenced('$n: number'))
     expect(hoverText('*[_type == "page"][$from..$to]', '$to')).toBe(fenced('$to: number'))
-    expect(hoverText('*[_type == "page"][$i]', '$i')).toBe(fenced('$i: number'))
+  })
+
+  it('leaves a subscript parameter unknown, as it may be an index, a key or a filter', () => {
+    expect(hoverText('*[_type == "page"][$i]', '$i')).toBe(fenced('$i: unknown'))
+  })
+
+  it('reads a filter in a query whose root is an object it projects again', () => {
+    const query = `// A type with no documents (https://example.com) gets a placeholder.
+{
+  "slugs": *[_type == $type && defined(slug.current)] {"slug": slug.current}
+} {
+  "slugs": select(count(slugs) > 0 => slugs, [{"slug": "__placeholder__"}])
+}.slugs`
+    expect(hoverText(query, '$type')).toBe(fenced('$type: "page" | "project"'))
+  })
+
+  it('types the bounds of a range, an arithmetic operand and a compared literal', () => {
+    const range = '*[_type == "post" && views in $min..$max]'
+    expect(hoverText(range, '$min')).toBe(fenced('$min: number'))
+    expect(hoverText(range, '$max')).toBe(fenced('$max: number'))
+    expect(hoverText('*[_type == "post" && views + $bump > 10]', '$bump')).toBe(
+      fenced('$bump: number')
+    )
+    expect(hoverText('*[_type == "page" && $flag == true]', '$flag')).toBe(fenced('$flag: boolean'))
+    expect(hoverText('*[_type == "page" && "a" == $mode]', '$mode')).toBe(fenced('$mode: string'))
+  })
+
+  it('reads an operand in a projection of a dereference', () => {
+    const query = '*[_type == "page"]{"same": author->{"is": name == $name}}'
+    expect(hoverText(query, '$name')).toBe(fenced('$name: string'))
+  })
+
+  it('joins a slice bound with what a comparison says', () => {
+    const query = '*[_type == "post" && views > $n][0...$n]'
+    expect(hoverText(query, '$n')).toBe(fenced('$n: number'))
+  })
+
+  it('reads an operand in a filter inside a function argument', () => {
+    const query = '*[_type == "page" && count(tags[@ == $tag]) > 0]'
+    expect(hoverText(query, '$tag')).toBe(fenced('$tag: string'))
   })
 
   it('joins what every use of the parameter says', () => {
