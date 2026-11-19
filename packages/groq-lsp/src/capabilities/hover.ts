@@ -9,7 +9,7 @@ import { parse, typeEvaluate, type SchemaType } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
 import type { GroqQuery } from '../types.js'
 import { formatType, type FormattedType } from './hover-format.js'
-import { resolveCallType, resolveFieldType } from './hover-types.js'
+import { resolveCallType, resolveFieldType, resolveStringLiteral } from './hover-types.js'
 
 /**
  * Options for computing hover information
@@ -33,6 +33,19 @@ export function getHoverInfo(
     const ast = parse(
       options.functions ? withGroqFunctions(query.query, options.functions) : query.query
     )
+
+    const literal = resolveStringLiteral(
+      query.query,
+      positionInQuery,
+      options.schema && { schema: options.schema, functions: options.functions }
+    )
+    if (literal) {
+      const content =
+        literal.key === undefined
+          ? { kind: 'markdown' as const, value: ['```groq', literal.text, '```'].join('\n') }
+          : buildHoverContent({ type: 'field', text: literal.key }, literal.keyType)
+      return content ? { contents: content } : null
+    }
 
     if (options.schema) {
       const call = resolveCallType(query.query, positionInQuery, {
