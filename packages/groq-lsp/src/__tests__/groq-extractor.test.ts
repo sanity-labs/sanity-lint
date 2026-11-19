@@ -321,6 +321,14 @@ describe('extractQueries: comments and strings', () => {
     expect(result.queries.map((q) => q.query)).toEqual(['*[_type == "post"]'])
   })
 
+  it('does not let a JSX closing tag hide a same-line query', () => {
+    const content =
+      '</div>; const a = groq`*[_type == "a"]`; </>; const b = defineQuery(`*[_type == "b"]`)'
+    const result = extractQueries(content, 'typescriptreact')
+
+    expect(result.queries.map((q) => q.query)).toEqual(['*[_type == "a"]', '*[_type == "b"]'])
+  })
+
   it('still accepts a /* groq */ marker, but not one inside another comment', () => {
     const content = '/* groq */ `*[_type == "a"]`\n// see /* groq */ `*[_type == "b"]`'
     const result = extractQueries(content, 'typescript')

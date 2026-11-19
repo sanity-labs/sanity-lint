@@ -91,6 +91,33 @@ interface TextRange {
 const REGEXP_PRECEDING_CHARS = new Set('(,=:[!&|?{};+-*%<>~^'.split(''))
 
 /**
+ * True when `/` at `index` opens a JSX closing tag (`</div>`, `</>`) rather
+ * than a regexp. Needed because `<` is a regexp-preceding character, so without
+ * this check `</div>` would be scanned as a regexp through the next `/` or
+ * newline and could hide a same-line embedded query.
+ */
+function isJsxClosingSlash(content: string, index: number): boolean {
+  let j = index + 1
+  while (j < content.length && (content[j] === ' ' || content[j] === '\t')) {
+    j++
+  }
+  if (content[j] === '>') {
+    return true
+  }
+  if (j < content.length && /[A-Za-z_$]/.test(content[j]!)) {
+    j++
+    while (j < content.length && /[\w$:.-]/.test(content[j]!)) {
+      j++
+    }
+    while (j < content.length && (content[j] === ' ' || content[j] === '\t')) {
+      j++
+    }
+    return content[j] === '>'
+  }
+  return false
+}
+
+/**
  * Find the comments, string literals and template literal text in JS/TS
  * source: everywhere `groq` followed by a backtick is prose, not a tag. The
  * code inside `${...}` of a template literal is scanned as code. Strings end at
@@ -153,7 +180,8 @@ function findNonCodeRanges(content: string): Array<TextRange> {
       lastSignificant = '`'
     } else if (
       char === '/' &&
-      (lastSignificant === '' || REGEXP_PRECEDING_CHARS.has(lastSignificant))
+      (lastSignificant === '' || REGEXP_PRECEDING_CHARS.has(lastSignificant)) &&
+      !(lastSignificant === '<' && isJsxClosingSlash(content, i))
     ) {
       let j = i + 1
       let inClass = false
