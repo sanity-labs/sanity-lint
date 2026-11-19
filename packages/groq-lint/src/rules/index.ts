@@ -3,6 +3,7 @@ import { computedValueInFilter } from './computed-value-in-filter'
 import { countInCorrelatedSubquery } from './count-in-correlated-subquery'
 import { deepPagination } from './deep-pagination'
 import { deepPaginationParam } from './deep-pagination-param'
+import { duplicateProjectionKey } from './duplicate-projection-key'
 import { extremelyLargeQuery } from './extremely-large-query'
 import { invalidTypeFilter } from './invalid-type-filter'
 import { joinInFilter } from './join-in-filter'
@@ -47,6 +48,7 @@ export const rules: Array<Rule> = [
 
   // Correctness
   matchOnId,
+  duplicateProjectionKey,
 
   // Schema-aware correctness (requires schema to run)
   invalidTypeFilter,
@@ -66,6 +68,7 @@ export {
   countInCorrelatedSubquery,
   deepPagination,
   deepPaginationParam,
+  duplicateProjectionKey,
   extremelyLargeQuery,
   invalidTypeFilter,
   joinInFilter,
