@@ -160,6 +160,43 @@ describe.skipIf(!existsSync(serverPath))(
       ])
     })
 
+    it('goes to the shared definition of a function a query calls', async () => {
+      const text = '*[_type == "post"][0]{"image": image::field(mainImage)}\n'
+      const uri = await open('queries/definition.groq', 'groq', text)
+      const links: Array<{
+        targetUri: string
+        targetSelectionRange: { start: { line: number; character: number } }
+      }> = await connection.sendRequest('textDocument/definition', {
+        textDocument: { uri },
+        position: { line: 0, character: text.indexOf('field') },
+      })
+      expect(links).toHaveLength(1)
+      expect(links[0]?.targetUri).toBe(pathToFileURL(join(workspace, 'groq/image.groq')).toString())
+      expect(links[0]?.targetSelectionRange.start).toEqual({ line: 1, character: 3 })
+    })
+
+    it('finds the calls of a shared function in the functions file and in queries', async () => {
+      write('queries/card.groq', '*[_type == "post"]{"a": image::asset(cover)}\n')
+      const functionsText =
+        'fn image::asset($asset) = $asset->{url};\nfn image::field($image) = $image{crop, "asset": image::asset(asset)};\n'
+      const uri = await open('groq/image.groq', 'groq', functionsText)
+      const locations: Array<{ uri: string; range: { start: { line: number } } }> =
+        await connection.sendRequest('textDocument/references', {
+          textDocument: { uri },
+          position: { line: 0, character: 'fn image::as'.length },
+          context: { includeDeclaration: false },
+        })
+      expect(
+        locations.map((location) => [
+          location.uri.slice(location.uri.lastIndexOf('/') + 1),
+          location.range.start.line,
+        ])
+      ).toEqual([
+        ['image.groq', 1],
+        ['card.groq', 0],
+      ])
+    })
+
     it('re-lints when the schema the tsconfig names changes', async () => {
       const uri = pathToFileURL(join(workspace, 'queries/post.groq')).toString()
       const before = await waitForDiagnostics(uri, (d) => d.diagnostics.length > 0)

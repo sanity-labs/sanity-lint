@@ -21,6 +21,12 @@ export interface GroqFunction {
   file: string
   /** The definition as written, through its `;`. */
   source: string
+  /** Where the definition starts in `file`, at its `fn`. */
+  start: number
+  /** Where its `namespace::name` starts in `file`. */
+  nameStart: number
+  /** Where its `namespace::name` ends in `file`. */
+  nameEnd: number
 }
 
 /** The definitions of a `functions` option by name, the files it matched, and what went wrong. */
@@ -69,8 +75,16 @@ export function loadGroqFunctions(
         continue
       }
       const parsed = parseDefinitions(text)
-      for (const { name, calls, start, end } of parsed.definitions) {
-        definitions.push({ name, calls, file, source: text.slice(start, end) })
+      for (const { name, calls, start, end, nameStart, nameEnd } of parsed.definitions) {
+        definitions.push({
+          name,
+          calls,
+          file,
+          source: text.slice(start, end),
+          start,
+          nameStart,
+          nameEnd,
+        })
       }
       for (const problem of parsed.problems) {
         if (problem.name) {
@@ -226,7 +240,7 @@ function expand(
 }
 
 /** Every file under `folder`, sorted, skipping `node_modules` and hidden folders. */
-function walk(folder: string): Array<string> {
+export function walk(folder: string): Array<string> {
   let entries
   try {
     entries = readdirSync(folder, { withFileTypes: true })

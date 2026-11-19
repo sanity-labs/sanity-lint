@@ -1,6 +1,7 @@
 // Main linting API
 export { lint, lintMany } from './linter'
 export type { LintResult, LintOptions } from './linter'
+export { isDefinitionsOnly } from './definitions'
 
 // WASM utilities
 export { WASM_RULES } from './wasm-linter'
@@ -27,3 +28,4 @@ export { formatFindings, formatFindingsJson, summarizeFindings } from '@sanity-l
 // Note: RuleTester is available from '@sanity-labs/lint-core/testing' for test files
 // Note: Schema utilities (loadSchema, findSchemaPath, etc.) are available from '@sanity-labs/groq-lint/schema'
 //       They are in a separate entry point because they use Node.js APIs
+// Note: isDefinitionsOnly is also available from '@sanity-labs/groq-lint/definitions', which does not load WASM

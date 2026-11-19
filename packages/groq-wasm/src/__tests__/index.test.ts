@@ -66,6 +66,66 @@ describe('@sanity-labs/groq-wasm', () => {
     it('should export DEFAULT_WIDTH', () => {
       expect(DEFAULT_WIDTH).toBe(80)
     })
+
+    it('formats a document of only fn definitions, such as a shared functions file', () => {
+      const functions = [
+        '// Image helpers',
+        '',
+        'fn image::asset($asset) = $asset->{url, metadata{lqip, dimensions}};',
+        'fn image::field($image) = $image{crop, hotspot, "asset": image::asset(asset)};',
+        'fn image::richText($blocks) = $blocks[]{',
+        '  ...,',
+        '  _type == "image" => {_key, _type, alt, caption, crop, hotspot, "asset": image::asset(asset)},',
+        '  _type == "timeline" => {',
+        '    ...,',
+        '    items[]{',
+        '      ...,',
+        '      milestones[]{',
+        '        ...,',
+        '        "image": image::field(image)',
+        '      }',
+        '    }',
+        '  }',
+        '};',
+        '',
+      ].join('\n')
+      expect(format(functions)).toBe(
+        [
+          '// Image helpers',
+          'fn image::asset($asset) = $asset-> { url, metadata { lqip, dimensions } };',
+          'fn image::field($image) = $image { crop, hotspot, "asset": image::asset(asset) };',
+          'fn image::richText($blocks) = $blocks[] {',
+          '  ...,',
+          '  _type == "image" => {',
+          '    _key,',
+          '    _type,',
+          '    alt,',
+          '    caption,',
+          '    crop,',
+          '    hotspot,',
+          '    "asset": image::asset(asset)',
+          '  },',
+          '  _type == "timeline" => {',
+          '    ...,',
+          '    items[] { ..., milestones[] { ..., "image": image::field(image) } }',
+          '  }',
+          '};',
+        ].join('\n')
+      )
+      expect(format('fn a::b($x)=$x{a}; // the end')).toBe('fn a::b($x) = $x { a };\n// the end')
+      expect(isValidSyntax(functions)).toBe(true)
+    })
+
+    it('still rejects definitions followed by an incomplete query, or not ended with ;', () => {
+      for (const query of [
+        'fn a::b($x) = $x{a}; *[',
+        'fn a::b($x) = $x{a}; foo ||',
+        'fn a::b($x) = $x{a}',
+        '// only a comment',
+      ]) {
+        expect(() => format(query), query).toThrow(WasmError)
+      }
+    })
   })
 
   describe('isValidSyntax', () => {
