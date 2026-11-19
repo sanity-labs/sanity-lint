@@ -1,5 +1,30 @@
 # @sanity/groq-lsp
 
+## 1.4.0
+
+### Minor Changes
+
+- 6528354: Hovering a field inside a filter `[]` now shows the type it can have before the filter is applied, instead of the type the filter narrows it to. `_type` in `*[_type == "post"]` hovers as every document type in the schema, while `_type` in the projection `*[_type == "post"]{_type}` is narrowed to `"post"` (and to `"post" | "author"` for `_type in ["post", "author"]`). `invalid-type-filter` now also checks the names in `_type in [...]` comparisons.
+
+  Thanks to Cody Olsen for the report.
+
+### Patch Changes
+
+- c18216a: Schema-aware hover now resolves fields inside a `...@-> { … }` spread, and any other `->` projection, against the dereferenced document type: in `showcaseProjects[] { _key, ...@-> { _id, _type, title } }`, `_type` hovers as `project` and `title` as the project's `title`, instead of falling back to the type of the whole query. A field followed by a projection, such as `showcaseProjects[] { … }` or `author-> { … }`, hovers as what the projection makes of it (`Array<{ _key: string; _id: string; _type: "project"; … }> | null`), which is what the query returns under that key. Objects whose `rest` is a named type, as `sanity schema extract` writes array items that are references, now show and resolve the attributes of that type (`_ref`, `_type: "reference"`, `_weak?`) instead of only their own.
+
+  Thanks to Cody Olsen for reporting the wrong hovers and the query that reproduced them.
+
+- 56eea6f: Hovering a query parameter such as `$slug` now shows the type the query uses it as, instead of the type of the whole query. The type is inferred from how the parameter is used: compared (`==`, `!=`, `<`, `>`, `<=`, `>=`) or tested with `in` against a field the schema types, matched with `match` (a string), or used as an index or slice bound (a number). `null` is left out of the type of the field it is compared to, and a parameter nothing types hovers as `unknown`.
+
+  Thanks to Cody Olsen for the report.
+
+- c61deb8: Fix hovering a string literal showing the type of the whole query. A string such as `"settings"` in `_type == "settings"` now hovers as the literal itself, and a quoted projection or object key such as `"overview"` in `"overview": pt::text(overview)` hovers as the type of its value (`overview: string`).
+
+  Thanks to Cody Olsen for the report.
+
+- Updated dependencies [6528354]
+  - @sanity-labs/groq-lint@1.3.0
+
 ## 1.3.0
 
 ### Minor Changes
