@@ -243,6 +243,154 @@ function keyName(literal: string): string {
   return literal.slice(1, -1)
 }
 
+export interface ParamType {
+  /** The name of the parameter, without the `$`. */
+  name: string
+  /** What the query uses the parameter as, or `null` when nothing in it says. */
+  type: FormattedType | null
+}
+
+const COMPARISON_BEFORE = /(==|!=|<=|>=|<|(?<![=-])>|\bin|\bmatch)\s*$/
+const COMPARISON_AFTER = /^\s*(==|!=|<=|>=|<|>|in\b|match\b)/
+
+/**
+ * Describe the parameter under `position`, or `null` when `position` is not on one.
+ *
+ * A parameter has no declared type, so it is inferred from how the query uses it, across every
+ * use of the name: compared (`==`, `!=`, `<`, `>`, `<=`, `>=`) or tested with `in` against a
+ * value the schema types, it has that type; `match` makes it a string; an index or slice bound
+ * (`[0...$n]`) makes it a number. A parameter is read as a value that is given, so `null` is
+ * left out of the type of the value it is compared to.
+ */
+export function resolveParamType(
+  query: string,
+  position: number,
+  options?: FieldTypeOptions
+): ParamType | null {
+  const masked = maskStrings(query)
+  const word = wordAt(masked, masked.charAt(position) === '$' ? position + 1 : position)
+  if (
+    !word ||
+    masked.charAt(word.start - 1) !== '$' ||
+    isInString(query, masked, word.start) ||
+    position < word.start - 1 ||
+    position > word.end
+  ) {
+    return null
+  }
+  if (!options) {
+    return { name: word.text, type: null }
+  }
+
+  const types: Array<TypeNode> = []
+  for (const use of masked.matchAll(new RegExp(`\\$${word.text}(?![A-Za-z0-9_])`, 'g'))) {
+    types.push(...paramUseTypes(query, masked, use.index, use.index + use[0].length, options))
+  }
+  return { name: word.text, type: types.length > 0 ? formatTypes(types, options.schema) : null }
+}
+
+/** The types the use of a parameter in `[start, end)` gives it. */
+function paramUseTypes(
+  query: string,
+  masked: string,
+  start: number,
+  end: number,
+  options: FieldTypeOptions
+): Array<TypeNode> {
+  const before = masked.slice(0, start)
+  const after = masked.slice(end)
+
+  if (isIndexOrSlice(masked, start, end)) {
+    return [{ type: 'number' }]
+  }
+
+  const paramIsOnRight = COMPARISON_BEFORE.test(before)
+  const operator = COMPARISON_BEFORE.exec(before)?.[1] ?? COMPARISON_AFTER.exec(after)?.[1]
+  if (!operator) {
+    return []
+  }
+  if (operator === 'match') {
+    return [{ type: 'string' }]
+  }
+
+  const operand = paramIsOnRight
+    ? operandBefore(masked, before.search(COMPARISON_BEFORE))
+    : operandAfter(masked, end + after.search(/\S/) + operator.length)
+  if (!operand) {
+    return []
+  }
+
+  const frames = enclosingFrames(masked, operand.start)
+  const parent = parentScope(frames, query.slice(operand.start, operand.end))
+  if (!parent) {
+    return []
+  }
+  const operandType = scopeTypesAt(query, masked, parent.frames, parent.prefix, options, '', true)
+  if (!operandType) {
+    return []
+  }
+
+  if (operator === 'in') {
+    return paramIsOnRight
+      ? [{ type: 'array', of: { type: 'union', of: given(unionMembers(operandType)) } }]
+      : given(flatten(operandType, options.schema))
+  }
+  return given(unionMembers(operandType))
+}
+
+function given(types: Array<TypeNode>): Array<TypeNode> {
+  return types.filter((type) => type.type !== 'null')
+}
+
+/**
+ * Whether the parameter is the index or a bound of a slice of a subscript, as in `[$i]`,
+ * `[0...$n]` or `[$from..$to]`, and not an element of an array literal.
+ */
+function isIndexOrSlice(masked: string, start: number, end: number): boolean {
+  const before = masked.slice(0, start).trimEnd()
+  const after = masked.slice(end).trimStart()
+  if (/\.\.\.?$/.test(before) || /^\.\.\.?/.test(after)) {
+    return true
+  }
+  if (!before.endsWith('[') || !after.startsWith(']')) {
+    return false
+  }
+  return postfixStart(masked, before.length - 1) !== undefined
+}
+
+/** The operand that ends before the operator at `operator`. */
+function operandBefore(masked: string, operator: number): { start: number; end: number } | null {
+  const end = trimmedEnd(masked, operator)
+  const start = postfixStart(masked, end)
+  return start === undefined ? null : { start, end }
+}
+
+/** The operand that starts at or after `from`. */
+function operandAfter(masked: string, from: number): { start: number; end: number } | null {
+  let start = from
+  while (start < masked.length && /\s/.test(masked.charAt(start))) {
+    start++
+  }
+  let end = start
+  while (end < masked.length) {
+    const char = masked.charAt(end)
+    if (isPostfixChar(char) || char === '.' || char === ':') {
+      end++
+    } else if (char === '-' && masked.charAt(end + 1) === '>') {
+      end += 2
+    } else if ((char === '(' || char === '[' || char === '{') && end > start) {
+      const close = matchingClose(masked, end)
+      if (close === undefined) {
+        break
+      }
+      end = close + 1
+    } else {
+      break
+    }
+  }
+  return end > start && /[A-Za-z_@^]/.test(masked.charAt(start)) ? { start, end } : null
+}
+
 export interface CallType {
   /** `namespace::name`. */
   name: string
@@ -582,13 +730,18 @@ function scopeTypesAt(
   frames: Array<Frame>,
   prefix: string,
   options: FieldTypeOptions,
-  preamble = ''
+  preamble = '',
+  narrowFilters = false
 ): TypeNode | undefined {
   const bases: Array<string> = []
   for (const frame of frames) {
     const start = postfixStart(masked, frame.open)
     if (start !== undefined) {
-      bases.push(query.slice(start, trimmedEnd(masked, frame.open)))
+      const close =
+        narrowFilters && frame.bracket === '[' ? matchingClose(masked, frame.open) : undefined
+      bases.push(
+        query.slice(start, close === undefined ? trimmedEnd(masked, frame.open) : close + 1)
+      )
     }
   }
 
@@ -619,6 +772,10 @@ function scopeTypesAt(
 
 function isObject(type: TypeNode): type is ObjectTypeNode {
   return type.type === 'object'
+}
+
+function unionMembers(type: TypeNode): Array<TypeNode> {
+  return type.type === 'union' ? type.of.flatMap(unionMembers) : [type]
 }
 
 /**

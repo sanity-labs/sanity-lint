@@ -9,7 +9,12 @@ import { parse, typeEvaluate, type SchemaType } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
 import type { GroqQuery } from '../types.js'
 import { formatType, type FormattedType } from './hover-format.js'
-import { resolveCallType, resolveFieldType, resolveStringLiteral } from './hover-types.js'
+import {
+  resolveCallType,
+  resolveFieldType,
+  resolveParamType,
+  resolveStringLiteral,
+} from './hover-types.js'
 
 /**
  * Options for computing hover information
@@ -30,6 +35,20 @@ export function getHoverInfo(
   options: HoverOptions = {}
 ): Hover | null {
   try {
+    // Read before parsing: groq-js cannot parse a slice with a parameter (`[0...$n]`).
+    const param = resolveParamType(
+      query.query,
+      positionInQuery,
+      options.schema && { schema: options.schema, functions: options.functions }
+    )
+    if (param) {
+      const content = buildHoverContent(
+        { type: 'parameter', text: `$${param.name}` },
+        options.schema ? (param.type ?? { text: 'unknown', notes: [] }) : null
+      )
+      return content ? { contents: content } : null
+    }
+
     const ast = parse(
       options.functions ? withGroqFunctions(query.query, options.functions) : query.query
     )
