@@ -1,5 +1,12 @@
 # @sanity/prettier-plugin-groq
 
+## 1.0.13
+
+### Patch Changes
+
+- Updated dependencies [df10e1a]
+  - @sanity-labs/groq-wasm@1.2.4
+
 ## 1.0.12
 
 ### Patch Changes

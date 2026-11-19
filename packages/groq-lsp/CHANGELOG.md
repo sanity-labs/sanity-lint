@@ -1,5 +1,22 @@
 # @sanity/groq-lsp
 
+## 1.3.0
+
+### Minor Changes
+
+- df10e1a: `format()` formats a GROQ document of only `fn` definitions, like a `.groq` file of shared custom functions, instead of failing to parse it. groq-lint exports `isDefinitionsOnly()`, also from `@sanity-labs/groq-lint/definitions` without WASM. groq-lsp adds go to definition and find references for custom functions, and a `@sanity-labs/groq-lsp/functions` entry with groq-content-mapper's settings, `withGroqFunctions()` and the definitions and calls in GROQ source, without WASM.
+
+### Patch Changes
+
+- 9ab485d: With a schema, hovering the name, the `::`, the `(` or the closing `)` of a custom GROQ function call such as `image::field(coverImage)` now shows the type the call resolves to (`image::field: { crop: object, hotspot: object, asset: object }`), computed from the function's definition and the type of its argument. Nested calls resolve too. Hovering an argument still shows the field's own type, and without a schema the hover is unchanged.
+- 536b9d8: Schema-aware hover now prints the full shape of an object type instead of the word `object`, for fields, custom function calls and every other hover that shows a type. Attributes are listed recursively with optional ones marked `?`, string literals such as `_type: "sanity.imageCrop"`, named types expanded from the schema and `| null` where a value can be null. Arrays show as `Array<…>`. Output is bounded: objects nested more than six levels deep, attributes past the first 40 of an object or past 300 in all, and types that contain themselves are cut short or shown by name, and the hover says so.
+
+  `slug.current` and other paths now hover with the type of the attribute (`string | null`) instead of falling back to the type of the whole query (`object | null`). Optional attributes and paths through a possibly missing value include `| null`. Fields are now also resolved inside `| order(…)` and `| score(…)`, after a projection, through `@`, and through `^` for the parent scope.
+
+- Updated dependencies [df10e1a]
+  - @sanity-labs/groq-wasm@1.2.4
+  - @sanity-labs/groq-lint@1.2.0
+
 ## 1.2.3
 
 ### Patch Changes
