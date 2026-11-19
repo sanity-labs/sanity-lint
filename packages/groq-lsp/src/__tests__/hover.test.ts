@@ -230,6 +230,8 @@ function hoverText(text: string, marker: string, occurrence = 0, withSchema = tr
   return hoverTextAt(text, offset + 1, withSchema)
 }
 
+const ALL_TYPES = '"author" | "home" | "page" | "post" | "project" | "sanity.imageAsset"'
+
 const PAGE_QUERY = `*[_type == "page" && slug.current == $slug][0] {
   _id,
   _type,
@@ -257,32 +259,54 @@ describe('hover types', () => {
 
   it('hovers _type in a projection as the type the query filters to', () => {
     const hover = hoverText(PAGE_QUERY, '_type', 1)
-    expect(hover).toContain('_type: page\n')
+    expect(hover).toContain('_type: "page"\n')
     expect(hover).toContain('Document type name')
   })
 
-  it('hovers _type in a filter as the type it is compared to', () => {
-    expect(hoverText(PAGE_QUERY, '_type')).toContain('_type: page\n')
-    expect(hoverText('*[_type == "page"][0]', '_type')).toContain('_type: page\n')
-    expect(hoverText('*[_type == "page"]', '_type')).toContain('_type: page\n')
+  it('hovers _type in a filter as every document type, not the one it is compared to', () => {
+    for (const query of [PAGE_QUERY, '*[_type == "page"][0]', '*[_type == "page"]']) {
+      expect(hoverText(query, '_type')).toContain(ALL_TYPES)
+    }
+    expect(hoverText('*[slug.current == $slug && _type == "page"][0]', '_type')).toContain(
+      ALL_TYPES
+    )
+    expect(hoverText('*[_type == "page" || _type == "post"]', '_type')).toContain(ALL_TYPES)
   })
 
-  it('finds the type filter when it is not the first clause', () => {
-    expect(hoverText('*[slug.current == $slug && _type == "page"][0]', '_type')).toContain(
-      '_type: page\n'
+  it('narrows _type in the projection of a == filter and widens it in the filter', () => {
+    const query = '*[_type == "post"]{_type}'
+    expect(hoverText(query, '_type', 0)).toBe(
+      `${fenced(`_type: ${ALL_TYPES}`)}\n\nFilters documents by their type`
+    )
+    expect(hoverText(query, '_type', 1)).toBe(`${fenced('_type: "post"')}\n\nDocument type name`)
+  })
+
+  it('narrows _type in the projection of an in filter to the listed types', () => {
+    const query = '*[_type in ["post","author"]]{_type}'
+    expect(hoverText(query, '_type', 0)).toContain(`_type: ${ALL_TYPES}\n`)
+    expect(hoverText(query, '_type', 1)).toContain('_type: "author" | "post"\n')
+  })
+
+  it('narrows _type in the projection of OR-ed and AND-ed filters', () => {
+    const either = '*[_type == "page" || _type == "post"]{_type}'
+    expect(hoverText(either, '_type', 2)).toContain('_type: "page" | "post"\n')
+    expect(hoverText('*[_type == "post" && views > 3]{_type}', '_type', 1)).toContain(
+      '_type: "post"\n'
     )
   })
 
-  it('hovers _type as the union of OR-ed type names', () => {
-    const query = '*[_type == "page" || _type == "post"]{_type}'
-    expect(hoverText(query, '_type')).toContain('_type: page | post\n')
-    expect(hoverText(query, '_type', 2)).toContain('_type: page | post\n')
-    expect(hoverText('*[_type in ["page", "post"]]', '_type')).toContain('_type: page | post\n')
+  it('widens _type in a nested filter and keeps the parent narrowed', () => {
+    const query = '*[_type == "post"]{"x": *[_type == "author" && ^._type == "post"]{_type}}'
+    expect(hoverText(query, '_type', 1)).toContain(`_type: ${ALL_TYPES}\n`)
+    expect(hoverText(query, '_type', 2)).toContain('_type: "post"\n')
+    expect(hoverText(query, '_type', 3)).toContain('_type: "author"\n')
   })
 
-  it('does not narrow _type when an OR branch does not filter on it', () => {
-    const hover = hoverText('*[_type == "page" || defined(title)][0]', '_type')
-    expect(hover).not.toContain('_type: page\n')
+  it('widens other fields in a filter to every type they may have there', () => {
+    expect(hoverText('*[_type == "post" && title == "x"]', 'title')).toContain(
+      'title: string | number'
+    )
+    expect(hoverText('*[_type == "post"]{title}', 'title')).toContain('title: number')
   })
 
   it('hovers the segments of a path through the schema', () => {
@@ -327,7 +351,7 @@ describe('hover types', () => {
   })
 
   it('does not take a type name from a type the schema does not define', () => {
-    expect(hoverText('*[_type == "missing"]', '_type')).not.toContain('_type: missing')
+    expect(hoverText('*[_type == "missing"]', '_type')).not.toContain('missing')
   })
 
   it('ignores brackets inside strings', () => {
@@ -596,7 +620,7 @@ describe('hover references and dereference spreads', () => {
     expect(hoverText(HOME_QUERY, '_id')).toBe(
       fenced('_id: string') + '\n\nUnique document identifier'
     )
-    expect(hoverText(HOME_QUERY, '_type', 1)).toContain('_type: project\n')
+    expect(hoverText(HOME_QUERY, '_type', 1)).toContain('_type: "project"\n')
     expect(hoverText(HOME_QUERY, 'current')).toBe(fenced('current: string | null'))
     expect(hoverText(HOME_QUERY, 'slug', 1)).toBe(fenced('slug: {\n  current?: string;\n} | null'))
     expect(hoverText(HOME_QUERY, 'tags')).toBe(fenced('tags: Array<string> | null'))
