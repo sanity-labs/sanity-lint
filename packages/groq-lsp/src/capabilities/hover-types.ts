@@ -2,8 +2,9 @@
  * Schema-aware types for hovering over fields in a GROQ query
  *
  * Resolves the identifier under the cursor against the schema, in the scope it is written in, so a
- * field hovers as the type the schema gives it rather than the type of the whole query. A `_type`
- * in a filter hovers as the document type names the filter selects.
+ * field hovers as the type the schema gives it rather than the type of the whole query. A field
+ * with a projection, such as `items[] { … }` or `author-> { … }`, hovers as what the projection
+ * makes of it. A `_type` in a filter hovers as the document type names the filter selects.
  */
 
 import {
@@ -16,7 +17,7 @@ import {
 } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
 import { leadingDefinitions } from '../content-mapper/groq-scanner.js'
-import { type FormattedType, formatTypes } from './hover-format.js'
+import { type FormattedType, formatTypes, objectShape } from './hover-format.js'
 
 export interface FieldTypeOptions {
   schema: SchemaType
@@ -58,6 +59,14 @@ export function resolveFieldType(
   }
 
   const base = memberBaseStart(masked, word.start)
+  const projectionEnd = projectionAfter(masked, word.end)
+  if (projectionEnd !== undefined) {
+    const projected = parentScope(frames, query.slice(base ?? word.start, projectionEnd + 1))
+    const type =
+      projected && scopeTypesAt(query, masked, projected.frames, projected.prefix, options)
+    return type ? formatTypes([type], options.schema) : null
+  }
+
   let prefix =
     base === undefined
       ? '@'
@@ -343,12 +352,15 @@ function postfixStart(masked: string, end: number): number | undefined {
         return postfixStart(masked, pipe) ?? start
       }
       const previous = masked.charAt(start - 1)
-      if (previous !== '.' && !(previous === '>' && masked.charAt(start - 2) === '-')) {
+      if (
+        !isMemberDot(masked, start - 1) &&
+        !(previous === '>' && masked.charAt(start - 2) === '-')
+      ) {
         break
       }
     } else if (char === '>' && masked.charAt(start - 2) === '-') {
       start -= 2
-    } else if (char === '.') {
+    } else if (isMemberDot(masked, start - 1)) {
       start--
     } else {
       break
@@ -357,8 +369,55 @@ function postfixStart(masked: string, end: number): number | undefined {
   return start < end ? start : undefined
 }
 
+/**
+ * Whether the `.` at `index` reads an attribute, rather than being part of a `...` spread or a
+ * `..` range.
+ */
+function isMemberDot(masked: string, index: number): boolean {
+  return (
+    masked.charAt(index) === '.' &&
+    masked.charAt(index - 1) !== '.' &&
+    masked.charAt(index + 1) !== '.'
+  )
+}
+
 function isPostfixChar(char: string | undefined): boolean {
   return isIdentifierChar(char) || char === '*' || char === '@' || char === '^'
+}
+
+/**
+ * The `}` of the projection that `showcaseProjects[] { … }` or `author-> { … }` applies to the
+ * word ending at `end`, after any `[…]` and `->`. A field with a projection hovers as what the
+ * projection makes of it, which is what the query returns under that key. `undefined` when the
+ * word has no projection.
+ */
+function projectionAfter(masked: string, end: number): number | undefined {
+  let index = skipSpaces(masked, end)
+  while (index < masked.length) {
+    const char = masked.charAt(index)
+    if (char === '[') {
+      const close = matchingClose(masked, index)
+      if (close === undefined) {
+        return undefined
+      }
+      index = close + 1
+    } else if (char === '-' && masked.charAt(index + 1) === '>') {
+      index += 2
+    } else if (char === '{') {
+      return matchingClose(masked, index)
+    } else {
+      return undefined
+    }
+    index = skipSpaces(masked, index)
+  }
+  return undefined
+}
+
+function skipSpaces(masked: string, index: number): number {
+  while (index < masked.length && /\s/.test(masked.charAt(index))) {
+    index++
+  }
+  return index
 }
 
 function trimmedEnd(masked: string, end: number): number {
@@ -374,7 +433,7 @@ function connectorLength(masked: string, wordStart: number): number {
 
 function hasMemberPrefix(masked: string, wordStart: number): boolean {
   return (
-    masked.charAt(wordStart - 1) === '.' ||
+    isMemberDot(masked, wordStart - 1) ||
     (masked.charAt(wordStart - 1) === '>' && masked.charAt(wordStart - 2) === '-')
   )
 }
@@ -466,6 +525,9 @@ function flatten(type: TypeNode, schema: SchemaType, seen = new Set<string>()): 
       return []
     }
     case 'object':
+      return type.rest
+        ? [{ type: 'object', attributes: Object.fromEntries(objectShape(type, schema).attributes) }]
+        : [type]
     case 'string':
     case 'number':
     case 'boolean':

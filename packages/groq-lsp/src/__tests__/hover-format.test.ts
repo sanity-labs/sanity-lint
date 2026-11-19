@@ -68,6 +68,56 @@ describe('formatType', () => {
     expect(formatType({ type: 'inline', name: 'missing' }, schema).text).toBe('missing')
   })
 
+  it('folds the attributes of the rest of an object into it', () => {
+    const schema: SchemaType = [
+      {
+        type: 'type',
+        name: 'reference',
+        value: {
+          type: 'object',
+          attributes: {
+            _ref: attribute(string),
+            _type: attribute({ type: 'string', value: 'reference' }),
+          },
+          rest: { type: 'inline', name: 'weak' },
+        },
+      },
+      {
+        type: 'type',
+        name: 'weak',
+        value: object({ _weak: attribute({ type: 'boolean' }, true) }),
+      },
+      {
+        type: 'type',
+        name: 'loop',
+        value: { type: 'object', attributes: {}, rest: { type: 'inline', name: 'loop' } },
+      },
+    ]
+    const item: TypeNode = {
+      type: 'object',
+      attributes: { _key: attribute(string), _type: attribute({ type: 'string', value: 'item' }) },
+      rest: { type: 'inline', name: 'reference' },
+    }
+    expect(formatType(item, schema).text).toBe(
+      '{\n  _key: string;\n  _type: "item";\n  _ref: string;\n  _weak?: boolean;\n}'
+    )
+    const inline: TypeNode = {
+      type: 'object',
+      attributes: {},
+      rest: object({ a: attribute(string) }),
+    }
+    expect(formatType(inline, schema).text).toBe('{\n  a: string;\n}')
+    const open: TypeNode = { type: 'object', attributes: {}, rest: { type: 'unknown' } }
+    expect(formatType(open, schema).text).toBe('{\n  [key: string]: unknown;\n}')
+    expect(formatType({ type: 'inline', name: 'loop' }, schema).text).toBe('{}')
+    const missing: TypeNode = {
+      type: 'object',
+      attributes: {},
+      rest: { type: 'inline', name: 'nope' },
+    }
+    expect(formatType(missing, schema).text).toBe('{}')
+  })
+
   it('breaks a type that contains itself and says so', () => {
     const schema: SchemaType = [
       {

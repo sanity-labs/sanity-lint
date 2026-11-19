@@ -125,6 +125,40 @@ const schema: SchemaType = [
     name: 'seo',
     value: { type: 'object', attributes: { description: attribute(string) } },
   },
+  // `sanity schema extract` writes an array of references as `{ _key }` items whose `rest` is a
+  // named reference type, which carries `dereferencesTo`.
+  documentType('home', {
+    title: attribute(string, true),
+    showcaseProjects: attribute(
+      {
+        type: 'array',
+        of: {
+          type: 'object',
+          attributes: { _key: attribute(string) },
+          rest: { type: 'inline', name: 'project.reference' },
+        },
+      },
+      true
+    ),
+  }),
+  documentType('project', {
+    title: attribute(string, true),
+    slug: attribute({ type: 'object', attributes: { current: attribute(string, true) } }, true),
+    tags: attribute({ type: 'array', of: string }, true),
+  }),
+  {
+    type: 'type',
+    name: 'project.reference',
+    value: {
+      type: 'object',
+      attributes: {
+        _ref: attribute(string),
+        _type: attribute({ type: 'string', value: 'reference' }),
+        _weak: attribute({ type: 'boolean' }, true),
+      },
+      dereferencesTo: 'project',
+    },
+  },
 ]
 
 const functions = new Map<string, GroqFunction>([
@@ -444,6 +478,106 @@ describe('hover custom function calls', () => {
 
   it('keeps the fallback hover without a schema', () => {
     expect(hoverText(COVER_QUERY, 'image::field', 0, false)).toBe('**image** (field)')
+  })
+})
+
+const HOME_QUERY = `*[_type == "home"][0] {
+  showcaseProjects[] {
+    _key,
+    ...@-> {
+      _id,
+      _type,
+      "slug": slug.current,
+      tags,
+      title
+    }
+  },
+  title
+}`
+
+const SHOWCASE_SHAPE = `Array<{
+  _key: string;
+  _id: string;
+  _type: "project";
+  slug: string | null;
+  tags: Array<string> | null;
+  title: string | null;
+}> | null`
+
+describe('hover references and dereference spreads', () => {
+  it('hovers a field with a projection as what the projection makes of it', () => {
+    expect(hoverText(HOME_QUERY, 'showcaseProjects')).toBe(
+      fenced(`showcaseProjects: ${SHOWCASE_SHAPE}`)
+    )
+    expect(hoverText('*[_type == "page"][0]{author->{name}}', 'author')).toBe(
+      fenced('author: {\n  name: string;\n}')
+    )
+    expect(hoverText('*[_type == "page"][0]{slug{current}}', 'slug')).toBe(
+      fenced('slug: {\n  current: string | null;\n} | null')
+    )
+  })
+
+  it('hovers fields inside a ...@-> spread against the dereferenced document', () => {
+    expect(hoverText(HOME_QUERY, '_id')).toBe(
+      fenced('_id: string') + '\n\nUnique document identifier'
+    )
+    expect(hoverText(HOME_QUERY, '_type', 1)).toContain('_type: project\n')
+    expect(hoverText(HOME_QUERY, 'current')).toBe(fenced('current: string | null'))
+    expect(hoverText(HOME_QUERY, 'slug', 1)).toBe(fenced('slug: {\n  current?: string;\n} | null'))
+    expect(hoverText(HOME_QUERY, 'tags')).toBe(fenced('tags: Array<string> | null'))
+    expect(hoverText(HOME_QUERY, 'title')).toBe(fenced('title: string | null'))
+    expect(hoverText(HOME_QUERY, '_key')).toContain('_key: string\n')
+  })
+
+  it('hovers fields inside a ...@-> spread without a trailing projection elsewhere', () => {
+    const query = '*[_type == "home"][0]{showcaseProjects[]{...@->{title}}}'
+    expect(hoverText(query, 'title')).toBe(fenced('title: string | null'))
+    expect(hoverText(query, 'showcaseProjects')).toBe(
+      fenced('showcaseProjects: Array<{\n  title: string | null;\n}> | null')
+    )
+  })
+
+  it('hovers the parent document field next to the spread', () => {
+    expect(hoverText(HOME_QUERY, 'title', 1)).toBe(fenced('title: string | null'))
+  })
+
+  it('folds the rest of an object into its shape and its attributes', () => {
+    expect(hoverText('*[_type == "home"]{showcaseProjects}', 'showcaseProjects')).toBe(
+      fenced(`showcaseProjects: Array<{
+  _key: string;
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+}> | null`)
+    )
+    expect(hoverText('*[_type == "home"]{showcaseProjects[]{_ref, _weak}}', '_ref')).toContain(
+      '_ref: string\n'
+    )
+    expect(hoverText('*[_type == "home"]{showcaseProjects[]{_ref, _weak}}', '_weak')).toContain(
+      '_weak: boolean | null\n'
+    )
+  })
+
+  it('hovers fields through an array of references dereferenced as a whole', () => {
+    const query = '*[_type == "home"][0]{showcaseProjects[]->{title, "s": slug.current}}'
+    expect(hoverText(query, 'title')).toBe(fenced('title: string | null'))
+    expect(hoverText(query, 'current')).toBe(fenced('current: string | null'))
+    expect(hoverText(query, 'showcaseProjects')).toBe(
+      fenced('showcaseProjects: Array<{\n  title: string | null;\n  s: string | null;\n}> | null')
+    )
+  })
+
+  it('keeps plain and object spreads working', () => {
+    expect(hoverText('*[_type == "page"]{..., "t": title}', 'title')).toContain('title: string')
+    expect(hoverText('*[_type == "page"]{...seo, title}', 'title')).toContain('title: string')
+    expect(hoverText('*[_type == "page"]{...seo, title}', 'seo')).toBe(
+      fenced('seo: {\n  description: string;\n}')
+    )
+    expect(hoverText('*[_type == "page"]{...seo{description}}', 'description')).toContain(
+      'description: string'
+    )
+    expect(hoverText('*[_type == "page"]{...author->{name}}', 'name')).toContain('name: string')
+    expect(hoverText('*[_type == "page"]{...@{title}}', 'title')).toContain('title: string')
   })
 })
 
