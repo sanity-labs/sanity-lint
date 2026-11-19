@@ -1,5 +1,23 @@
 # @sanity/groq-lsp
 
+## 1.4.1
+
+### Patch Changes
+
+- a202095: Update `groq-js` to ^2.0.2. A field the schema makes nullable is now typed as non-null under a `defined(field)` or `field != null` filter even when the filter has terms that cannot be decided, such as `_type == $type`, and `defined(path.to.field)` narrows a path through a named type.
+- a15de47: Hovering a call to a built-in GROQ function, such as `count(…)`, `defined(…)`, `coalesce(…)`, `select(…)` or `pt::text(…)`, now shows what the call returns, as the generated types have it, next to the function's documentation. A pipe function such as `| order(…)` shows the array it returns. Before, these hovers showed only the documentation.
+- 81e372b: Hovering the start of a chain that goes on after it now shows its type, as the generated types have it, instead of only its name. That covers `slug` in `*[_type == "post"].slug.current` or in `showcaseProjects[]->slug.current`, a pipe function that a projection, slice or index follows, as `order` in `*[…] | order(…) {…}`, and a field that a shorthand attribute indexes, maps or projects, as `tags` in `{tags[0]}` or `{tags[]}`.
+- f5f2690: String and number literals now hover as the generated types print them. A single-quoted string hovers double-quoted with its escapes read, so `'It\'s'` shows `"It's"`, and a single-quoted key is named the same way. A number hovers as its value, so `10` shows `10` and `2.50` shows `2.5`, where it used to show as a field named after its first digits.
+- e80b308: A query parameter now hovers as the type the content mapper generates for it in `QueryParams`. The hover reads the query's syntax tree the way the content mapper does, instead of reading the text around each `$param`. A parameter inside a query whose root is an object, such as `$type` in `{"slugs": *[_type == $type]{…}}{…}.slugs`, now gets its type instead of `unknown`. The bounds of `x in $min..$max`, an arithmetic operand such as `$bump` in `views + $bump > 10`, a parameter compared with a literal (`$flag == true` is a `boolean`), and a parameter compared inside a filter of a function argument are typed as well. A subscript such as `[$i]` hovers as `unknown`, as in the generated types, since it may be an index, an attribute name or a filter.
+- 7df08ec: A field read through `^` in a filter over an array of strings or numbers now hovers with its type, as `tags` does in `tags[@ in ^.tags]` or `count(tags[@ in ^.^.tags]) > 0`. Before, such a hover showed only the field name, because the scope it was read in only had a type for object elements.
+- 9ec0af1: Hover types now print the way `sanity typegen` and the content mapper generate them. An empty union, such as a Portable Text `listItem` with no list styles, shows as `never` instead of `null`. Number and boolean literals show their value (`3`, `false`). An attribute whose name is not an identifier is quoted (`"my title": string`). The items of an array of named types, such as an array of references, have the `_key: string` that `ArrayOf<…>` adds, and an array of named and other types is shown as one array of each. A type the schema does not have, and an object whose other attributes are unknown, show as `unknown`.
+- c0dcd49: Field, projection key and custom function call hovers now read the query's syntax tree, in the scopes groq-js evaluates it in, so they show the type the generated `QueryResponse` gives that part of the query. Before, the hover rebuilt the scopes from the text around the cursor. That failed on queries whose root is an object, as in `{"slugs": *[…]{…}}{…}.slugs`, where hovers fell back to the type of the whole query. It also failed after a `//` comment with an apostrophe in it. A field in a `select()` alternative or in a conditional `condition => {…}` attribute is now read only for the document types its condition keeps, as groq-js reads it. A field the schema does not have hovers as `null`, as in the generated types, instead of as the whole query. `true`, `false` and `null` hover as literals, and `in`, `match`, `asc` and `desc` show no hover.
+- Updated dependencies [a202095]
+- Updated dependencies [644a1ac]
+  - @sanity-labs/lint-core@1.0.3
+  - @sanity-labs/groq-lint@1.3.1
+  - @sanity-labs/groq-wasm@1.2.4
+
 ## 1.4.0
 
 ### Minor Changes
