@@ -5,6 +5,7 @@ export default defineConfig({
     index: 'src/index.ts',
     server: 'src/server.ts',
     fragments: 'src/fragments/index.ts',
+    functions: 'src/functions.ts',
   },
   format: 'esm',
   fixedExtension: false,

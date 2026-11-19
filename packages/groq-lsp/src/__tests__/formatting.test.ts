@@ -58,6 +58,14 @@ describe('formatGroqFile', () => {
     expect(result.startsWith('\n\n*[')).toBe(true)
   })
 
+  it('formats a file of only fn definitions, such as a shared functions file', async () => {
+    const content =
+      '// Image helpers\nfn image::asset($asset)=$asset->{url};\nfn image::field($image)=$image{crop,"asset":image::asset(asset)};\n'
+    expect(applyFormat(content, await formatGroqFile(content))).toBe(
+      '// Image helpers\nfn image::asset($asset) = $asset-> { url };\nfn image::field($image) = $image { crop, "asset": image::asset(asset) };\n'
+    )
+  })
+
   it('returns no edits when the file is already formatted', async () => {
     const [first] = await formatGroqFile(unformatted)
     const formatted = first?.newText ?? ''

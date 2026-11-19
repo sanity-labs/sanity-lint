@@ -79,14 +79,31 @@ function callAt(tokens: Array<Token>, index: number): string | undefined {
 }
 
 function callsIn(tokens: Array<Token>): Array<string> {
-  const calls = new Set<string>()
+  return [...new Set(callSpans(tokens).map((call) => call.name))]
+}
+
+/** A `namespace::name` in GROQ source, from the start of its namespace to the end of its name. */
+export interface FunctionNameSpan {
+  name: string
+  start: number
+  end: number
+}
+
+function callSpans(tokens: Array<Token>): Array<FunctionNameSpan> {
+  const calls: Array<FunctionNameSpan> = []
   for (let index = 0; index < tokens.length; index++) {
-    const call = callAt(tokens, index)
-    if (call) {
-      calls.add(call)
+    const name = callAt(tokens, index)
+    const definesIt = tokens[index - 1]?.kind === 'identifier' && tokens[index - 1]?.text === 'fn'
+    if (name && !definesIt) {
+      calls.push({ name, start: tokens[index]!.start, end: tokens[index + 2]!.end })
     }
   }
-  return [...calls]
+  return calls
+}
+
+/** Every call of a namespaced function in `source`, in order, outside strings and comments. */
+export function findFunctionCalls(source: string): Array<FunctionNameSpan> {
+  return callSpans(tokenize(source))
 }
 
 /** The `;` that ends the definition starting at `from`, at bracket depth 0, and its index. */
@@ -117,6 +134,10 @@ export interface ScannedDefinition {
   start: number
   /** Where it ends, after its `;`. */
   end: number
+  /** Where its `namespace::name` starts. */
+  nameStart: number
+  /** Where its `namespace::name` ends. */
+  nameEnd: number
 }
 
 /** A definition that could not be read, with where it starts. */
@@ -152,14 +173,15 @@ function scanDefinitions(tokens: Array<Token>, stopAtNonDefinition: boolean): De
       continue
     }
     const [namespace, separator, name, paren] = tokens.slice(index + 1, index + 5)
-    const header =
+    const nameTokens =
       namespace?.kind === 'identifier' &&
       separator?.text === '::' &&
       name?.kind === 'identifier' &&
       paren?.text === '('
-        ? `${namespace.text}::${name.text}`
+        ? { namespace, name }
         : null
-    if (header === null || !end) {
+    const header = nameTokens && `${nameTokens.namespace.text}::${nameTokens.name.text}`
+    if (nameTokens === null || header === null || !end) {
       problems.push({
         message:
           header === null
@@ -179,6 +201,8 @@ function scanDefinitions(tokens: Array<Token>, stopAtNonDefinition: boolean): De
       calls: callsIn(tokens.slice(index + 5, end.index)).filter((call) => call !== header),
       start: head.start,
       end: end.end,
+      nameStart: nameTokens.namespace.start,
+      nameEnd: nameTokens.name.end,
     })
     index = end.index + 1
   }

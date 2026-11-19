@@ -65,6 +65,9 @@ const functions = new Map<string, GroqFunction>([
       calls: [],
       file: 'groq/image.groq',
       source: 'fn image::richText($blocks) = $blocks[]{...};',
+      start: 0,
+      nameStart: 3,
+      nameEnd: 18,
     },
   ],
 ])

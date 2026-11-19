@@ -22,6 +22,10 @@
     "./fragments": {
       "types": "./dist/fragments.d.ts",
       "default": "./dist/fragments.js"
+    },
+    "./functions": {
+      "types": "./dist/functions.d.ts",
+      "default": "./dist/functions.js"
     }
   },
   "main": "./dist/index.js",

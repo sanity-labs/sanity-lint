@@ -1,5 +1,6 @@
 import { parse, type SchemaType } from 'groq-js'
 import type { Finding, Rule, RuleContext, LinterConfig } from '@sanity-labs/lint-core'
+import { DEFINITIONS_SENTINEL, isDefinitionsOnly } from './definitions'
 import { rules as allRules } from './rules'
 import { isWasmRule, lintWithWasm } from './wasm-linter'
 
@@ -159,33 +160,6 @@ export function lint(query: string, options?: LintOptions): LintResult {
   }
 
   return { query, findings }
-}
-
-const DEFINITIONS_SENTINEL = 'null'
-
-/**
- * Whether `query` is only `fn` definitions (and comments), like a file of shared custom functions.
- *
- * GROQ's parsers, groq-js and the Rust parser behind groq-wasm, require a query to end with an
- * expression. Definitions followed by `null` parse, and since groq-js inlines functions where they
- * are called, `null` is then the whole syntax tree. Anything else before `null` would show in it.
- */
-function isDefinitionsOnly(query: string): boolean {
-  if (!/^fn\s/.test(query.replace(/^(?:\s|\/\/[^\n]*)*/, ''))) {
-    return false
-  }
-  try {
-    parse(query)
-    return false
-  } catch {
-    // Expected when nothing follows the definitions
-  }
-  try {
-    const ast = parse(`${query}\n${DEFINITIONS_SENTINEL}`)
-    return ast.type === 'Value' && ast.value === null
-  } catch {
-    return false
-  }
 }
 
 /**

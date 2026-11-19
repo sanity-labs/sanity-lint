@@ -39,11 +39,20 @@ export {
   type ContentMapperConfig,
 } from './content-mapper/config.js'
 export {
+  groqFunctionsPrelude,
   loadGroqFunctions,
   withGroqFunctions,
   type GroqFunction,
   type LoadedGroqFunctions,
 } from './content-mapper/functions.js'
+export {
+  findFunctionCalls,
+  leadingDefinitions,
+  parseDefinitions,
+  type FunctionNameSpan,
+  type ScannedDefinition,
+} from './content-mapper/groq-scanner.js'
+export { isDefinitionsOnly } from '@sanity-labs/groq-lint'
 
 // Query extraction
 export { extractQueries, findQueryAtOffset, offsetToQueryPosition } from './utils/groq-extractor.js'
@@ -68,6 +77,16 @@ export {
   getCompletionTriggerCharacters,
   type CompletionOptions,
 } from './capabilities/completion.js'
+
+export {
+  contentMapperGroqFiles,
+  getFunctionDefinition,
+  getFunctionReferences,
+  type FileSpan,
+  type FunctionDefinitionResult,
+  type FunctionDefinitionTarget,
+  type FunctionNavigationContext,
+} from './capabilities/function-navigation.js'
 
 export {
   formatQuery,

@@ -97,7 +97,7 @@ interface WasmLintConfig {
 
 #### `format(query: string, config?: WasmFormatConfig): string`
 
-Format a GROQ query.
+Format a GROQ query. A document of only `fn` definitions (and comments), such as a file of shared custom functions, is formatted too, although GROQ's parser requires a query to end with an expression.
 
 ```typescript
 interface WasmFormatConfig {

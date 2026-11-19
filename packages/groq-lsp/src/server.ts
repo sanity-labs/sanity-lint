@@ -7,6 +7,7 @@
  * - Hover (type information)
  * - Completion (fields, functions, types)
  * - Formatting (via groq-format in @sanity-labs/groq-wasm)
+ * - Go to definition and find references for custom functions
  */
 
 import {
@@ -22,11 +23,15 @@ import {
   type TextDocumentPositionParams,
   type DocumentFormattingParams,
   type CompletionParams,
+  type Location,
+  type LocationLink,
+  type ReferenceParams,
 } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
 import type { SchemaType } from 'groq-js'
 
+import { readFileSync } from 'node:fs'
 import { basename, extname } from 'node:path'
 import { ContentMapperConfigs, type ContentMapperConfig } from './content-mapper/config.js'
 import type { GroqFunction } from './content-mapper/functions.js'
@@ -37,6 +42,13 @@ import { FragmentFiles } from './fragments/files.js'
 import { getHoverInfo } from './capabilities/hover.js'
 import { getCompletions, getCompletionTriggerCharacters } from './capabilities/completion.js'
 import { formatDocument, formatGroqFile } from './capabilities/formatting.js'
+import {
+  contentMapperGroqFiles,
+  getFunctionDefinition,
+  getFunctionReferences,
+  type FileSpan,
+  type FunctionNavigationContext,
+} from './capabilities/function-navigation.js'
 import type { GroqQuery, DocumentState } from './types.js'
 
 // Create connection using Node IPC
@@ -121,6 +133,9 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       hoverProvider: true,
       // Formatting
       documentFormattingProvider: true,
+      // Custom functions
+      definitionProvider: true,
+      referencesProvider: true,
       // We'll compute diagnostics on document change
     },
   }
@@ -476,6 +491,79 @@ connection.onDocumentFormatting(async (params: DocumentFormattingParams) => {
     tabSize: params.options.tabSize,
     insertSpaces: params.options.insertSpaces,
   })
+})
+
+/** An open document's text, else the file's on disk. */
+function readText(file: string): string | undefined {
+  const open = documents.all().find((document) => filePath(document.uri) === file)
+  if (open) {
+    return open.getText()
+  }
+  try {
+    return readFileSync(file, 'utf8')
+  } catch {
+    return undefined
+  }
+}
+
+function navigationContext(uri: string): FunctionNavigationContext | undefined {
+  const document = documents.get(uri)
+  const file = filePath(uri)
+  if (!document || !file) {
+    return undefined
+  }
+  const config = contentMapperConfigs.forFile(file)
+  return {
+    file,
+    text: document.getText(),
+    languageId: document.languageId,
+    functions: contextFor(uri).functions,
+    read: readText,
+    groqFiles: () => (config ? contentMapperGroqFiles(config) : []),
+  }
+}
+
+function spanRange(span: FileSpan, start = span.start, end = span.end) {
+  const text = readText(span.file) ?? ''
+  const document = TextDocument.create(URI.file(span.file).toString(), 'groq', 0, text)
+  return { start: document.positionAt(start), end: document.positionAt(end) }
+}
+
+/**
+ * Go to the definition of a custom function
+ */
+connection.onDefinition((params: TextDocumentPositionParams): Array<LocationLink> => {
+  const context = navigationContext(params.textDocument.uri)
+  const document = documents.get(params.textDocument.uri)
+  const found =
+    context && document && getFunctionDefinition(context, document.offsetAt(params.position))
+  if (!found) {
+    return []
+  }
+  return [
+    {
+      originSelectionRange: spanRange(found.origin),
+      targetUri: URI.file(found.target.file).toString(),
+      targetRange: spanRange(found.target),
+      targetSelectionRange: spanRange(found.target, found.target.nameStart, found.target.nameEnd),
+    },
+  ]
+})
+
+/**
+ * Find the calls of a custom function
+ */
+connection.onReferences((params: ReferenceParams): Array<Location> => {
+  const context = navigationContext(params.textDocument.uri)
+  const document = documents.get(params.textDocument.uri)
+  if (!context || !document) {
+    return []
+  }
+  return getFunctionReferences(
+    context,
+    document.offsetAt(params.position),
+    params.context.includeDeclaration
+  ).map((span) => ({ uri: URI.file(span.file).toString(), range: spanRange(span) }))
 })
 
 // Start listening

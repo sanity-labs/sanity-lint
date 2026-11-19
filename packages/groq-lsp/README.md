@@ -4,12 +4,13 @@ Language Server Protocol (LSP) implementation for GROQ - provides IDE features f
 
 ## Features
 
-| Feature         | Description                                |
-| --------------- | ------------------------------------------ |
-| **Diagnostics** | Real-time linting via `@sanity/groq-lint`  |
-| **Hover**       | Type information and documentation         |
-| **Completion**  | Field names, functions, document types     |
-| **Formatting**  | Via `@sanity-labs/groq-wasm` (groq-format) |
+| Feature         | Description                                                    |
+| --------------- | -------------------------------------------------------------- |
+| **Diagnostics** | Real-time linting via `@sanity/groq-lint`                      |
+| **Hover**       | Type information and documentation                             |
+| **Completion**  | Field names, functions, document types                         |
+| **Formatting**  | Via `@sanity-labs/groq-wasm` (groq-format)                     |
+| **Navigation**  | Go to definition and find references for custom GROQ functions |
 
 ## Installation
 
@@ -164,6 +165,10 @@ The server reads the `contentMappers` entry for `@sanity-labs/groq-content-mappe
 
 Besides locating the schema, the `functions` option lists files of shared [custom GROQ functions](https://www.sanity.io/docs/content-lake/custom-groq-functions). A query in a file with one of the mapper's `extensions` that calls one is linted with the definitions it needs prepended, as the mapper's loaders deliver it, so the call is not a parse error. Findings are reported at their place in the query; those inside the prepended definitions are left out. Problems with the options or the functions files are logged to the server output.
 
+Go to definition on a call such as `image::richText(body)` opens its definition in the functions file, and find references on a definition or a call lists its calls in every `.groq` file under the `tsconfig.json`'s folder that the mapper handles, functions files included. A query that defines a function of the same name itself keeps its own.
+
+Editor features that run outside the server can import the mapper settings, the definitions and calls in GROQ source, and `isDefinitionsOnly()` from `@sanity-labs/groq-lsp/functions`, which does not load WASM.
+
 Generate a schema file from your Sanity project:
 
 ```bash
@@ -244,6 +249,8 @@ Document type name
 ```
 
 ### Formatting
+
+A `.groq` file of only `fn` definitions, such as a file of shared custom functions, is formatted too.
 
 Formats GROQ queries with [groq-format](https://github.com/atombender/groq-format) through `@sanity-labs/groq-wasm`, wrapped to `printWidth` (default 80) and indented with `tabSize` spaces, or tabs when `insertSpaces` is `false`:
 
