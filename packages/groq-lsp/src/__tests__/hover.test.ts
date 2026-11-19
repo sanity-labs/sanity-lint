@@ -119,8 +119,14 @@ const schema: SchemaType = [
   documentType('post', {
     title: attribute({ type: 'number' }),
     views: attribute({ type: 'number' }),
+    meta: attribute({ type: 'inline', name: 'post.meta' }, true),
   }),
   documentType('author', { name: attribute(string) }),
+  {
+    type: 'type',
+    name: 'post.meta',
+    value: { type: 'object', attributes: { summary: attribute(string, true) } },
+  },
   {
     type: 'type',
     name: 'seo',
@@ -770,6 +776,28 @@ describe('hover optional and nullable paths', () => {
         expect(hoverTextAt(query, offset), `${query} @${offset}`).toBe(current)
       }
     }
+  })
+
+  it('hovers a nullable field as non-null in the projection of a defined() or != null filter', () => {
+    expect(hoverText('*[_type == $type]{subtitle}', 'subtitle')).toBe(
+      fenced('subtitle: string | null')
+    )
+    for (const query of [
+      '*[_type == $type && defined(subtitle)]{subtitle}',
+      '*[_type == $type && subtitle != null]{subtitle}',
+      '*[_type == "page" && defined(subtitle)]{subtitle}',
+      '*[_type == "page" && subtitle != null]{subtitle}',
+    ]) {
+      expect(hoverText(query, 'subtitle', 1), query).toBe(fenced('subtitle: string'))
+    }
+  })
+
+  it('hovers a path through an inline type as non-null under a defined() filter', () => {
+    const query = '*[_type == $type && defined(meta.summary)]{"summary": meta.summary}'
+    expect(hoverText('*[_type == $type]{"summary": meta.summary}', 'summary', 1)).toBe(
+      fenced('summary: string | null')
+    )
+    expect(hoverText(query, 'summary', 2), query).toBe(fenced('summary: string'))
   })
 
   it('hovers an attribute of a possibly missing element as nullable', () => {
