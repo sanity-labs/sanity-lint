@@ -36,9 +36,9 @@ import { rules as schemaRules } from '@sanity-labs/schema-lint'
 import { createAllRules } from './utils/rule-factory'
 import { createAllSchemaRules } from './utils/schema-rule-factory'
 
-// Version is injected at build time by tsup
+// Version is injected at build time by tsdown
 declare const PACKAGE_VERSION: string
-// oxlint-disable-next-line unicorn/no-typeof-undefined -- the global is undeclared when tsup has not injected it
+// oxlint-disable-next-line unicorn/no-typeof-undefined -- the global is undeclared when tsdown has not injected it
 const version = typeof PACKAGE_VERSION !== 'undefined' ? PACKAGE_VERSION : '0.0.0'
 
 // Create ESLint rules from all GROQ lint rules

@@ -30,8 +30,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
@@ -39,7 +39,7 @@
     "groq-js": "catalog:"
   },
   "devDependencies": {
-    "tsup": "^9.0.0",
+    "tsdown": "^0.23.7",
     "typescript": "^6.0.3",
     "vitest": "catalog:"
   },

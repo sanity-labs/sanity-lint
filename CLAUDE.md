@@ -9,7 +9,7 @@ Sanity Developer Experience Suite - linting, formatting, and static analysis for
 - **Package manager**: pnpm workspaces
 - **Build orchestration**: Turborepo
 - **Testing**: Vitest with custom RuleTester pattern
-- **Bundling**: tsup (ESM + CJS dual output)
+- **Bundling**: tsdown (ESM output with `.d.ts`)
 - **Versioning**: Changesets
 
 ### Packages

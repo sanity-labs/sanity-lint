@@ -1,4 +1,4 @@
-import { defineConfig } from 'tsup'
+import { defineConfig } from 'tsdown'
 
 export default defineConfig({
   entry: {
@@ -6,8 +6,8 @@ export default defineConfig({
     server: 'src/server.ts',
     fragments: 'src/fragments/index.ts',
   },
-  format: ['esm'],
-  dts: true,
-  clean: true,
+  format: 'esm',
+  fixedExtension: false,
+  dts: { sourcemap: false },
   sourcemap: true,
 })
