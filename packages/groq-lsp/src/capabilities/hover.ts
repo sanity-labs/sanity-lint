@@ -13,6 +13,7 @@ import type { FormattedType } from './hover-format.js'
 import {
   resolveCallType,
   resolveFieldType,
+  resolveNumberLiteral,
   resolveParamType,
   resolveStringLiteral,
 } from './hover-types.js'
@@ -52,9 +53,14 @@ export function getHoverInfo(
     if (literal) {
       const content =
         literal.key === undefined
-          ? literalContent(literal.text)
+          ? literalContent(JSON.stringify(literal.value))
           : buildHoverContent({ type: 'field', text: literal.key }, literal.keyType)
       return content ? { contents: content } : null
+    }
+
+    const number = resolveNumberLiteral(query.query, positionInQuery)
+    if (number !== null) {
+      return { contents: literalContent(number) }
     }
 
     if (typeOptions) {

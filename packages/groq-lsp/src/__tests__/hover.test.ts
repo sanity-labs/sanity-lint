@@ -574,6 +574,23 @@ describe('hover string literals', () => {
     expect(hoverText(`*[_type == "page" && title == ${literal}]`, 'b{')).toBe(fenced(literal))
   })
 
+  it('hovers a single-quoted string as the generated types print it', () => {
+    expect(hoverText("*[_type == 'page']", 'page')).toBe(fenced('"page"'))
+    const query = String.raw`*[_type == "page" && title != 'It\'s']{'It\'s': title}`
+    expect(hoverText(query, 'It', 0)).toBe(fenced(`"It's"`))
+    expect(hoverText(query, 'It', 1)).toBe(fenced("It's: string"))
+  })
+
+  it('hovers a number as the literal the generated types print', () => {
+    const query = '*[_type == "post" && views > 10][0...3]{"half": 2.50, "less": -1, title2}'
+    expect(hoverText(query, '10')).toBe(fenced('10'))
+    expect(hoverText(query, '10', 0, false)).toBe(fenced('10'))
+    expect(hoverTextAt(query, query.indexOf('3]'))).toBe(fenced('3'))
+    expect(hoverTextAt(query, query.indexOf('2.50') + 2)).toBe(fenced('2.5'))
+    expect(hoverTextAt(query, query.indexOf('-1') + 1)).toBe(fenced('1'))
+    expect(hoverText(query, 'title2')).toBe(fenced('title2: null'))
+  })
+
   it('hovers a projection key as the type of its value', () => {
     expect(hoverText(CODY_QUERY, '"overview"')).toBe(fenced('overview: string'))
     expect(hoverText(CODY_QUERY, 'overview', 0)).toBe(fenced('overview: string'))
