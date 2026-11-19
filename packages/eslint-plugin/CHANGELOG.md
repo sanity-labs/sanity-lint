@@ -1,5 +1,12 @@
 # eslint-plugin-sanity
 
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [6528354]
+  - @sanity-labs/groq-lint@1.3.0
+
 ## 1.1.1
 
 ### Patch Changes
