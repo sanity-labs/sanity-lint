@@ -413,3 +413,40 @@ describe('invalid-type-filter', () => {
     })
   })
 })
+
+const inErrors = (query: string) =>
+  lint(query, { schema: testSchema }).findings.filter((f) => f.ruleId === 'invalid-type-filter')
+
+describe('invalid-type-filter: in comparisons', () => {
+  it.each([
+    '*[_type in ["post", "author"]]',
+    '*[_type in ["post", "author"]]{ _type }',
+    '*[_type in $types]',
+    '*[_type in ["post", ...$more]]',
+    '*[_type in []]',
+    '*[_type in ["post"] || _type == "category"]',
+  ])('accepts %s', (query) => {
+    expect(inErrors(query)).toHaveLength(0)
+  })
+
+  it('flags a type in the list that does not exist, with a suggestion', () => {
+    const errors = inErrors('*[_type in ["post", "athor"]]')
+    expect(errors).toHaveLength(1)
+    expect(errors[0]?.message).toBe('Document type "athor" does not exist in schema')
+    expect(errors[0]?.suggestions?.[0]?.replacement).toBe('author')
+  })
+
+  it('flags every type in the list that does not exist', () => {
+    const errors = inErrors('*[_type in ["psot", "athor"]]')
+    expect(errors.map((e) => e.message)).toEqual([
+      'Document type "psot" does not exist in schema',
+      'Document type "athor" does not exist in schema',
+    ])
+  })
+
+  it('flags a == comparison in a nested filter inside an in filter', () => {
+    const errors = inErrors('*[_type in ["post"]]{ "x": *[_type in ["missing"]] }')
+    expect(errors).toHaveLength(1)
+    expect(errors[0]?.message).toContain('"missing"')
+  })
+})

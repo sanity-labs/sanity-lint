@@ -4,7 +4,12 @@
  * Resolves the identifier under the cursor against the schema, in the scope it is written in, so a
  * field hovers as the type the schema gives it rather than the type of the whole query. A field
  * with a projection, such as `items[] { … }` or `author-> { … }`, hovers as what the projection
- * makes of it. A `_type` in a filter hovers as the document type names the filter selects.
+ * makes of it.
+ *
+ * A filter `[]` is read in the scope of the array it filters, as that array is before the filter
+ * runs, so a field in a filter hovers as every value it may have there: `_type` in
+ * `*[_type == "post"]` is every document type. A projection `{}` after the filter is read in the
+ * scope the filter narrowed it to, so the `_type` in `*[_type == "post"]{_type}` is `"post"`.
  */
 
 import {
@@ -50,13 +55,6 @@ export function resolveFieldType(
   }
 
   let frames = enclosingFrames(masked, word.start)
-  const filter = frames.at(-1)
-  if (word.text === '_type' && filter?.bracket === '[' && !hasMemberPrefix(masked, word.start)) {
-    const names = typeNamesInFilter(query, masked, filter, options)
-    if (names) {
-      return { text: names.join(' | '), notes: [] }
-    }
-  }
 
   const base = memberBaseStart(masked, word.start)
   const projectionEnd = projectionAfter(masked, word.end)
@@ -99,7 +97,7 @@ export function resolveFieldType(
   if (baseMayBeNull) {
     found.push({ type: 'null' })
   }
-  return formatTypes(found, options.schema, { bareLiterals: word.text === '_type' })
+  return formatTypes(found, options.schema)
 }
 
 /**
@@ -662,88 +660,4 @@ function flatten(type: TypeNode, schema: SchemaType, seen = new Set<string>()): 
 
 function assertNever(value: never): never {
   throw new Error(`Unhandled type: ${JSON.stringify(value)}`)
-}
-
-function unique(values: Array<string>): Array<string> {
-  return [...new Set(values)]
-}
-
-/**
- * The document type names a filter selects, when it constrains `_type` and every name is a
- * type the schema defines.
- */
-function typeNamesInFilter(
-  query: string,
-  masked: string,
-  frame: Frame,
-  options: FieldTypeOptions
-): Array<string> | null {
-  if (postfixStart(masked, frame.open) === undefined) {
-    return null
-  }
-  const close = matchingClose(masked, frame.open) ?? masked.length
-  let filter: ExprNode
-  try {
-    filter = parseQuery(query.slice(frame.open + 1, close), options)
-  } catch {
-    return null
-  }
-
-  const names = typeNamesOf(filter)
-  if (!names || names.length === 0) {
-    return null
-  }
-  const defined = new Set(options.schema.map((entry) => entry.name))
-  return names.every((name) => defined.has(name)) ? names : null
-}
-
-function typeNamesOf(node: ExprNode): Array<string> | null {
-  switch (node.type) {
-    case 'Group':
-      return typeNamesOf(node.base)
-    case 'And': {
-      const left = typeNamesOf(node.left)
-      const right = typeNamesOf(node.right)
-      if (left && right) {
-        return left.filter((name) => right.includes(name))
-      }
-      return left ?? right
-    }
-    case 'Or': {
-      const left = typeNamesOf(node.left)
-      const right = typeNamesOf(node.right)
-      return left && right ? unique([...left, ...right]) : null
-    }
-    case 'OpCall':
-      return typeNamesOfComparison(node)
-    default:
-      return null
-  }
-}
-
-function typeNamesOfComparison(node: Extract<ExprNode, { type: 'OpCall' }>): Array<string> | null {
-  const { op, left, right } = node
-  if (op === '==') {
-    const sides = isTypeAccess(left) ? right : isTypeAccess(right) ? left : undefined
-    return sides?.type === 'Value' && typeof sides.value === 'string' ? [sides.value] : null
-  }
-  if (op === 'in' && isTypeAccess(left) && right.type === 'Array') {
-    const names: Array<string> = []
-    for (const element of right.elements) {
-      if (
-        element.isSplat ||
-        element.value.type !== 'Value' ||
-        typeof element.value.value !== 'string'
-      ) {
-        return null
-      }
-      names.push(element.value.value)
-    }
-    return names
-  }
-  return null
-}
-
-function isTypeAccess(node: ExprNode): boolean {
-  return node.type === 'AccessAttribute' && node.name === '_type' && !node.base
 }

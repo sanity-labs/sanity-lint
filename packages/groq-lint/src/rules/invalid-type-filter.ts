@@ -1,9 +1,9 @@
 /**
  * Rule: invalid-type-filter
  *
- * Detects when a query filters by `_type == "someType"` where "someType"
- * doesn't exist in the schema. This catches typos like `_type == "psot"`
- * when you meant `_type == "post"`.
+ * Detects when a query filters by `_type == "someType"` or
+ * `_type in ["someType", ...]` where "someType" doesn't exist in the schema.
+ * This catches typos like `_type == "psot"` when you meant `_type == "post"`.
  *
  * Document filters (`*[...]`) are validated against document types. Filters on
  * arrays (e.g. `content[_type == "imageBlock"]`) are validated against the
@@ -14,7 +14,7 @@
  */
 
 import type { Rule, Suggestion } from '@sanity-labs/lint-core'
-import type { AccessAttributeNode, OpCallNode } from 'groq-js'
+import type { AccessAttributeNode, ExprNode, OpCallNode } from 'groq-js'
 import { SchemaTypeResolver, walkScoped } from '../type-scope'
 
 /**
@@ -80,38 +80,46 @@ function findSimilarTypes(
 }
 
 /**
- * Check if an OpCallNode is a _type comparison
+ * The type names an OpCallNode compares `_type` to: `_type == "a"`, `"a" == _type` and
+ * `_type in ["a", "b"]`. Elements of an `in` array that are not string literals are skipped.
  */
-function isTypeComparison(
-  node: OpCallNode
-): { typeName: string; typeAccess: AccessAttributeNode } | null {
+function typeComparisons(node: OpCallNode): {
+  typeNames: Array<string>
+  typeAccess: AccessAttributeNode
+} | null {
+  const { left, right } = node
+
+  if (node.op === 'in') {
+    if (isTypeAccess(left) && right.type === 'Array') {
+      const typeNames = right.elements.flatMap((element) =>
+        !element.isSplat &&
+        element.value.type === 'Value' &&
+        typeof element.value.value === 'string'
+          ? [element.value.value]
+          : []
+      )
+      return { typeNames, typeAccess: left }
+    }
+    return null
+  }
+
   if (node.op !== '==') {
     return null
   }
 
-  const { left, right } = node
-
-  // Check _type == "value"
-  if (
-    left.type === 'AccessAttribute' &&
-    left.name === '_type' &&
-    right.type === 'Value' &&
-    typeof right.value === 'string'
-  ) {
-    return { typeName: right.value, typeAccess: left }
+  if (isTypeAccess(left) && right.type === 'Value' && typeof right.value === 'string') {
+    return { typeNames: [right.value], typeAccess: left }
   }
 
-  // Check "value" == _type
-  if (
-    right.type === 'AccessAttribute' &&
-    right.name === '_type' &&
-    left.type === 'Value' &&
-    typeof left.value === 'string'
-  ) {
-    return { typeName: left.value, typeAccess: right }
+  if (isTypeAccess(right) && left.type === 'Value' && typeof left.value === 'string') {
+    return { typeNames: [left.value], typeAccess: right }
   }
 
   return null
+}
+
+function isTypeAccess(node: ExprNode): node is AccessAttributeNode {
+  return node.type === 'AccessAttribute' && node.name === '_type'
 }
 
 function formatTypeList(types: Array<string>): string {
@@ -144,47 +152,53 @@ export const invalidTypeFilter: Rule = {
         return
       }
 
-      const typeComparison = isTypeComparison(node as OpCallNode)
+      const typeComparison = typeComparisons(node as OpCallNode)
       if (!typeComparison) {
         return
       }
 
-      const { typeName, typeAccess } = typeComparison
+      const { typeNames, typeAccess } = typeComparison
 
       // Only validate when the possible types of the value whose `_type` is
       // compared are fully known; unknown contexts are skipped.
       const ownerType = typeAccess.base ? resolver.resolve(typeAccess.base, scope) : scope.type
       const possibleTypes = ownerType && resolver.possibleTypeNames(ownerType)
-      if (!possibleTypes || possibleTypes.includes(typeName)) {
+      if (!possibleTypes) {
         return
       }
 
-      if (!documentTypeSet.has(typeName) && possibleTypes.every((t) => documentTypeSet.has(t))) {
-        const similarTypes = findSimilarTypes(typeName, documentTypes)
+      for (const typeName of typeNames) {
+        if (possibleTypes.includes(typeName)) {
+          continue
+        }
+
+        if (!documentTypeSet.has(typeName) && possibleTypes.every((t) => documentTypeSet.has(t))) {
+          const similarTypes = findSimilarTypes(typeName, documentTypes)
+
+          context.report({
+            message: `Document type "${typeName}" does not exist in schema`,
+            severity: 'error',
+            help:
+              similarTypes.length > 0
+                ? `Did you mean: ${similarTypes.map((t) => `"${t}"`).join(', ')}?`
+                : `Available types: ${documentTypes.slice(0, 5).join(', ')}${documentTypes.length > 5 ? '...' : ''}`,
+            suggestions: toSuggestions(similarTypes),
+          })
+          continue
+        }
+
+        const similarTypes = findSimilarTypes(typeName, possibleTypes)
 
         context.report({
-          message: `Document type "${typeName}" does not exist in schema`,
+          message: `Type "${typeName}" is not a possible type here`,
           severity: 'error',
           help:
             similarTypes.length > 0
               ? `Did you mean: ${similarTypes.map((t) => `"${t}"`).join(', ')}?`
-              : `Available types: ${documentTypes.slice(0, 5).join(', ')}${documentTypes.length > 5 ? '...' : ''}`,
+              : `Possible types: ${formatTypeList(possibleTypes)}`,
           suggestions: toSuggestions(similarTypes),
         })
-        return
       }
-
-      const similarTypes = findSimilarTypes(typeName, possibleTypes)
-
-      context.report({
-        message: `Type "${typeName}" is not a possible type here`,
-        severity: 'error',
-        help:
-          similarTypes.length > 0
-            ? `Did you mean: ${similarTypes.map((t) => `"${t}"`).join(', ')}?`
-            : `Possible types: ${formatTypeList(possibleTypes)}`,
-        suggestions: toSuggestions(similarTypes),
-      })
     })
   },
 }
