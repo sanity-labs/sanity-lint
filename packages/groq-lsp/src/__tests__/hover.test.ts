@@ -747,6 +747,15 @@ describe('hover custom function calls', () => {
     expect(hoverTextAt(COVER_QUERY, callStart + call.length - 1)).toBe(expected)
   })
 
+  it('hovers the closing parenthesis after a number or parameter argument as the call', () => {
+    const rounded = '*[_type == "post"]{"r": round(views, 2)}'
+    expect(hoverTextAt(rounded, rounded.indexOf(')'))).toContain(fenced('round: number'))
+    expect(hoverTextAt(rounded, rounded.indexOf('2)'))).toBe(fenced('2'))
+    const withParam = '*[_type == "post"]{"r": round(views, $places)}'
+    expect(hoverTextAt(withParam, withParam.indexOf(')'))).toContain(fenced('round: number | null'))
+    expect(hoverText(withParam, '$places')).toBe(fenced('$places: unknown'))
+  })
+
   it('keeps the argument hovering as the field it names, with its full shape', () => {
     const argument = hoverTextAt(COVER_QUERY, callStart + 'image::field('.length + 2)
     expect(argument).toContain('coverImage: {\n  crop: {\n    _type: "sanity.imageCrop";')
