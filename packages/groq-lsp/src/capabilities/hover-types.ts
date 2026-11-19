@@ -1,126 +1,52 @@
 /**
- * Schema-aware types for hovering over fields in a GROQ query
+ * Schema-aware types for hovering over a GROQ query
  *
- * Resolves the identifier under the cursor against the schema, in the scope it is written in, so a
- * field hovers as the type the schema gives it rather than the type of the whole query. A field
- * with a projection, such as `items[] { … }` or `author-> { … }`, hovers as what the projection
- * makes of it.
- *
- * A filter `[]` is read in the scope of the array it filters, as that array is before the filter
- * runs, so a field in a filter hovers as every value it may have there: `_type` in
- * `*[_type == "post"]` is every document type. A projection `{}` after the filter is read in the
- * scope the filter narrowed it to, so the `_type` in `*[_type == "post"]{_type}` is `"post"`.
+ * Each part of a query hovers as the type groq-js gives it in the scope it is written in, which is
+ * how the content mapper and `sanity typegen` type the query, so a hover shows what the generated
+ * types say. A field hovers as its value there, or as what its projection makes of it when one
+ * follows, as in `items[] { … }` or `author-> { … }`. A projection key hovers as the value it is
+ * given, a custom function call as what it returns, and a `$param` as the type the generated
+ * `QueryParams` gives it. {@link typeOfRange} describes the scope each part is read in.
  */
 
-import {
-  parse,
-  typeEvaluate,
-  type ExprNode,
-  type ObjectTypeNode,
-  type SchemaType,
-  type TypeNode,
-} from 'groq-js'
+import type { SchemaType, TypeNode } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
 import { leadingDefinitions } from '../content-mapper/groq-scanner.js'
-import { type FormattedType, formatTypes, objectShape } from './hover-format.js'
+import { withoutLiterals } from './groq-probe.js'
+import { type FormattedType, formatTypes } from './hover-format.js'
 import { inferParamTypes } from './hover-params.js'
+import { type MarkedRange, typeOfRange } from './hover-scope.js'
 
 export interface FieldTypeOptions {
   schema: SchemaType
   functions?: Map<string, GroqFunction> | undefined
 }
 
-const SCOPE_KEY = '__scope'
-
 /**
- * A scope an identifier is read in: the element of a filter `[`, a projection `{`, or the array a
- * `| order(` or `| score(` call sorts, which opens at its `|`.
- */
-interface Frame {
-  open: number
-  bracket: '[' | '{' | '|'
-}
-
-/**
- * Describe the type of the identifier at `position`, or `null` when the schema does not say.
+ * Describe the type of the field at `position`, or `null` when `position` is not on a field or
+ * groq-js cannot type it.
  */
 export function resolveFieldType(
   query: string,
   position: number,
   options: FieldTypeOptions
 ): FormattedType | null {
-  const masked = maskStrings(query)
+  const masked = withoutLiterals(query)
   const word = wordAt(masked, position)
-  if (!word || isInString(query, masked, word.start) || !isFieldReference(masked, word)) {
+  if (
+    !word ||
+    isInString(query, masked, word.start) ||
+    !isFieldReference(masked, word) ||
+    word.start < preambleEnd(query)
+  ) {
     return null
   }
 
-  let frames = enclosingFrames(masked, word.start)
-
-  const base = memberBaseStart(masked, word.start)
+  const start = memberBaseStart(masked, word.start) ?? word.start
   const projectionEnd = projectionAfter(masked, word.end)
-  if (projectionEnd !== undefined) {
-    const projected = parentScope(frames, query.slice(base ?? word.start, projectionEnd + 1))
-    const type =
-      projected && scopeTypesAt(query, masked, projected.frames, projected.prefix, options)
-    return type ? formatTypes([type], options.schema) : null
-  }
-
-  let prefix =
-    base === undefined
-      ? '@'
-      : query.slice(base, word.start - (masked.charAt(word.start - 1) === '.' ? 1 : 0))
-  const parent = parentScope(frames, prefix)
-  if (!parent) {
-    return null
-  }
-  ;({ frames, prefix } = parent)
-  const scopeTypes = scopeTypesAt(query, masked, frames, prefix, options)
-  if (!scopeTypes) {
-    return null
-  }
-
-  const scoped = flatten(scopeTypes, options.schema)
-  const baseMayBeNull = base !== undefined && scoped.some((type) => type.type === 'null')
-  const found: Array<TypeNode> = []
-  for (const object of scoped.filter(isObject)) {
-    const attribute = object.attributes[word.text]
-    if (attribute) {
-      found.push(attribute.value)
-      if (attribute.optional) {
-        found.push({ type: 'null' })
-      }
-    }
-  }
-  if (found.length === 0) {
-    return null
-  }
-  if (baseMayBeNull) {
-    found.push({ type: 'null' })
-  }
-  return formatTypes(found, options.schema)
-}
-
-/**
- * `^` reads the scope around the one it is written in, so each `^` at the start of `prefix`
- * drops the innermost frame. `null` when there are more of them than frames.
- */
-function parentScope(
-  frames: Array<Frame>,
-  prefix: string
-): { frames: Array<Frame>; prefix: string } | null {
-  let up = 0
-  let rest = prefix
-  while (rest.startsWith('^')) {
-    up++
-    rest = rest.slice(1).replace(/^\./, '')
-  }
-  if (up === 0) {
-    return { frames, prefix }
-  }
-  return up <= frames.length
-    ? { frames: frames.slice(0, frames.length - up), prefix: rest || '@' }
-    : null
+  const end = projectionEnd === undefined ? word.end : projectionEnd + 1
+  const as = isShorthandAttribute(masked, start, end) ? 'attribute' : 'expression'
+  return formatted(typeOfRange(query, { start, end, as }, options), options.schema)
 }
 
 export interface StringLiteral {
@@ -144,8 +70,8 @@ export function resolveStringLiteral(
   position: number,
   options?: FieldTypeOptions
 ): StringLiteral | null {
-  const masked = maskStrings(query)
-  const range = stringRangeAt(query, position)
+  const masked = withoutLiterals(query)
+  const range = stringRangeAt(masked, position)
   if (!range) {
     return null
   }
@@ -154,7 +80,10 @@ export function resolveStringLiteral(
     return { text, keyType: null }
   }
   const key = keyName(text)
-  const keyType = options ? projectionKeyType(query, masked, range, key, options) : null
+  const keyType =
+    options && range.start >= preambleEnd(query)
+      ? formatted(typeOfRange(query, { ...range, as: 'key' }, options), options.schema)
+      : null
   return { text, key, keyType }
 }
 
@@ -163,73 +92,27 @@ interface StringRange {
   end: number
 }
 
-/** The string literal, quotes included, that `position` is in: from its opening quote to past its closing one. */
-function stringRangeAt(query: string, position: number): StringRange | null {
+/**
+ * The string literal, quotes included, that `position` is in. `masked` blanks the contents of
+ * strings and comments, so the quote after an opening one closes it.
+ */
+function stringRangeAt(masked: string, position: number): StringRange | null {
   let start: number | undefined
-  let quote = ''
-  for (let index = 0; index < query.length; index++) {
-    const char = query.charAt(index)
-    if (start === undefined) {
-      if (char === '"' || char === "'") {
-        start = index
-        quote = char
-      }
-    } else if (char === '\\') {
-      index++
-    } else if (char === quote) {
-      if (position >= start && position <= index) {
-        return { start, end: index + 1 }
-      }
-      start = undefined
+  for (let index = 0; index < masked.length; index++) {
+    const char = masked.charAt(index)
+    if (char !== '"' && char !== "'") {
+      continue
     }
+    if (start === undefined) {
+      start = index
+      continue
+    }
+    if (position >= start && position <= index) {
+      return { start, end: index + 1 }
+    }
+    start = undefined
   }
   return null
-}
-
-function projectionKeyType(
-  query: string,
-  masked: string,
-  range: StringRange,
-  key: string,
-  options: FieldTypeOptions
-): FormattedType | null {
-  const frames = enclosingFrames(masked, range.start)
-  const projection = frames.at(-1)
-  if (projection?.bracket !== '{') {
-    return null
-  }
-  const close = matchingClose(masked, projection.open)
-  if (close === undefined) {
-    return null
-  }
-  const start = postfixStart(masked, projection.open) ?? projection.open
-  const preamble = query.slice(0, leadingDefinitions(query).at(-1)?.end ?? 0)
-  if (start < preamble.length) {
-    return null
-  }
-  const type = scopeTypesAt(
-    query,
-    masked,
-    frames.slice(0, -1),
-    query.slice(start, close + 1),
-    options,
-    preamble
-  )
-  if (!type) {
-    return null
-  }
-
-  const found: Array<TypeNode> = []
-  for (const object of flatten(type, options.schema).filter(isObject)) {
-    const attribute = object.attributes[key]
-    if (attribute) {
-      found.push(attribute.value)
-      if (attribute.optional) {
-        found.push({ type: 'null' })
-      }
-    }
-  }
-  return found.length === 0 ? null : formatTypes(found, options.schema)
 }
 
 function keyName(literal: string): string {
@@ -253,14 +136,14 @@ export interface ParamType {
 
 /**
  * Describe the parameter under `position`, or `null` when `position` is not on one. Its type is
- * the one the content mapper generates for it in `QueryParams`; see {@link inferParamTypes}.
+ * the one the generated `QueryParams` gives it; see {@link inferParamTypes}.
  */
 export function resolveParamType(
   query: string,
   position: number,
   options?: FieldTypeOptions
 ): ParamType | null {
-  const masked = maskStrings(query)
+  const masked = withoutLiterals(query)
   const word = wordAt(masked, masked.charAt(position) === '$' ? position + 1 : position)
   if (
     !word ||
@@ -282,7 +165,7 @@ export function resolveParamType(
   } catch {
     type = undefined
   }
-  return { name: word.text, type: type ? formatTypes([type], options.schema) : null }
+  return { name: word.text, type: formatted(type, options.schema) }
 }
 
 export interface CallType {
@@ -292,11 +175,12 @@ export interface CallType {
 }
 
 const NAMESPACED_CALL = /([A-Za-z_]\w*)\s*::\s*([A-Za-z_]\w*)\s*\(/g
+const NOT_FUNCTIONS = new Set(['in', 'match', 'asc', 'desc', 'fn', 'true', 'false', 'null'])
 
 /**
  * Describe what the custom function call under `position` returns, or `null` when `position` is
  * not on the name or the parentheses of a call to a function the query defines or `functions`
- * holds, or the schema does not say. The arguments of the call are left to
+ * holds, or groq-js cannot type it. The arguments of the call are left to
  * {@link resolveFieldType}.
  */
 export function resolveCallType(
@@ -304,40 +188,38 @@ export function resolveCallType(
   position: number,
   options: FieldTypeOptions
 ): CallType | null {
-  const masked = maskStrings(query)
+  const masked = withoutLiterals(query)
   const definitions = leadingDefinitions(query)
-  const defined = new Set(definitions.map((definition) => definition.name))
-  const preamble = query.slice(0, definitions.at(-1)?.end ?? 0)
+  const preamble = definitions.at(-1)?.end ?? 0
 
-  let hovered: { name: string; start: number; close: number } | undefined
   for (const match of masked.matchAll(NAMESPACED_CALL)) {
     const name = `${match[1]}::${match[2]}`
     const open = match.index + match[0].length - 1
     const close = matchingClose(masked, open)
     if (
       close === undefined ||
-      match.index < preamble.length ||
+      match.index < preamble ||
       /\bfn\s*$/.test(masked.slice(0, match.index)) ||
-      !(defined.has(name) || options.functions?.has(name))
+      !(definitions.some((definition) => definition.name === name) || options.functions?.has(name))
     ) {
       continue
     }
     if ((position >= match.index && position <= open) || position === close) {
-      hovered = { name, start: match.index, close }
-      break
+      const range: MarkedRange = { start: match.index, end: close + 1, as: 'expression' }
+      const type = formatted(typeOfRange(query, range, options), options.schema)
+      return type ? { name, type } : null
     }
   }
-  if (!hovered) {
-    return null
-  }
+  return null
+}
 
-  const call = query.slice(hovered.start, hovered.close + 1)
-  const frames = enclosingFrames(masked, hovered.start)
-  const type = scopeTypesAt(query, masked, frames, call, options, preamble)
-  if (!type) {
-    return null
-  }
-  return { name: hovered.name, type: formatTypes([type], options.schema) }
+function formatted(type: TypeNode | undefined, schema: SchemaType): FormattedType | null {
+  return type ? formatTypes([type], schema) : null
+}
+
+/** Where the `fn` definitions at the start of `query` end, and the query they serve begins. */
+function preambleEnd(query: string): number {
+  return leadingDefinitions(query).at(-1)?.end ?? 0
 }
 
 interface Word {
@@ -366,34 +248,7 @@ function isIdentifierChar(char: string | undefined): boolean {
   return char !== undefined && /[a-zA-Z0-9_]/.test(char)
 }
 
-/**
- * Replace the contents of string literals with spaces so brackets in them are not counted.
- */
-function maskStrings(text: string): string {
-  let result = ''
-  let quote: string | undefined
-  for (let index = 0; index < text.length; index++) {
-    const char = text.charAt(index)
-    if (quote) {
-      if (char === '\\') {
-        result += '  '
-        index++
-      } else if (char === quote) {
-        quote = undefined
-        result += char
-      } else {
-        result += ' '
-      }
-    } else {
-      if (char === '"' || char === "'") {
-        quote = char
-      }
-      result += char
-    }
-  }
-  return result
-}
-
+/** Whether `index` is in a string or a comment, which `masked` blanks out. */
 function isInString(text: string, masked: string, index: number): boolean {
   return text.charAt(index) !== masked.charAt(index)
 }
@@ -415,44 +270,40 @@ function isFieldReference(masked: string, word: Word): boolean {
   if (after.startsWith('(') || after.startsWith('::')) {
     return false
   }
-  return !['true', 'false', 'null', 'in', 'match', 'asc', 'desc'].includes(word.text)
+  return !NOT_FUNCTIONS.has(word.text)
 }
 
 /**
- * The `[` and `{` that are open at `position`, outermost first. Parentheses are skipped: they
- * group or call, and do not change what an identifier refers to.
+ * Whether `[start, end)` is a whole attribute of an object or projection written without a key,
+ * as `title` or `author->{name}` in `{title, author->{name}}`.
  */
-function enclosingFrames(masked: string, position: number): Array<Frame> {
-  const stack: Array<{ char: string; index: number; pipe: number | undefined }> = []
+function isShorthandAttribute(masked: string, start: number, end: number): boolean {
+  const before = masked.slice(0, start).trimEnd()
+  const after = masked.slice(end).trimStart()
+  return (
+    (before.endsWith('{') || before.endsWith(',')) &&
+    (after.startsWith(',') || after.startsWith('}')) &&
+    innermostOpen(masked, start) === '{'
+  )
+}
+
+/** The bracket that is open at `position`, if any. */
+function innermostOpen(masked: string, position: number): string | undefined {
+  const stack: Array<string> = []
   for (let index = 0; index < position; index++) {
     const char = masked.charAt(index)
     if (char === '[' || char === '{' || char === '(') {
-      stack.push({ char, index, pipe: char === '(' ? pipedCall(masked, index) : undefined })
+      stack.push(char)
     } else if (char === ']' || char === '}' || char === ')') {
       stack.pop()
     }
   }
-  const frames: Array<Frame> = []
-  for (const { char, index, pipe } of stack) {
-    if (char === '[' || char === '{') {
-      frames.push({ open: index, bracket: char })
-    } else if (pipe !== undefined) {
-      frames.push({ open: pipe, bracket: '|' })
-    }
-  }
-  return frames
+  return stack.at(-1)
 }
 
-/**
- * The `|` of `| order(` or `| score(` when `open` is the `(` that follows it. The arguments of
- * these calls are read in the scope of the elements of the array piped in.
- */
-function pipedCall(masked: string, open: number): number | undefined {
-  const name = /\b(order|score)\s*$/.exec(masked.slice(0, open))
-  if (!name) {
-    return undefined
-  }
-  const pipe = trimmedEnd(masked, name.index) - 1
+/** The `|` before the pipe function whose name starts at `nameStart`, as in `| order(`. */
+function pipeBefore(masked: string, nameStart: number): number | undefined {
+  const pipe = trimmedEnd(masked, nameStart) - 1
   return masked.charAt(pipe) === '|' && masked.charAt(pipe - 1) !== '|' ? pipe : undefined
 }
 
@@ -489,45 +340,95 @@ function matchingOpen(masked: string, close: number): number | undefined {
 }
 
 /**
- * Start of the postfix expression that ends right before `end` (such as `*[_type == "page"][0]`
- * or `authors[]->`), or `undefined` when nothing precedes it.
+ * Start of the postfix expression that ends right before `end`: an operand such as `*`, `@`,
+ * `^`, `$param`, a name, a call or a bracketed literal, with the traversals after it, as
+ * `*[_type == "page"][0]`, `authors[]->`, `^.slug` or `*[…] | order(…)`. `undefined` when
+ * nothing precedes `end`.
  */
 function postfixStart(masked: string, end: number): number | undefined {
-  end = trimmedEnd(masked, end)
-  let start = end
-  while (start > 0) {
-    const char = masked.charAt(start - 1)
-    if (char === ']' || char === ')' || char === '}') {
-      const open = matchingOpen(masked, start - 1)
+  const last = trimmedEnd(masked, end)
+  // `start` is where the part of the expression read so far begins. Each step reads the element
+  // before it: a bracketed group, a name, a `.` or a `->`.
+  let start = last
+  for (;;) {
+    const before = trimmedEnd(masked, start)
+    const char = masked.charAt(before - 1)
+    if (before === 0) {
+      break
+    }
+    if (char === ']' || char === '}' || char === ')') {
+      const open = matchingOpen(masked, before - 1)
       if (open === undefined) {
         break
       }
       start = open
+      if (char === ')') {
+        // A call is where a chain starts, unless it is a pipe function applied to the one before.
+        const call = callNameStart(masked, open)
+        if (call !== undefined) {
+          const pipe = pipeBefore(masked, call)
+          start = pipe === undefined ? call : (postfixStart(masked, pipe) ?? call)
+        }
+        break
+      }
+      // A `[…]` or `{…}` after an operand traverses it; anywhere else it is an array or object.
+      if (!endsOperand(masked, trimmedEnd(masked, start))) {
+        break
+      }
     } else if (isPostfixChar(char)) {
-      const nameEnd = start
+      start = before
       while (start > 0 && isPostfixChar(masked.charAt(start - 1))) {
         start--
       }
-      const pipe = masked.charAt(nameEnd) === '(' ? pipedCall(masked, nameEnd) : undefined
-      if (pipe !== undefined) {
-        return postfixStart(masked, pipe) ?? start
-      }
-      const previous = masked.charAt(start - 1)
-      if (
-        !isMemberDot(masked, start - 1) &&
-        !(previous === '>' && masked.charAt(start - 2) === '-')
-      ) {
+      // A name continues the chain only as the attribute after a `.` or `->`.
+      const connector = trimmedEnd(masked, start)
+      if (isMemberDot(masked, connector - 1)) {
+        start = connector - 1
+      } else if (masked.charAt(connector - 1) === '>' && masked.charAt(connector - 2) === '-') {
+        start = connector - 2
+      } else {
         break
       }
-    } else if (char === '>' && masked.charAt(start - 2) === '-') {
-      start -= 2
-    } else if (isMemberDot(masked, start - 1)) {
-      start--
+    } else if (char === '>' && masked.charAt(before - 2) === '-') {
+      start = before - 2
+    } else if (isMemberDot(masked, before - 1)) {
+      start = before - 1
     } else {
       break
     }
   }
-  return start < end ? start : undefined
+  return start < last ? start : undefined
+}
+
+/** Words that are operators or keywords, never names or operands. */
+const OPERATOR_WORDS = new Set(['in', 'match', 'asc', 'desc', 'fn'])
+
+/** Whether the text ending at `end` ends an operand, so a `[` or `{` after it traverses it. */
+function endsOperand(masked: string, end: number): boolean {
+  const char = masked.charAt(end - 1)
+  if (char === ']' || char === ')' || char === '}') {
+    return true
+  }
+  if (char === '>' && masked.charAt(end - 2) === '-') {
+    return true
+  }
+  if (!isPostfixChar(char)) {
+    return false
+  }
+  let start = end
+  while (start > 0 && isPostfixChar(masked.charAt(start - 1))) {
+    start--
+  }
+  return !OPERATOR_WORDS.has(masked.slice(start, end))
+}
+
+/** The start of the name of the function called with the `(` at `open`, namespace included. */
+function callNameStart(masked: string, open: number): number | undefined {
+  const name = /([A-Za-z_]\w*)(\s*::\s*[A-Za-z_]\w*)?\s*$/.exec(masked.slice(0, open))
+  if (!name || NOT_FUNCTIONS.has(name[1]!) || /\$\s*$/.test(masked.slice(0, name.index))) {
+    return undefined
+  }
+  return name.index
 }
 
 /**
@@ -543,7 +444,7 @@ function isMemberDot(masked: string, index: number): boolean {
 }
 
 function isPostfixChar(char: string | undefined): boolean {
-  return isIdentifierChar(char) || char === '*' || char === '@' || char === '^'
+  return isIdentifierChar(char) || char === '*' || char === '@' || char === '^' || char === '$'
 }
 
 /**
@@ -588,123 +489,16 @@ function trimmedEnd(masked: string, end: number): number {
   return end
 }
 
-function connectorLength(masked: string, wordStart: number): number {
-  return masked.charAt(wordStart - 1) === '.' ? 1 : 2
-}
-
-function hasMemberPrefix(masked: string, wordStart: number): boolean {
-  return (
-    isMemberDot(masked, wordStart - 1) ||
-    (masked.charAt(wordStart - 1) === '>' && masked.charAt(wordStart - 2) === '-')
-  )
-}
-
 /**
  * Start of the expression whose attribute the word names (`slug` in `slug.current`).
  */
 function memberBaseStart(masked: string, wordStart: number): number | undefined {
-  if (!hasMemberPrefix(masked, wordStart)) {
-    return undefined
+  const before = trimmedEnd(masked, wordStart)
+  if (isMemberDot(masked, before - 1)) {
+    return postfixStart(masked, before - 1)
   }
-  return postfixStart(masked, wordStart - connectorLength(masked, wordStart))
-}
-
-function parseQuery(text: string, options: FieldTypeOptions): ExprNode {
-  return parse(options.functions ? withGroqFunctions(text, options.functions) : text)
-}
-
-/**
- * Evaluate `prefix` as it is seen from inside the open frames. Each projection or filter is
- * rebuilt around a single attribute that carries the next level, so groq-js evaluates every
- * base in the scope of the one enclosing it.
- */
-function scopeTypesAt(
-  query: string,
-  masked: string,
-  frames: Array<Frame>,
-  prefix: string,
-  options: FieldTypeOptions,
-  preamble = '',
-  narrowFilters = false
-): TypeNode | undefined {
-  const bases: Array<string> = []
-  for (const frame of frames) {
-    const start = postfixStart(masked, frame.open)
-    if (start !== undefined) {
-      const close =
-        narrowFilters && frame.bracket === '[' ? matchingClose(masked, frame.open) : undefined
-      bases.push(
-        query.slice(start, close === undefined ? trimmedEnd(masked, frame.open) : close + 1)
-      )
-    }
+  if (masked.charAt(before - 1) === '>' && masked.charAt(before - 2) === '-') {
+    return postfixStart(masked, before - 2)
   }
-
-  if (bases.length === 0 && prefix === '@') {
-    return undefined
-  }
-
-  const body = bases.reduceRight((inner, base) => `${base}{"${SCOPE_KEY}": ${inner}}`, prefix)
-  const composed = preamble ? `${preamble}\n${body}` : body
-
-  try {
-    let type: TypeNode = typeEvaluate(parseQuery(composed, options), options.schema)
-    for (let level = 0; level < bases.length; level++) {
-      const next: Array<TypeNode> = []
-      for (const object of flatten(type, options.schema).filter(isObject)) {
-        const attribute = object.attributes[SCOPE_KEY]
-        if (attribute) {
-          next.push(attribute.value)
-        }
-      }
-      type = { type: 'union', of: next }
-    }
-    return type
-  } catch {
-    return undefined
-  }
-}
-
-function isObject(type: TypeNode): type is ObjectTypeNode {
-  return type.type === 'object'
-}
-
-/**
- * Flatten arrays, unions and named types into the types they may be at a single value.
- */
-function flatten(type: TypeNode, schema: SchemaType, seen = new Set<string>()): Array<TypeNode> {
-  switch (type.type) {
-    case 'union':
-      return type.of.flatMap((member) => flatten(member, schema, seen))
-    case 'array':
-      return flatten(type.of, schema, seen)
-    case 'inline': {
-      if (seen.has(type.name)) {
-        return []
-      }
-      const declaration = schema.find((entry) => entry.name === type.name)
-      if (declaration?.type === 'type') {
-        return flatten(declaration.value, schema, new Set(seen).add(type.name))
-      }
-      if (declaration?.type === 'document') {
-        return [{ type: 'object', attributes: declaration.attributes }]
-      }
-      return []
-    }
-    case 'object':
-      return type.rest
-        ? [{ type: 'object', attributes: Object.fromEntries(objectShape(type, schema).attributes) }]
-        : [type]
-    case 'string':
-    case 'number':
-    case 'boolean':
-    case 'null':
-    case 'unknown':
-      return [type]
-    default:
-      return assertNever(type)
-  }
-}
-
-function assertNever(value: never): never {
-  throw new Error(`Unhandled type: ${JSON.stringify(value)}`)
+  return undefined
 }
