@@ -5,10 +5,11 @@
  */
 
 import type { Hover, MarkupContent } from 'vscode-languageserver'
-import { parse, typeEvaluate, type SchemaType } from 'groq-js'
+import type { SchemaType } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
 import type { GroqQuery } from '../types.js'
-import { formatType, type FormattedType } from './hover-format.js'
+import { parseQuery, withoutLiterals } from './groq-probe.js'
+import type { FormattedType } from './hover-format.js'
 import {
   resolveCallType,
   resolveFieldType,
@@ -35,12 +36,8 @@ export function getHoverInfo(
   options: HoverOptions = {}
 ): Hover | null {
   try {
-    // Read before parsing: groq-js cannot parse a slice with a parameter (`[0...$n]`).
-    const param = resolveParamType(
-      query.query,
-      positionInQuery,
-      options.schema && { schema: options.schema, functions: options.functions }
-    )
+    const typeOptions = options.schema && { schema: options.schema, functions: options.functions }
+    const param = resolveParamType(query.query, positionInQuery, typeOptions)
     if (param) {
       const content = buildHoverContent(
         { type: 'parameter', text: `$${param.name}` },
@@ -49,28 +46,19 @@ export function getHoverInfo(
       return content ? { contents: content } : null
     }
 
-    const ast = parse(
-      options.functions ? withGroqFunctions(query.query, options.functions) : query.query
-    )
+    parseQuery(options.functions ? withGroqFunctions(query.query, options.functions) : query.query)
 
-    const literal = resolveStringLiteral(
-      query.query,
-      positionInQuery,
-      options.schema && { schema: options.schema, functions: options.functions }
-    )
+    const literal = resolveStringLiteral(query.query, positionInQuery, typeOptions)
     if (literal) {
       const content =
         literal.key === undefined
-          ? { kind: 'markdown' as const, value: ['```groq', literal.text, '```'].join('\n') }
+          ? literalContent(literal.text)
           : buildHoverContent({ type: 'field', text: literal.key }, literal.keyType)
       return content ? { contents: content } : null
     }
 
-    if (options.schema) {
-      const call = resolveCallType(query.query, positionInQuery, {
-        schema: options.schema,
-        functions: options.functions,
-      })
+    if (typeOptions) {
+      const call = resolveCallType(query.query, positionInQuery, typeOptions)
       const content = call
         ? buildHoverContent({ type: 'function', text: call.name }, call.type)
         : null
@@ -80,32 +68,19 @@ export function getHoverInfo(
     }
 
     // Find the node at the cursor position
-    const nodeInfo = findNodeAtPosition(ast, positionInQuery, query.query)
+    const nodeInfo = findNodeAtPosition(query.query, positionInQuery)
     if (!nodeInfo) {
       return null
     }
-
-    // Evaluate type if schema is available
-    let typeInfo: FormattedType | null = null
-    if (options.schema) {
-      const fieldType = isFieldNode(nodeInfo)
-        ? resolveFieldType(query.query, positionInQuery, {
-            schema: options.schema,
-            functions: options.functions,
-          })
-        : null
-      if (fieldType) {
-        typeInfo = fieldType
-      } else {
-        try {
-          typeInfo = formatType(typeEvaluate(ast, options.schema), options.schema)
-        } catch {
-          // Type evaluation failed, continue without type info
-        }
-      }
+    if (nodeInfo.type === 'literal') {
+      return { contents: literalContent(nodeInfo.text) }
     }
 
-    // Build hover content
+    const typeInfo: FormattedType | null =
+      typeOptions && isFieldNode(nodeInfo)
+        ? resolveFieldType(query.query, positionInQuery, typeOptions)
+        : null
+
     const content = buildHoverContent(nodeInfo, typeInfo)
     if (!content) {
       return null
@@ -133,15 +108,30 @@ function isFieldNode(nodeInfo: NodeInfo): boolean {
   return nodeInfo.type === 'field' || nodeInfo.type === 'system-field' || nodeInfo.type === 'filter'
 }
 
+function literalContent(text: string): MarkupContent {
+  return { kind: 'markdown', value: ['```groq', text, '```'].join('\n') }
+}
+
+const LITERAL_WORDS = new Set(['true', 'false', 'null'])
+const OPERATOR_WORDS = new Set(['in', 'match', 'asc', 'desc'])
+
 /**
  * Find the node at a given position in the query
  * Returns basic info about what's at that position
  */
-function findNodeAtPosition(_ast: unknown, position: number, queryText: string): NodeInfo | null {
-  // Extract the word/identifier at the position
-  const { word, context } = extractWordAtPosition(queryText, position)
+function findNodeAtPosition(queryText: string, position: number): NodeInfo | null {
+  // Extract the word/identifier at the position, outside strings and comments
+  const masked = withoutLiterals(queryText)
+  const { word, context } = extractWordAtPosition(masked, position)
 
   if (!word) {
+    return null
+  }
+
+  if (LITERAL_WORDS.has(word)) {
+    return { type: 'literal', text: word }
+  }
+  if (OPERATOR_WORDS.has(word)) {
     return null
   }
 

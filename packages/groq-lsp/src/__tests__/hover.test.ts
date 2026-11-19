@@ -338,10 +338,8 @@ describe('hover types', () => {
     expect(hoverText('*[_type == "post" && views > 3]', 'views')).toContain('views: number')
   })
 
-  it('keeps the old hover for a field the schema does not have', () => {
-    const hover = hoverText(PAGE_QUERY, 'overview')
-    expect(hover).toContain('overview: {\n  _id: string;')
-    expect(hover).toContain('} | null')
+  it('hovers a field the schema does not have as null, as generated types do', () => {
+    expect(hoverText(PAGE_QUERY, 'overview')).toBe(fenced('overview: null'))
   })
 
   it('keeps the old hover without a schema', () => {
@@ -359,6 +357,60 @@ describe('hover types', () => {
     expect(hoverText('*[_type == "page" && subtitle == "{["]{title}', 'title', 1)).toContain(
       'title: string'
     )
+  })
+})
+
+describe('hover types read from the syntax tree', () => {
+  const SLUGS_QUERY = `// A type with no documents (https://example.com) gets a placeholder.
+{
+  "slugs": *[_type == $type && defined(slug.current)] {"slug": slug.current}
+} {
+  "slugs": select(count(slugs) > 0 => slugs, [{"slug": "__placeholder__"}])
+}.slugs`
+
+  it('hovers the fields and keys of a query whose root is an object it projects again', () => {
+    expect(hoverText(SLUGS_QUERY, '_type')).toContain(fenced(`_type: ${ALL_TYPES}`))
+    expect(hoverText(SLUGS_QUERY, 'current', 1)).toBe(fenced('current: string | null'))
+    expect(hoverText(SLUGS_QUERY, '"slugs"')).toBe(
+      fenced('slugs: Array<{\n  slug: string | null;\n}>')
+    )
+    expect(hoverText(SLUGS_QUERY, 'slugs', 3)).toBe(
+      fenced('slugs: Array<{\n  slug: string | null;\n}>')
+    )
+  })
+
+  it('reads a select alternative and a conditional attribute where their condition holds', () => {
+    const select = '*[_type in ["page", "post"]]{"t": select(_type == "post" => title, "none")}'
+    expect(hoverText(select, 'title')).toBe(fenced('title: number'))
+    const splat = '*[_type in ["page", "post"]]{_type == "post" => {title}}'
+    expect(hoverText(splat, 'title')).toBe(fenced('title: number'))
+  })
+
+  it('reads a select fallback only where no condition surely holds', () => {
+    const query = '*[_type in ["page", "post"]]{"t": select(_type == "post" => views, title)}'
+    expect(hoverText(query, 'title')).toBe(fenced('title: string'))
+  })
+
+  it('reads past a comment with an apostrophe', () => {
+    const query = `// Pages that don't have a slug yet
+*[_type == "page" && !defined(slug)]{title}`
+    expect(hoverText(query, 'title')).toBe(fenced('title: string'))
+  })
+
+  it('hovers a field read through a pipe function and an index', () => {
+    const query = '*[_type == "post"] | order(views desc)[0].title'
+    expect(hoverText(query, 'title')).toBe(fenced('title: number | null'))
+  })
+
+  it('reads ^ as the document the enclosing projection is over', () => {
+    const query = '*[_type == "page"]{"posts": *[_type == "post" && title == ^.title]{views}}'
+    expect(hoverText(query, 'title', 1)).toBe(fenced('title: string'))
+  })
+
+  it('hovers true, false and null as literals and operator words as nothing', () => {
+    const query = '*[_type == "page" && defined(slug) == true]{title}'
+    expect(hoverText(query, 'true')).toBe(fenced('true'))
+    expect(hoverText('*[_type in ["page"]]', 'in')).toBeNull()
   })
 })
 
