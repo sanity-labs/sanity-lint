@@ -94,6 +94,32 @@ function unionMembers(type: TypeNode): Array<TypeNode> {
 }
 
 /**
+ * A union of `true` and `false` is `boolean`, as codegen prints it. The merged type takes the place
+ * of the first boolean, and a lone `true` or `false` stays a literal.
+ */
+function mergeBooleans(members: Array<TypeNode>): Array<TypeNode> {
+  const booleans = members.filter((member) => member.type === 'boolean')
+  const complete =
+    booleans.some((member) => member.value === undefined) ||
+    (booleans.some((member) => member.value === true) &&
+      booleans.some((member) => member.value === false))
+  if (!complete || booleans.length < 2) {
+    return members
+  }
+  let merged = false
+  return members.flatMap((member): Array<TypeNode> => {
+    if (member.type !== 'boolean') {
+      return [member]
+    }
+    if (merged) {
+      return []
+    }
+    merged = true
+    return [{ type: 'boolean' }]
+  })
+}
+
+/**
  * `keyed` adds the `_key: string` that codegen's `ArrayOf<…>` gives each item of an array of
  * named types.
  */
@@ -105,7 +131,7 @@ function formatUnion(
   bareLiterals: boolean,
   keyed = false
 ): string {
-  const members = types.flatMap(unionMembers)
+  const members = mergeBooleans(types.flatMap(unionMembers))
   if (members.length === 0) {
     return 'never'
   }

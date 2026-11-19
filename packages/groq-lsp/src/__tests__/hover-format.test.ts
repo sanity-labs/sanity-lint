@@ -66,6 +66,58 @@ describe('formatType', () => {
     expect(formatType(union, []).text).toBe('1 | 2 | null')
   })
 
+  describe('booleans', () => {
+    const isTrue: TypeNode = { type: 'boolean', value: true }
+    const isFalse: TypeNode = { type: 'boolean', value: false }
+
+    it('prints a plain boolean as boolean', () => {
+      expect(formatType({ type: 'boolean' }, []).text).toBe('boolean')
+    })
+
+    it('prints a lone true or false as the literal', () => {
+      expect(formatType(isTrue, []).text).toBe('true')
+      expect(formatType(isFalse, []).text).toBe('false')
+      expect(formatType({ type: 'union', of: [isTrue, isTrue] }, []).text).toBe('true')
+    })
+
+    it('prints true and false together as boolean, in either order', () => {
+      expect(formatType({ type: 'union', of: [isFalse, isTrue] }, []).text).toBe('boolean')
+      expect(formatType({ type: 'union', of: [isTrue, isFalse] }, []).text).toBe('boolean')
+    })
+
+    it('collapses true and false inside a larger union', () => {
+      const union: TypeNode = { type: 'union', of: [isTrue, isFalse, { type: 'null' }] }
+      expect(formatType(union, []).text).toBe('boolean | null')
+      const mixed: TypeNode = { type: 'union', of: [isTrue, string, isFalse] }
+      expect(formatType(mixed, []).text).toBe('boolean | string')
+      const nestedUnion: TypeNode = {
+        type: 'union',
+        of: [{ type: 'union', of: [isFalse, { type: 'null' }] }, isTrue],
+      }
+      expect(formatType(nestedUnion, []).text).toBe('boolean | null')
+    })
+
+    it('keeps a literal beside other types when only one of true and false is there', () => {
+      const union: TypeNode = { type: 'union', of: [isTrue, { type: 'null' }] }
+      expect(formatType(union, []).text).toBe('true | null')
+    })
+
+    it('collapses true and false in a nested object field', () => {
+      const type = object({
+        inner: attribute(
+          object({
+            flag: attribute({ type: 'union', of: [isTrue, isFalse] }),
+            only: attribute(isTrue),
+          })
+        ),
+        maybe: attribute({ type: 'union', of: [isFalse, isTrue, { type: 'null' }] }, true),
+      })
+      expect(formatType(type, []).text).toBe(
+        '{\n  inner: {\n    flag: boolean;\n    only: true;\n  };\n  maybe?: boolean | null;\n}'
+      )
+    })
+  })
+
   it('prints an empty union as never, as codegen does', () => {
     const never: TypeNode = { type: 'union', of: [] }
     expect(formatType(never, []).text).toBe('never')
