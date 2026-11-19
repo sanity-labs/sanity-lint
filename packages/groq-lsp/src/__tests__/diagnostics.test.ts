@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { SchemaType } from 'groq-js'
 import { computeQueryDiagnostics, computeDocumentDiagnostics } from '../capabilities/diagnostics'
 import type { GroqQuery } from '../types'
+import { extractQueries } from '../utils/groq-extractor'
 
 // Sample schema for testing
 const sampleSchema: SchemaType = [
@@ -177,5 +178,36 @@ describe('diagnostic severity', () => {
 
     const fieldWarning = result.diagnostics.find((d) => d.code === 'unknown-field')
     expect(fieldWarning?.severity).toBe(2) // DiagnosticSeverity.Warning
+  })
+})
+
+describe('a .groq file of only fn definitions', () => {
+  const content = `// Image projections shared by the queries.
+// Each takes an image or asset and returns what the front end renders.
+
+fn image::asset($asset) = $asset->{url, metadata{lqip, dimensions}};
+fn image::field($image) = $image{crop, hotspot, "asset": image::asset(asset)};
+fn image::richText($blocks) = $blocks[]{
+  ...,
+  _type == "image" => {_key, _type, alt, caption, crop, hotspot, "asset": image::asset(asset)},
+  _type == "timeline" => {
+    ...,
+    items[]{
+      ...,
+      milestones[]{
+        ...,
+        "image": image::field(image)
+      }
+    }
+  }
+};
+`
+
+  it('has no syntax diagnostic', () => {
+    const { queries } = extractQueries(content, 'groq')
+
+    expect(queries).toHaveLength(1)
+    expect(computeDocumentDiagnostics(queries)).toEqual([])
+    expect(computeDocumentDiagnostics(queries, { schema: sampleSchema })).toEqual([])
   })
 })
