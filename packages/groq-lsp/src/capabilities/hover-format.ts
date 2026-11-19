@@ -9,7 +9,7 @@
  * happened so the hover can tell the reader.
  */
 
-import type { ObjectTypeNode, SchemaType, TypeNode } from 'groq-js'
+import type { ObjectAttribute, ObjectTypeNode, SchemaType, TypeNode } from 'groq-js'
 
 /** How many objects may be nested in one another before the next one is printed as `{ … }`. */
 export const MAX_DEPTH = 6
@@ -156,14 +156,72 @@ function formatMember(
   }
 }
 
+export interface ObjectShape {
+  /** The object's own attributes, then those its `rest` adds, in order. */
+  attributes: Array<[string, ObjectAttribute]>
+  /** Whether the object may hold attributes the schema does not name. */
+  open: boolean
+}
+
+/**
+ * The attributes an object holds, with those of its `rest` folded in. `sanity schema extract`
+ * writes an array item that is a reference as `{ _key }` whose `rest` is a named reference type,
+ * so the attributes of the named type are part of the item. An own attribute wins over the same
+ * name in `rest`, as it does when groq-js reads an attribute.
+ */
+export function objectShape(
+  type: ObjectTypeNode,
+  schema: SchemaType,
+  seen: Array<string> = []
+): ObjectShape {
+  const attributes = Object.entries(type.attributes)
+  const names = new Set(Object.keys(type.attributes))
+  let open = false
+  let rest = type.rest
+  const visited = [...seen]
+  while (rest) {
+    if (rest.type === 'unknown') {
+      open = true
+      break
+    }
+    let object: ObjectTypeNode | undefined
+    if (rest.type === 'inline') {
+      const { name } = rest
+      if (visited.includes(name)) {
+        break
+      }
+      visited.push(name)
+      const declared = schema.find((entry) => entry.name === name)
+      if (declared?.type === 'document') {
+        object = { type: 'object', attributes: declared.attributes }
+      } else if (declared?.type === 'type' && declared.value.type === 'object') {
+        object = declared.value
+      }
+    } else {
+      object = rest
+    }
+    if (!object) {
+      break
+    }
+    for (const entry of Object.entries(object.attributes)) {
+      if (!names.has(entry[0])) {
+        names.add(entry[0])
+        attributes.push(entry)
+      }
+    }
+    rest = object.rest
+  }
+  return { attributes, open }
+}
+
 function formatObject(
   type: ObjectTypeNode,
   state: State,
   depth: number,
   seen: Array<string>
 ): string {
-  const attributes = Object.entries(type.attributes)
-  if (attributes.length === 0 && !type.rest) {
+  const { attributes, open } = objectShape(type, state.schema, seen)
+  if (attributes.length === 0 && !open) {
     return '{}'
   }
   if (depth >= MAX_DEPTH) {
@@ -190,7 +248,7 @@ function formatObject(
     state.tooWide = true
     lines.push(`… ${attributes.length - MAX_ATTRIBUTES_PER_OBJECT} more`)
   }
-  if (type.rest?.type === 'unknown') {
+  if (open) {
     lines.push('[key: string]: unknown;')
   }
 
