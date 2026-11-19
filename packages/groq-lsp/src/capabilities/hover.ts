@@ -8,7 +8,7 @@ import type { Hover, MarkupContent } from 'vscode-languageserver'
 import { parse, typeEvaluate, type TypeNode, type SchemaType } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
 import type { GroqQuery, TypeInfo } from '../types.js'
-import { resolveFieldType } from './hover-types.js'
+import { resolveCallType, resolveFieldType } from './hover-types.js'
 
 /**
  * Options for computing hover information
@@ -32,6 +32,22 @@ export function getHoverInfo(
     const ast = parse(
       options.functions ? withGroqFunctions(query.query, options.functions) : query.query
     )
+
+    if (options.schema) {
+      const call = resolveCallType(query.query, positionInQuery, {
+        schema: options.schema,
+        functions: options.functions,
+      })
+      const content = call
+        ? buildHoverContent(
+            { type: 'function', text: call.name },
+            { type: call.type, schemaType: call.name }
+          )
+        : null
+      if (content) {
+        return { contents: content }
+      }
+    }
 
     // Find the node at the cursor position
     const nodeInfo = findNodeAtPosition(ast, positionInQuery, query.query)

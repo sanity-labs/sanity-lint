@@ -44,7 +44,23 @@ const schema: SchemaType = [
       dereferencesTo: 'author',
     }),
     seo: attribute({ type: 'inline', name: 'seo' }),
+    coverImage: attribute(
+      {
+        type: 'object',
+        attributes: {
+          crop: attribute({ type: 'object', attributes: { top: attribute({ type: 'number' }) } }),
+          hotspot: attribute({ type: 'object', attributes: { x: attribute({ type: 'number' }) } }),
+          asset: attribute({
+            type: 'object',
+            attributes: { _ref: attribute(string) },
+            dereferencesTo: 'sanity.imageAsset',
+          }),
+        },
+      },
+      true
+    ),
   }),
+  documentType('sanity.imageAsset', { url: attribute(string) }),
   documentType('post', {
     title: attribute({ type: 'number' }),
     views: attribute({ type: 'number' }),
@@ -70,10 +86,38 @@ const functions = new Map<string, GroqFunction>([
       nameEnd: 18,
     },
   ],
+  [
+    'image::field',
+    {
+      name: 'image::field',
+      calls: ['image::asset'],
+      file: 'groq/image.groq',
+      source: 'fn image::field($image) = $image{crop, hotspot, "asset": image::asset(asset)};',
+    },
+  ],
+  [
+    'image::asset',
+    {
+      name: 'image::asset',
+      calls: [],
+      file: 'groq/image.groq',
+      source: 'fn image::asset($asset) = $asset->{url};',
+    },
+  ],
 ])
 
 function queryOf(text: string): GroqQuery {
   return { query: text, start: 0, end: text.length, line: 0, column: 0 }
+}
+
+function hoverTextAt(text: string, offset: number, withSchema = true): string | null {
+  const hover = getHoverInfo(
+    queryOf(text),
+    offset,
+    withSchema ? { schema, functions } : { functions }
+  )
+  const contents = hover?.contents
+  return contents && typeof contents === 'object' && 'value' in contents ? contents.value : null
 }
 
 function hoverText(text: string, marker: string, occurrence = 0, withSchema = true): string | null {
@@ -82,13 +126,7 @@ function hoverText(text: string, marker: string, occurrence = 0, withSchema = tr
     offset = text.indexOf(marker, offset + 1)
   }
   expect(offset).toBeGreaterThanOrEqual(0)
-  const hover = getHoverInfo(
-    queryOf(text),
-    offset + 1,
-    withSchema ? { schema, functions } : { functions }
-  )
-  const contents = hover?.contents
-  return contents && typeof contents === 'object' && 'value' in contents ? contents.value : null
+  return hoverTextAt(text, offset + 1, withSchema)
 }
 
 const PAGE_QUERY = `*[_type == "page" && slug.current == $slug][0] {
@@ -191,5 +229,83 @@ describe('hover types', () => {
     expect(hoverText('*[_type == "page" && subtitle == "{["]{title}', 'title', 1)).toContain(
       'title: string'
     )
+  })
+})
+
+const COVER_QUERY = `*[_type == "page"][0]{
+  "coverImage": image::field(coverImage),
+  "plain": image::richText(body),
+}`
+
+describe('hover custom function calls', () => {
+  const call = 'image::field(coverImage)'
+  const callStart = COVER_QUERY.indexOf(call)
+  const expected = 'image::field: { crop: object, hotspot: object, asset: object }'
+
+  it('hovers the name of a call as the type the function returns', () => {
+    expect(hoverTextAt(COVER_QUERY, callStart)).toContain(expected)
+    expect(hoverTextAt(COVER_QUERY, callStart + 2)).toContain(expected)
+    expect(hoverTextAt(COVER_QUERY, callStart + 'image::'.length + 2)).toContain(expected)
+  })
+
+  it('hovers the separator and the parentheses of a call', () => {
+    expect(hoverTextAt(COVER_QUERY, callStart + 'image'.length)).toContain(expected)
+    expect(hoverTextAt(COVER_QUERY, callStart + 'image::field'.length)).toContain(expected)
+    expect(hoverTextAt(COVER_QUERY, callStart + call.length - 1)).toContain(expected)
+  })
+
+  it('keeps the argument hovering as the field it names', () => {
+    const argument = hoverTextAt(COVER_QUERY, callStart + 'image::field('.length + 2)
+    expect(argument).toContain('coverImage: ')
+    expect(argument).not.toContain('image::field')
+    expect(hoverTextAt(COVER_QUERY, callStart + call.length) ?? '').not.toContain('image::field')
+  })
+
+  it('resolves a function whose body does not project, from the argument type', () => {
+    expect(hoverText(COVER_QUERY, 'image::richText', 0)).toContain('image::richText: array<object>')
+    expect(
+      hoverText('*[_type == "page"][0]{"a": image::asset(coverImage.asset)}', 'asset')
+    ).toContain('image::asset: { url: string }')
+  })
+
+  it('resolves nested calls, the inner and the outer', () => {
+    const query = '*[_type == "page"][0]{"x": image::asset(image::field(coverImage).asset)}'
+    expect(hoverText(query, 'asset', 0)).toContain('image::asset: ')
+    expect(hoverText(query, 'field', 0)).toContain(expected)
+  })
+
+  it('resolves a call outside any projection', () => {
+    const query = '*[_type == "page"][0].coverImage'
+    expect(hoverText(`image::field(${query})`, 'image::field')).toContain(expected)
+  })
+
+  it('resolves a function defined in the query itself', () => {
+    const query =
+      'fn local::title($page) = $page{title};\n*[_type == "page"][0]{"t": local::title(@)}'
+    expect(hoverText(query, 'local::title', 1)).toContain('local::title: { title: string }')
+  })
+
+  it('does not hover the definition of a function as a call', () => {
+    const query =
+      'fn local::title($page) = $page{title};\n*[_type == "page"][0]{"t": local::title(@)}'
+    expect(hoverText(query, 'local::title', 0)).not.toContain('local::title: ')
+  })
+
+  it('keeps the existing hover for built-in functions', () => {
+    expect(hoverText('*[_type == "page"]{"n": count(body)}', 'count')).toContain('count(array)')
+    expect(hoverText('*[_type == "page"]{"t": pt::text(body)}', 'text')).not.toContain('pt::text:')
+  })
+
+  it('ignores calls in strings and calls the functions do not define', () => {
+    expect(hoverText('*[title == "image::field(x)"]', 'image::field') ?? '').not.toContain(
+      'image::field:'
+    )
+    expect(hoverText('*[_type == "page"]{"a": other::fn(title)}', 'other') ?? '').not.toContain(
+      'other::fn:'
+    )
+  })
+
+  it('keeps the fallback hover without a schema', () => {
+    expect(hoverText(COVER_QUERY, 'image::field', 0, false)).toBe('**image** (field)')
   })
 })
