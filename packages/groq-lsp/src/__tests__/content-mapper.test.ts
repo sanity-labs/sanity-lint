@@ -23,6 +23,14 @@ const AUTHOR_FUNCTIONS = `fn author::summary($author) = $author->{
 fn post::card($post) = $post{title, "author": author::summary(author), "image": image::field(mainImage)};
 `
 
+const RICH_TEXT_FUNCTION = `fn image::richText($blocks) = $blocks[]{..., _type == "image" => image::field(@)};
+`
+
+/** `image::lqip` dereferences `asset` twice in one projection; `image::preview` only calls it. */
+const LQIP_FUNCTIONS = `fn image::lqip($image) = $image{"url": asset->url, "lqip": asset->metadata.lqip};
+fn image::preview($image) = $image{alt, "src": image::lqip(@)};
+`
+
 let project: string
 
 function write(path: string, content: string): string {
@@ -234,6 +242,66 @@ describe('diagnostics and hover with shared functions', () => {
     expect(joins[0]?.range).toEqual(
       plain.diagnostics.find((d) => d.code === 'join-in-filter')?.range
     )
+  })
+
+  it('leaves findings in prepended function bodies out of the calling query', () => {
+    write('groq/image.groq', LQIP_FUNCTIONS)
+    const { functions } = loadGroqFunctions('groq/image.groq', project)
+    const query = queryAt(
+      '*[_type == "page"][0]{\n  title,\n  "image": image::preview(mainImage)\n}'
+    )
+    expect(computeQueryDiagnostics(query, { functions })).toEqual({ query, diagnostics: [] })
+  })
+
+  it('keeps the calling query’s own span-less findings', () => {
+    write('groq/image.groq', LQIP_FUNCTIONS)
+    const { functions } = loadGroqFunctions('groq/image.groq', project)
+    const own = '"name": author->name, "bio": author->bio'
+    const query = queryAt(`*[_type == "post"][0]{${own}, "image": image::preview(mainImage)}`)
+    const { diagnostics } = computeQueryDiagnostics(query, { functions })
+    const repeated = diagnostics.filter((d) => d.code === 'repeated-dereference')
+    expect(repeated.map((d) => d.message)).toEqual([
+      expect.stringMatching(/^Reference 'author' is dereferenced 2 times/),
+    ])
+    // Without a span, the finding covers the query, as it does without functions.
+    expect(repeated[0]?.range).toEqual({
+      start: { line: 0, character: 0 },
+      end: { line: 0, character: query.query.length },
+    })
+  })
+
+  it('does not report nested image helpers as a repeated dereference', () => {
+    write('groq/image.groq', `${IMAGE_FUNCTIONS}${RICH_TEXT_FUNCTION}`)
+    const { functions } = loadGroqFunctions('groq/image.groq', project)
+    const query = queryAt(
+      '*[_type == "page" && slug.current == $slug][0]{\n  title,\n  "image": image::field(mainImage),\n  "body": image::richText(body)\n}'
+    )
+    expect(computeQueryDiagnostics(query, { functions })).toEqual({ query, diagnostics: [] })
+  })
+
+  it('reports a finding in a function body on that definition in its functions file', () => {
+    const text = `${IMAGE_FUNCTIONS}${LQIP_FUNCTIONS}`
+    const query = { ...queryAt(text), line: 3, column: 2 }
+    const { diagnostics } = computeQueryDiagnostics(query, { functions: functions() })
+    const repeated = diagnostics.filter((d) => d.code === 'repeated-dereference')
+    const name = text.split('\n').findIndex((line) => line.startsWith('fn image::lqip('))
+    expect(repeated.map((d) => d.range)).toEqual([
+      {
+        start: { line: 3 + name, character: 3 },
+        end: { line: 3 + name, character: 3 + 'image::lqip'.length },
+      },
+    ])
+  })
+
+  it('reports a finding in a function the query defines on its definition, not the query', () => {
+    const text = `${LQIP_FUNCTIONS.split('\n')[0]}\n*[_type == "page"][0]{"image": image::lqip(mainImage)}`
+    const { diagnostics } = computeQueryDiagnostics(queryAt(text))
+    expect(diagnostics.map(({ code, range }) => ({ code, range }))).toEqual([
+      {
+        code: 'repeated-dereference',
+        range: { start: { line: 0, character: 3 }, end: { line: 0, character: 14 } },
+      },
+    ])
   })
 
   it('hovers in a query that calls a shared function', () => {

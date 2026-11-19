@@ -16,6 +16,19 @@ tester.run('repeated-dereference', repeatedDereference, {
 
     // No projection
     '*[_type == "post"].author->name',
+
+    // Each nested projection dereferences its own object's field once
+    '*[_type == "page"][0]{ "image": mainImage{ asset->{ url } }, "body": body[]{ asset->{ url } } }',
+    '*[_type == "page"]{ "hero": hero{ "url": asset->url }, "logo": logo{ "url": asset->url } }',
+
+    // Once in a filter, once in the projection
+    '*[_type == "post"]{ author->name, "related": *[_type == "post" && author->name == "x"] }',
+
+    // Custom functions are inlined into nested projections at each call
+    `fn image::asset($asset) = $asset->{url, metadata};
+fn image::field($image) = $image{crop, hotspot, "asset": image::asset(asset)};
+fn image::richText($blocks) = $blocks[]{..., _type == "image" => image::field(@)};
+*[_type == "page"][0]{ title, "image": image::field(mainImage), "body": image::richText(body) }`,
   ],
 
   invalid: [
@@ -27,6 +40,16 @@ tester.run('repeated-dereference', repeatedDereference, {
     {
       name: 'same reference dereferenced three times',
       code: '*[_type == "post"]{ "name": author->name, "bio": author->bio, "email": author->email }',
+      errors: [{ ruleId: 'repeated-dereference' }],
+    },
+    {
+      name: 'repeated inside a nested projection, reported once',
+      code: '*[_type == "page"]{ "image": mainImage{ "url": asset->url, "lqip": asset->metadata.lqip } }',
+      errors: [{ ruleId: 'repeated-dereference' }],
+    },
+    {
+      name: 'nested projections on the same reference count in the outer one',
+      code: '*[_type == "post"]{ "a": author->{ name }, "b": author->{ bio } }',
       errors: [{ ruleId: 'repeated-dereference' }],
     },
   ],

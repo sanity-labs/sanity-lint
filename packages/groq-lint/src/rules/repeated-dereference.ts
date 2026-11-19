@@ -29,11 +29,25 @@ function getDerefBaseName(node: ExprNode): string | null {
   return null
 }
 
+const SCOPED_NODE_TYPES = new Set(['Projection', 'Map', 'FlatMap', 'Filter'])
+
+/**
+ * Whether `node` is evaluated against another value than the projection the walk started in:
+ * inside a nested projection, a `[]` map, or a filter, where `asset` names another object's field.
+ */
+function inNestedScope(node: ExprNode, parents: Array<ExprNode>): boolean {
+  return parents.some(
+    (parent, index) =>
+      SCOPED_NODE_TYPES.has(parent.type) &&
+      (parent as { expr?: ExprNode }).expr === (parents[index + 1] ?? node)
+  )
+}
+
 /**
  * Rule: repeated-dereference
  *
  * Detects multiple dereference operations on the same attribute
- * within a single projection.
+ * within a single projection. Nested projections count on their own.
  */
 export const repeatedDereference: Rule = {
   id: 'repeated-dereference',
@@ -57,8 +71,8 @@ export const repeatedDereference: Rule = {
       // Track dereferenced attributes in this projection
       const derefCounts = new Map<string, number>()
 
-      walk(projectionExpr, (innerNode) => {
-        if (innerNode.type === 'Deref') {
+      walk(projectionExpr, (innerNode, { parents }) => {
+        if (innerNode.type === 'Deref' && !inNestedScope(innerNode, parents)) {
           const baseName = getDerefBaseName(innerNode)
           if (baseName) {
             derefCounts.set(baseName, (derefCounts.get(baseName) ?? 0) + 1)

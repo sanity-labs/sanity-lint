@@ -196,6 +196,11 @@ export function parseDefinitions(source: string): ParsedDefinitions {
   return { definitions, problems }
 }
 
+/** The definitions a query, or a functions file, starts with. */
+export function leadingDefinitions(query: string): Array<ScannedDefinition> {
+  return scanDefinitions(tokenize(query), true).definitions
+}
+
 /** The functions a query defines at its start, and the namespaced functions it calls. */
 export interface ParsedCalls {
   calls: Array<string>
