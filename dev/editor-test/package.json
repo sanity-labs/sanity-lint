@@ -21,7 +21,7 @@
     "prettier": "^3.10.1",
     "@sanity-labs/prettier-plugin-groq": "workspace:*",
     "sanity": "^6.24.0",
-    "typescript": "^6.0.3"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "dependencies": {
     "next-sanity": "^13.5.1"
