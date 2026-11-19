@@ -20,7 +20,7 @@ import type { ExprNode, SchemaType, SyntaxNode, TypeNode } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
 import { leadingDefinitions } from '../content-mapper/groq-scanner.js'
 import {
-  mapElements,
+  children,
   nested,
   parseQuery,
   ROOT_SCOPE,
@@ -213,7 +213,7 @@ function along(root: ExprNode, path: Array<Step>): { node: SyntaxNode; scope: Sc
 function scopeOf(node: SyntaxNode, step: Step, next: Step | undefined, scope: Scope): Scope {
   switch (node.type) {
     case 'Filter':
-      return step.key === 'expr' ? nested(scope, (probe) => mapElements(node.base, probe)) : scope
+      return step.key === 'expr' ? nested(scope, (probe) => eachElement(node.base, probe)) : scope
     case 'FlatMap':
     case 'Map':
     case 'Projection':
@@ -223,7 +223,7 @@ function scopeOf(node: SyntaxNode, step: Step, next: Step | undefined, scope: Sc
         ? nested(scope, (probe) => ({ type: 'Object', attributes: [{ ...node, value: probe }] }))
         : scope
     case 'PipeFuncCall':
-      return step.key === 'args' ? nested(scope, (probe) => mapElements(node.base, probe)) : scope
+      return step.key === 'args' ? nested(scope, (probe) => eachElement(node.base, probe)) : scope
     case 'Select': {
       if (step.key === 'fallback') {
         const unread: ExprNode = { type: 'Value', value: null }
@@ -243,6 +243,55 @@ function scopeOf(node: SyntaxNode, step: Step, next: Step | undefined, scope: Sc
     }
     default:
       return scope
+  }
+}
+
+/**
+ * The probe read once per element of `base` in a scope of its own, as a filter reads its
+ * constraint. groq-js hides a map's scope from `^`, so a probe that uses `^` gets a scope from a
+ * projection: of `@` when the probe reads the element, which types object elements only, and of
+ * an empty object when it does not, which types every element.
+ */
+function eachElement(base: ExprNode, probe: ExprNode): ExprNode {
+  if (!usesParent(probe)) {
+    return { type: 'Map', base, expr: probe }
+  }
+  const self: ExprNode = readsOwnScope(probe)
+    ? { type: 'This' }
+    : { type: 'Object', attributes: [] }
+  return { type: 'Map', base, expr: { type: 'Projection', base: self, expr: probe } }
+}
+
+function usesParent(node: ExprNode): boolean {
+  return node.type === 'Parent' || children(node).some(usesParent)
+}
+
+/**
+ * Whether `node`, read in a scope of its own, reads that scope's value: `@` or an attribute of
+ * it, or a `^` that leads back to it from `depth` scopes further in. In a map, `@` is the map's
+ * own element, and `^` skips the map's scope.
+ */
+function readsOwnScope(node: ExprNode, depth = 0, inMap = false): boolean {
+  switch (node.type) {
+    case 'This':
+      return depth === 0 && !inMap
+    case 'AccessAttribute':
+      return node.base ? readsOwnScope(node.base, depth, inMap) : depth === 0 && !inMap
+    case 'Parent':
+      return node.n === depth
+    case 'Filter':
+    case 'Projection':
+      return readsOwnScope(node.base, depth, inMap) || readsOwnScope(node.expr, depth + 1)
+    case 'FlatMap':
+    case 'Map':
+      return readsOwnScope(node.base, depth, inMap) || readsOwnScope(node.expr, depth, true)
+    case 'PipeFuncCall':
+      return (
+        readsOwnScope(node.base, depth, inMap) ||
+        node.args.some((arg) => readsOwnScope(arg, depth + 1))
+      )
+    default:
+      return children(node).some((child) => readsOwnScope(child, depth, inMap))
   }
 }
 

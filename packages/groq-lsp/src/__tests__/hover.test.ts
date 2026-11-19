@@ -413,6 +413,19 @@ describe('hover types read from the syntax tree', () => {
     expect(hoverText(query, 'title', 1)).toBe(fenced('title: string'))
   })
 
+  it('reads ^ in a filter over an array of strings', () => {
+    const tags = fenced('tags: Array<string> | null')
+    expect(hoverText('*[_type == "page"]{"shared": tags[@ in ^.tags]}', 'tags]')).toBe(tags)
+    const others = `*[_type == "page"]{
+  "others": *[_type == "page" && _id != ^._id]{"common": tags[@ in ^.^.tags]}
+}`
+    expect(hoverText(others, 'tags]')).toBe(tags)
+    const related = `*[_type == "page"]{
+  "related": *[_type == "page" && count(tags[@ in ^.^.tags]) > 0]{title}
+}`
+    expect(hoverText(related, 'tags]')).toBe(tags)
+  })
+
   it('hovers true, false and null as literals and operator words as nothing', () => {
     const query = '*[_type == "page" && defined(slug) == true]{title}'
     expect(hoverText(query, 'true')).toBe(fenced('true'))
