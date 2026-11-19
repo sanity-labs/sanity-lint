@@ -8,7 +8,13 @@ import type { Diagnostic, DiagnosticSeverity, Range, Position } from 'vscode-lan
 import { lint, type Finding, type Severity } from '@sanity-labs/groq-lint'
 import type { SourceLocation } from '@sanity-labs/lint-core'
 import type { SchemaType } from 'groq-js'
-import { type GroqFunction, groqFunctionsPrelude } from '../content-mapper/functions.js'
+import {
+  type GroqFunction,
+  groqFunctionStub,
+  groqFunctionStubsPrelude,
+  groqFunctionsPrelude,
+} from '../content-mapper/functions.js'
+import { leadingDefinitions, type ScannedDefinition } from '../content-mapper/groq-scanner.js'
 import type { GroqQuery } from '../types.js'
 
 /**
@@ -49,12 +55,14 @@ export function computeQueryDiagnostics(
   }
   const text = query.resolved ?? query.query
   const prelude = options.functions ? groqFunctionsPrelude(text, options.functions) : ''
-  const result = lint(
-    prelude ? `${prelude}\n${text}` : text,
-    options.schema ? { schema: options.schema } : undefined
-  )
+  const lintOptions = options.schema ? { schema: options.schema } : undefined
+  const result = lint(prelude ? `${prelude}\n${text}` : text, lintOptions)
   // The prelude ends with a newline, so the query's own lines only shift down.
   const preludeLines = prelude ? prelude.split('\n').length : 0
+  const definitions = leadingDefinitions(text)
+  const definitionDiagnostics = definitions.flatMap((definition) =>
+    lintDefinition(definition, text, query, definitions, options)
+  )
 
   if (result.parseError) {
     // Create a diagnostic for the parse error
@@ -70,14 +78,24 @@ export function computeQueryDiagnostics(
 
     return {
       query,
-      diagnostics: [diagnostic],
+      diagnostics: [diagnostic, ...definitionDiagnostics],
       parseError: result.parseError,
     }
   }
 
+  const ownSpanless =
+    (prelude || definitions.length > 0) && result.findings.some((finding) => !finding.span)
+      ? spanlessFindingsWithoutBodies(text, definitions, options)
+      : undefined
+
   // Convert findings to diagnostics
   const diagnostics = result.findings.flatMap((finding) => {
-    if (!finding.span || preludeLines === 0) {
+    if (!finding.span) {
+      // groq-js inlines function bodies at each call, without positions: a finding that linting
+      // with the bodies left out lacks is about a body, and its definition reports it.
+      return !ownSpanless || take(ownSpanless, finding) ? [findingToDiagnostic(finding, query)] : []
+    }
+    if (preludeLines === 0) {
       return [findingToDiagnostic(finding, query)]
     }
     // A finding in a prepended definition belongs to its functions file, not this query.
@@ -97,7 +115,94 @@ export function computeQueryDiagnostics(
     ]
   })
 
-  return { query, diagnostics }
+  return { query, diagnostics: [...diagnostics, ...definitionDiagnostics] }
+}
+
+/**
+ * The span-less findings of `text` linted with every function body it defines or calls left out,
+ * or undefined when that does not parse.
+ */
+function spanlessFindingsWithoutBodies(
+  text: string,
+  definitions: Array<ScannedDefinition>,
+  options: DiagnosticsOptions
+): Array<Finding> | undefined {
+  let stubbed = text
+  for (const { start, end } of [...definitions].reverse()) {
+    stubbed = `${stubbed.slice(0, start)}${groqFunctionStub(text.slice(start, end))}${stubbed.slice(end)}`
+  }
+  const stubs = options.functions ? groqFunctionStubsPrelude(text, options.functions) : ''
+  const result = lint(
+    stubs ? `${stubs}\n${stubbed}` : stubbed,
+    options.schema ? { schema: options.schema } : undefined
+  )
+  return result.parseError ? undefined : result.findings.filter((finding) => !finding.span)
+}
+
+/** Removes a finding like `finding` from `findings`, and whether there was one. */
+function take(findings: Array<Finding>, finding: Finding): boolean {
+  const index = findings.findIndex(
+    (each) => each.ruleId === finding.ruleId && each.message === finding.message
+  )
+  if (index === -1) {
+    return false
+  }
+  findings.splice(index, 1)
+  return true
+}
+
+/**
+ * What linting finds in the body of a definition `text`, the query as linted, starts with,
+ * reported on its name.
+ *
+ * groq-js inlines a body only where it is called, so the definition is linted with one call, and
+ * with the functions it calls left out: what they contain their own definitions report. A
+ * finding that linting with this body left out also has comes from the call, not the body.
+ */
+function lintDefinition(
+  definition: ScannedDefinition,
+  text: string,
+  query: GroqQuery,
+  definitions: Array<ScannedDefinition>,
+  options: DiagnosticsOptions
+): Array<Diagnostic> {
+  const sourceOf = (name: string) => {
+    const own = definitions.find((each) => each.name === name)
+    return own ? text.slice(own.start, own.end) : options.functions?.get(name)?.source
+  }
+  const stubs: Array<string> = []
+  for (const call of definition.calls) {
+    const source = sourceOf(call)
+    if (source === undefined) {
+      return []
+    }
+    stubs.push(groqFunctionStub(source))
+  }
+  const source = text.slice(definition.start, definition.end)
+  const lintOptions = options.schema ? { schema: options.schema } : undefined
+  const withBody = (body: string) =>
+    lint([...stubs, body, `{"_": ${definition.name}(@)}`].join('\n'), lintOptions)
+  const result = withBody(source)
+  if (result.parseError) {
+    return []
+  }
+  const withoutBody = withBody(groqFunctionStub(source)).findings.filter((each) => !each.span)
+
+  const nameStart = text.indexOf(definition.name, definition.start)
+  const span = {
+    start: locationAt(text, nameStart),
+    end: locationAt(text, nameStart + definition.name.length),
+  }
+  return result.findings
+    .filter((finding) => !finding.span && !take(withoutBody, finding))
+    .map((finding) => findingToDiagnostic({ ...finding, span }, query))
+}
+
+/** The 1-based line and column of `offset` in `text`. */
+function locationAt(text: string, offset: number): SourceLocation {
+  const before = text.slice(0, offset)
+  const lineStart = before.lastIndexOf('\n') + 1
+  return { line: before.split('\n').length, column: offset - lineStart + 1, offset }
 }
 
 /**

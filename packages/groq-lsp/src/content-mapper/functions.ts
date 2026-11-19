@@ -136,6 +136,32 @@ export function groqFunctionsPrelude(query: string, functions: Map<string, GroqF
     .join('\n')
 }
 
+/**
+ * {@link groqFunctionsPrelude} with every body left out, so linting `query` after it finds only
+ * what is in `query` itself.
+ */
+export function groqFunctionStubsPrelude(
+  query: string,
+  functions: Map<string, GroqFunction>
+): string {
+  if (functions.size === 0) {
+    return ''
+  }
+  const { calls, defines } = parseCalls(query)
+  return called(calls, functions, new Set(defines))
+    .map((fn) => groqFunctionStub(fn.source))
+    .join('\n')
+}
+
+/**
+ * `fn namespace::name($param) = $param{};`: the definition in `source` with its body left out.
+ * groq-js allows a single parameter, and an empty projection of it is the smallest valid body.
+ */
+export function groqFunctionStub(source: string): string {
+  const header = /^fn\s+\w+::\w+\s*\(\s*(\$\w+)\s*\)/.exec(source)
+  return header ? `${header[0]} = ${header[1]}{};` : source
+}
+
 /** `query` with the custom functions it calls prepended, as groq-content-mapper's loaders do. */
 export function withGroqFunctions(query: string, functions: Map<string, GroqFunction>): string {
   const prelude = groqFunctionsPrelude(query, functions)
