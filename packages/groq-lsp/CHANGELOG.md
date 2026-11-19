@@ -1,5 +1,12 @@
 # @sanity/groq-lsp
 
+## 1.2.3
+
+### Patch Changes
+
+- Updated dependencies [c67dde7]
+  - @sanity-labs/groq-lint@1.1.0
+
 ## 1.2.2
 
 ### Patch Changes
