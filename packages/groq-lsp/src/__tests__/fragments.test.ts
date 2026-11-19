@@ -71,6 +71,14 @@ describe('resolveEmbeddedQueries', () => {
     expect((await contents(source)).at(-1)).toEqual('book{author->{name}}')
   })
 
+  it('resolves comma-separated const bindings', async () => {
+    const source = [
+      'const title = groq`title,`, slug = groq`slug,`',
+      'const q = groq`*{${title} ${slug}}`',
+    ].join('\n')
+    expect((await contents(source)).at(-1)).toEqual('*{title, slug,}')
+  })
+
   it('resolves concatenation and wrapping', async () => {
     const source = [
       "const a = 'title,'",

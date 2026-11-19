@@ -16,9 +16,20 @@ export class FragmentFiles {
    */
   constructor(private readonly openText: (file: string) => string | undefined) {}
 
-  async resolve(file: string, content: string, queries: Array<GroqQuery>) {
+  /**
+   * @param stillCurrent - When false after fragment I/O, the dependency set is left unchanged so a
+   *   slower older resolve cannot overwrite a newer document's reads.
+   */
+  async resolve(
+    file: string,
+    content: string,
+    queries: Array<GroqQuery>,
+    stillCurrent: () => boolean = () => true
+  ) {
     if (!queries.some((query) => query.interpolated)) {
-      this.reads.delete(file)
+      if (stillCurrent()) {
+        this.reads.delete(file)
+      }
       return queries
     }
     const read = new Set<string>()
@@ -38,7 +49,9 @@ export class FragmentFiles {
       realpath: (path) => realpath(path),
     }
     const resolved = await resolveQueryFragments(content, file, queries, host)
-    this.reads.set(file, read)
+    if (stillCurrent()) {
+      this.reads.set(file, read)
+    }
     return resolved
   }
 

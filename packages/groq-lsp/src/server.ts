@@ -362,7 +362,14 @@ async function validateDocument(document: TextDocument): Promise<void> {
   const file = filePath(uri)
   let linted = queries
   try {
-    linted = file ? await fragmentFiles.resolve(file, content, queries) : queries
+    linted = file
+      ? await fragmentFiles.resolve(
+          file,
+          content,
+          queries,
+          () => documents.get(uri)?.version === document.version
+        )
+      : queries
   } catch (error) {
     connection.console.warn(`Could not resolve GROQ fragments in ${uri}: ${String(error)}`)
   }

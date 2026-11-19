@@ -82,4 +82,12 @@ describe('diagnostics of interpolated queries', () => {
   it('leaves out queries with fragments it cannot resolve', async () => {
     expect(await diagnose('const q = groq`*[_type == "article"]{${fromSomewhere()}}`')).toEqual([])
   })
+
+  it('leaves out queries whose nested fragments still contain unresolved interpolations', async () => {
+    const content = [
+      'const helper = groq`${fromSomewhere()}`',
+      'const q = groq`*[_type == "article"]{${helper}}`',
+    ].join('\n')
+    expect(await diagnose(content)).toEqual([])
+  })
 })

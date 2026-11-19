@@ -27,6 +27,11 @@ interface Context {
   modules: Map<string, Promise<Module | undefined>>
   /** Names being resolved right now, so fragments that refer to each other cannot loop. */
   active: Set<string>
+  /**
+   * When true, a template with an unresolved `${}` yields undefined instead of leaving the
+   * `${}` as written. Used while inlining fragments for linting.
+   */
+  strict: boolean
 }
 
 interface Evaluated {
@@ -162,24 +167,49 @@ function parseModule(file: string, source: string): Module {
     }
 
     if (token.value === 'const' || token.value === 'let' || token.value === 'var') {
-      const name = tokens[i + 1]
-      if (name?.kind !== 'ident') {
-        continue
-      }
-      let j = i + 2
-      if (isPunct(tokens[j], ':')) {
-        // A type annotation: skip to the `=`.
-        while (
-          j < tokens.length &&
-          j < i + 40 &&
-          !isPunct(tokens[j], '=') &&
-          !isPunct(tokens[j], ';')
-        ) {
+      let j = i + 1
+      while (j < tokens.length) {
+        const name = tokens[j]
+        if (name?.kind !== 'ident') {
+          break
+        }
+        j++
+        if (isPunct(tokens[j], ':')) {
+          // A type annotation: skip to the `=`.
+          const typeStart = j
+          while (
+            j < tokens.length &&
+            j < typeStart + 40 &&
+            !isPunct(tokens[j], '=') &&
+            !isPunct(tokens[j], ';') &&
+            !isPunct(tokens[j], ',')
+          ) {
+            j++
+          }
+        }
+        if (!isPunct(tokens[j], '=')) {
+          break
+        }
+        module.declarations.set(name.value, j + 1)
+        j++
+        let initDepth = 0
+        while (j < tokens.length) {
+          const init = tokens[j]
+          if (init?.kind === 'punct') {
+            if ('{(['.includes(init.value)) {
+              initDepth++
+            } else if ('})]'.includes(init.value)) {
+              initDepth--
+            } else if (initDepth === 0 && (init.value === ',' || init.value === ';')) {
+              break
+            }
+          }
           j++
         }
-      }
-      if (isPunct(tokens[j], '=')) {
-        module.declarations.set(name.value, j + 1)
+        if (!isPunct(tokens[j], ',')) {
+          break
+        }
+        j++
       }
     } else if (token.value === 'import') {
       i = parseImport(module, i)
@@ -280,14 +310,19 @@ async function evaluateTemplate(
   module: Module,
   template: Extract<Token, { kind: 'template' }>,
   context: Context
-): Promise<string> {
+): Promise<string | undefined> {
   let text = template.quasis[0] ?? ''
   for (const [index, expr] of template.exprs.entries()) {
     const { value, next } = await evaluateSum(module, expr.tokens, 0, context)
-    // What cannot be resolved stays as written, which is what the query contained before.
-    text +=
-      (next === expr.tokens.length && value !== undefined ? value : '${' + expr.text + '}') +
-      template.quasis[index + 1]
+    if (value === undefined || next !== expr.tokens.length) {
+      if (context.strict) {
+        return undefined
+      }
+      // What cannot be resolved stays as written, which is what the query contained before.
+      text += '${' + expr.text + '}' + (template.quasis[index + 1] ?? '')
+      continue
+    }
+    text += value + (template.quasis[index + 1] ?? '')
   }
   return text
 }
@@ -370,7 +405,7 @@ async function evaluateSum(
 }
 
 function load(source: string, file: string, host: FragmentHost) {
-  const context: Context = { host, modules: new Map(), active: new Set() }
+  const context: Context = { host, modules: new Map(), active: new Set(), strict: false }
   const module = parseModule(file, source)
   context.modules.set(file, Promise.resolve(module))
   return { module, context }
@@ -381,15 +416,13 @@ async function resolveTemplate(
   template: Extract<Token, { kind: 'template' }>,
   context: Context
 ): Promise<string | undefined> {
-  let query = template.quasis[0] ?? ''
-  for (const [index, expr] of template.exprs.entries()) {
-    const { value, next } = await evaluateSum(module, expr.tokens, 0, context)
-    if (value === undefined || next !== expr.tokens.length) {
-      return undefined
-    }
-    query += value + (template.quasis[index + 1] ?? '')
+  const previous = context.strict
+  context.strict = true
+  try {
+    return await evaluateTemplate(module, template, context)
+  } finally {
+    context.strict = previous
   }
-  return query
 }
 
 /**
