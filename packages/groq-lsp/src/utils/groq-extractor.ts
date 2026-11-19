@@ -78,19 +78,143 @@ const EMBEDDED_QUERY_PREFIX =
 /** A `${` that an odd number of backslashes does not escape. */
 const INTERPOLATION = /(?<!\\)(?:\\\\)*\$\{/
 
+interface TextRange {
+  start: number
+  end: number
+}
+
+/**
+ * Characters after which a `/` starts a regular expression literal rather than
+ * a division. A heuristic, but it only has to keep quotes and backticks inside
+ * regular expressions from being read as strings.
+ */
+const REGEXP_PRECEDING_CHARS = new Set('(,=:[!&|?{};+-*%<>~^'.split(''))
+
+/**
+ * Find the comments, string literals and template literal text in JS/TS
+ * source: everywhere `groq` followed by a backtick is prose, not a tag. The
+ * code inside `${...}` of a template literal is scanned as code. Strings end at
+ * a line break so that an unbalanced quote, like an apostrophe in JSX text,
+ * hides at most the rest of its line.
+ */
+function findNonCodeRanges(content: string): Array<TextRange> {
+  const ranges: Array<TextRange> = []
+  // Braces opened since the innermost open `${`, and the depths of the `${`s around it.
+  let braceDepth = 0
+  const outerBraceDepths: Array<number> = []
+  let lastSignificant = ''
+
+  const skipTemplateText = (from: number) => {
+    let i = from
+    while (i < content.length) {
+      const char = content[i]
+      if (char === '\\') {
+        i += 2
+      } else if (char === '`') {
+        ranges.push({ start: from, end: i })
+        return i + 1
+      } else if (char === '$' && content[i + 1] === '{') {
+        ranges.push({ start: from, end: i })
+        outerBraceDepths.push(braceDepth)
+        braceDepth = 0
+        return i + 2
+      } else {
+        i++
+      }
+    }
+    ranges.push({ start: from, end: content.length })
+    return content.length
+  }
+
+  let i = 0
+  while (i < content.length) {
+    const char = content[i]!
+    const next = content[i + 1]
+    if (char === '/' && next === '/') {
+      const end = content.indexOf('\n', i)
+      const stop = end === -1 ? content.length : end
+      ranges.push({ start: i, end: stop })
+      i = stop
+    } else if (char === '/' && next === '*') {
+      const end = content.indexOf('*/', i + 2)
+      const stop = end === -1 ? content.length : end + 2
+      ranges.push({ start: i, end: stop })
+      i = stop
+    } else if (char === '"' || char === "'") {
+      let j = i + 1
+      while (j < content.length && content[j] !== char && content[j] !== '\n') {
+        j += content[j] === '\\' ? 2 : 1
+      }
+      ranges.push({ start: i, end: j + 1 })
+      i = j + 1
+      lastSignificant = char
+    } else if (char === '`') {
+      i = skipTemplateText(i + 1)
+      lastSignificant = '`'
+    } else if (
+      char === '/' &&
+      (lastSignificant === '' || REGEXP_PRECEDING_CHARS.has(lastSignificant))
+    ) {
+      let j = i + 1
+      let inClass = false
+      while (j < content.length && content[j] !== '\n') {
+        const c = content[j]
+        if (c === '\\') {
+          j++
+        } else if (c === '[') {
+          inClass = true
+        } else if (c === ']') {
+          inClass = false
+        } else if (c === '/' && !inClass) {
+          break
+        }
+        j++
+      }
+      ranges.push({ start: i, end: j + 1 })
+      i = j + 1
+      lastSignificant = '/'
+    } else {
+      if (char === '{') {
+        braceDepth++
+      } else if (char === '}' && braceDepth === 0 && outerBraceDepths.length > 0) {
+        braceDepth = outerBraceDepths.pop()!
+        i = skipTemplateText(i + 1)
+        lastSignificant = '`'
+        continue
+      } else if (char === '}') {
+        braceDepth--
+      }
+      if (!/\s/.test(char)) {
+        lastSignificant = char
+      }
+      i++
+    }
+  }
+  return ranges
+}
+
 /**
  * Extract GROQ from JavaScript/TypeScript files
  * Looks for groq`...`, defineQuery(`...`) and /* groq *\/ `...` templates
+ * outside comments and strings
  * (nested backticks are not handled; that would need a proper parser)
  */
 function extractFromJsTs(content: string): ExtractionResult {
   const queries: Array<GroqQuery> = []
   const errors: Array<string> = []
+  const nonCode = findNonCodeRanges(content)
 
   EMBEDDED_QUERY_PREFIX.lastIndex = 0
 
   let match
   while ((match = EMBEDDED_QUERY_PREFIX.exec(content)) !== null) {
+    const { index } = match
+    const enclosing = nonCode.find((range) => index >= range.start && index < range.end)
+    // A `/* groq */` marker is itself a comment, so it may start one, but not sit inside one.
+    if (enclosing && !(match[0].startsWith('/*') && enclosing.start === index)) {
+      continue
+    }
+
     const queryStart = match.index + match[0].length + 1
     const queryEnd = content.indexOf('`', queryStart)
     if (queryEnd === -1) {
