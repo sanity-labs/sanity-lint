@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
-import ts from 'typescript'
+import ts from '@typescript/typescript6'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const wasmBytes = readFileSync(new URL('../../wasm/groq_wasm_bg.wasm', import.meta.url))

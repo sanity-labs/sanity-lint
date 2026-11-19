@@ -51,7 +51,7 @@
     "@sanity-labs/groq-content-mapper": "^0.7.0",
     "@types/picomatch": "^4.0.3",
     "tsdown": "^0.23.7",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vitest": "catalog:"
   },
   "engines": {
