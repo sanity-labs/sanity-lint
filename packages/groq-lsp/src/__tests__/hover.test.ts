@@ -391,6 +391,17 @@ describe('hover types read from the syntax tree', () => {
     expect(hoverText(query, 'title')).toBe(fenced('title: string'))
   })
 
+  it('reads a select value at the top of a query, where groq-js types only the fallback', () => {
+    const query =
+      'select(defined(*[_type == "page"][0]) => *[_type == "page"]{"slug": slug.current}, [])'
+    expect(hoverText(query, 'current')).toBe(fenced('current: string | null'))
+    expect(hoverText(query, '"slug"')).toBe(fenced('slug: string | null'))
+    expect(hoverText(`{"pages": ${query}}`, 'current')).toBe(fenced('current: string | null'))
+    expect(hoverText('select(false => *[_type == "page"]{title}, [])', 'title')).not.toContain(
+      'title: '
+    )
+  })
+
   it('reads past a comment with an apostrophe', () => {
     const query = `// Pages that don't have a slug yet
 *[_type == "page" && !defined(slug)]{title}`

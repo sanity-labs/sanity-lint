@@ -14,6 +14,11 @@
  * - a `select()` value and a conditional `condition => {…}` attribute are read only where their
  *   condition may hold, and a `select()` fallback only where no condition surely holds, as
  *   groq-js evaluates them.
+ *
+ * groq-js reads a `select()` value only for the values of `@` its condition keeps. At the top of
+ * a query `@` has none, so groq-js types no `select()` value there and the generated types have
+ * only the fallback. A value there is read wherever its condition may hold instead, as groq-js
+ * reads a conditional attribute.
  */
 
 import type { ExprNode, SchemaType, SyntaxNode, TypeNode } from 'groq-js'
@@ -65,8 +70,12 @@ export function typeOfRange(
     return undefined
   }
 
-  let types = typesAt(original, prepare(withMarker(query, range)), range.as, (node, scope) =>
-    isExpression(node) ? typeInScope(scope, node, options.schema) : undefined
+  let types = typesAt(
+    original,
+    prepare(withMarker(query, range)),
+    range.as,
+    options.schema,
+    (node, scope) => (isExpression(node) ? typeInScope(scope, node, options.schema) : undefined)
   )
   // Marking only the start of a chain can change how the rest of it parses: `*[…].slug.current`
   // gives each document's `slug.current`, but `$marker.current` reads one attribute. The chain
@@ -76,8 +85,12 @@ export function typeOfRange(
     const preamble = query.slice(0, leadingDefinitions(query).at(-1)?.end ?? 0)
     const start = parsed(prepare(`${preamble}${query.slice(range.start, range.end)}`))
     if (start) {
-      types = typesAt(original, prepare(withMarker(query, chain)), chain.as, (_node, scope) =>
-        typeInScope(scope, start, options.schema)
+      types = typesAt(
+        original,
+        prepare(withMarker(query, chain)),
+        chain.as,
+        options.schema,
+        (_node, scope) => typeInScope(scope, start, options.schema)
       )
     }
   }
@@ -100,6 +113,7 @@ function typesAt(
   original: ExprNode,
   marked: string,
   as: MarkedRange['as'],
+  schema: SchemaType,
   read: (node: SyntaxNode, scope: Scope) => TypeNode | undefined
 ): Array<TypeNode> {
   const markedRoot = parsed(marked)
@@ -107,7 +121,7 @@ function typesAt(
     return []
   }
   return markerPaths(original, markedRoot, as === 'expression').flatMap((path) => {
-    const found = along(original, path)
+    const found = along(original, path, schema)
     const type = found && read(found.node, found.scope)
     return type ? [type] : []
   })
@@ -195,11 +209,15 @@ function isSyntaxNode(value: unknown): value is SyntaxNode {
 }
 
 /** The node at the end of `path`, and the scope it is read in. */
-function along(root: ExprNode, path: Array<Step>): { node: SyntaxNode; scope: Scope } | undefined {
+function along(
+  root: ExprNode,
+  path: Array<Step>,
+  schema: SchemaType
+): { node: SyntaxNode; scope: Scope } | undefined {
   let scope: Scope = ROOT_SCOPE
   let node: SyntaxNode = root
   for (const [position, step] of path.entries()) {
-    scope = scopeOf(node, step, path[position + 1], scope)
+    scope = scopeOf(node, step, path[position + 1], scope, schema)
     const child = at(node, step)
     if (!child) {
       return undefined
@@ -210,7 +228,13 @@ function along(root: ExprNode, path: Array<Step>): { node: SyntaxNode; scope: Sc
 }
 
 /** The scope the child of `node` at `step` is read in, inside `scope`, the one `node` is read in. */
-function scopeOf(node: SyntaxNode, step: Step, next: Step | undefined, scope: Scope): Scope {
+function scopeOf(
+  node: SyntaxNode,
+  step: Step,
+  next: Step | undefined,
+  scope: Scope,
+  schema: SchemaType
+): Scope {
   switch (node.type) {
     case 'Filter':
       return step.key === 'expr' ? nested(scope, (probe) => eachElement(node.base, probe)) : scope
@@ -234,16 +258,29 @@ function scopeOf(node: SyntaxNode, step: Step, next: Step | undefined, scope: Sc
         }))
       }
       const alternative = step.key === 'alternatives' ? node.alternatives[step.index!] : undefined
-      return alternative && next?.key === 'value'
+      if (!alternative || next?.key !== 'value') {
+        return scope
+      }
+      const { condition } = alternative
+      return hasValues(scope, schema)
         ? nested(scope, (probe) => ({
             type: 'Select',
             alternatives: [{ ...alternative, value: probe }],
           }))
-        : scope
+        : nested(scope, (probe) => ({
+            type: 'Object',
+            attributes: [{ type: 'ObjectConditionalSplat', condition, value: probe }],
+          }))
     }
     default:
       return scope
   }
+}
+
+/** Whether `@` has any value in `scope`. At the top of a query it has none. */
+function hasValues(scope: Scope, schema: SchemaType): boolean {
+  const self = typeInScope(scope, { type: 'This' }, schema)
+  return self?.type !== 'union' || self.of.length > 0
 }
 
 /**
