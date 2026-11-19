@@ -45,8 +45,16 @@ export function resolveFieldType(
   const start = memberBaseStart(masked, word.start) ?? word.start
   const projectionEnd = projectionAfter(masked, word.end)
   const end = projectionEnd === undefined ? word.end : projectionEnd + 1
+  return formatted(typeOfRange(query, markedRange(masked, start, end), options), options.schema)
+}
+
+/** `[start, end)` marked as what it is, with the operand chain it starts when that goes on. */
+function markedRange(masked: string, start: number, end: number): MarkedRange {
   const as = isShorthandAttribute(masked, start, end) ? 'attribute' : 'expression'
-  return formatted(typeOfRange(query, { start, end, as }, options), options.schema)
+  const chainEnd = operandEnd(masked, end)
+  return chainEnd === end
+    ? { start, end, as }
+    : { start, end, as, chain: markedRange(masked, start, chainEnd) }
 }
 
 export interface StringLiteral {
@@ -215,7 +223,7 @@ export function resolveCallType(
     const name = second === undefined ? first! : `${first}::${second}`
     const pipe = second === undefined ? pipeBefore(masked, match.index) : undefined
     const start = pipe === undefined ? match.index : (postfixStart(masked, pipe) ?? match.index)
-    const range: MarkedRange = { start, end: close + 1, as: 'expression' }
+    const range = markedRange(masked, start, close + 1)
     const type = formatted(typeOfRange(query, range, options), options.schema)
     if (!type) {
       return null
@@ -488,6 +496,35 @@ function projectionAfter(masked: string, end: number): number | undefined {
     index = skipSpaces(masked, index)
   }
   return undefined
+}
+
+/**
+ * The end of the operand chain that goes on after `end`: the attributes, `->`, `[…]`, `{…}` and
+ * pipe calls after it, as `.current` after `*[…].slug` or `{…}` after `*[…] | order(…)`. `end`
+ * when nothing follows.
+ */
+function operandEnd(masked: string, end: number): number {
+  let index = end
+  for (;;) {
+    const next = skipSpaces(masked, index)
+    const char = masked.charAt(next)
+    const name = /^\s*[A-Za-z_]\w*/.exec(masked.slice(next + (char === '-' ? 2 : 1)))
+    let last: number | undefined
+    if (char === '[' || char === '{') {
+      last = matchingClose(masked, next)
+    } else if (char === '-' && masked.charAt(next + 1) === '>') {
+      last = next + 1 + (name?.[0].length ?? 0)
+    } else if (isMemberDot(masked, next) && name) {
+      last = next + name[0].length
+    } else if (char === '|' && masked.charAt(next + 1) !== '|') {
+      const call = /^\|\s*[A-Za-z_]\w*\s*\(/.exec(masked.slice(next))
+      last = call ? matchingClose(masked, next + call[0].length - 1) : undefined
+    }
+    if (last === undefined) {
+      return index
+    }
+    index = last + 1
+  }
 }
 
 function skipSpaces(masked: string, index: number): number {
