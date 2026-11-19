@@ -376,13 +376,9 @@ describe('hover types read from the syntax tree', () => {
 
   it('hovers the fields and keys of a query whose root is an object it projects again', () => {
     expect(hoverText(SLUGS_QUERY, '_type')).toContain(fenced(`_type: ${ALL_TYPES}`))
-    expect(hoverText(SLUGS_QUERY, 'current', 1)).toBe(fenced('current: string | null'))
-    expect(hoverText(SLUGS_QUERY, '"slugs"')).toBe(
-      fenced('slugs: Array<{\n  slug: string | null;\n}>')
-    )
-    expect(hoverText(SLUGS_QUERY, 'slugs', 3)).toBe(
-      fenced('slugs: Array<{\n  slug: string | null;\n}>')
-    )
+    expect(hoverText(SLUGS_QUERY, 'current', 1)).toBe(fenced('current: string'))
+    expect(hoverText(SLUGS_QUERY, '"slugs"')).toBe(fenced('slugs: Array<{\n  slug: string;\n}>'))
+    expect(hoverText(SLUGS_QUERY, 'slugs', 3)).toBe(fenced('slugs: Array<{\n  slug: string;\n}>'))
   })
 
   it('reads a select alternative and a conditional attribute where their condition holds', () => {
@@ -449,7 +445,7 @@ describe('hover the start of a chain that goes on', () => {
 
   it('hovers a pipe function that a projection or a slice follows', () => {
     const posts = fenced(
-      'order: Array<{\n  _id: string;\n  _type: "post";\n  title: number;\n  views: number;\n}>'
+      'order: Array<{\n  _id: string;\n  _type: "post";\n  title: number;\n  views: number;\n  meta?: {\n    summary?: string;\n  };\n}>'
     )
     expect(hoverText('*[_type == "post"] | order(views desc) {views}', 'order')).toContain(posts)
     expect(hoverText('*[_type == "post"] | order(views desc)[0...2].views', 'order')).toContain(
@@ -818,7 +814,7 @@ describe('hover custom function calls', () => {
 
   it('hovers built-in calls in filters and projections as groq-js types them', () => {
     expect(hoverText('*[_type == "page" && defined(slug.current)]', 'defined')).toContain(
-      fenced('defined: boolean')
+      fenced('defined: false | true')
     )
     expect(hoverText('*[_type == "page" && count(tags) > 0]', 'count')).toContain(
       fenced('count: number | null')
