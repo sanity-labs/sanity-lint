@@ -5,9 +5,10 @@
  */
 
 import type { Hover, MarkupContent } from 'vscode-languageserver'
-import { parse, typeEvaluate, type TypeNode, type SchemaType } from 'groq-js'
+import { parse, typeEvaluate, type SchemaType } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
-import type { GroqQuery, TypeInfo } from '../types.js'
+import type { GroqQuery } from '../types.js'
+import { formatType, type FormattedType } from './hover-format.js'
 import { resolveCallType, resolveFieldType } from './hover-types.js'
 
 /**
@@ -39,10 +40,7 @@ export function getHoverInfo(
         functions: options.functions,
       })
       const content = call
-        ? buildHoverContent(
-            { type: 'function', text: call.name },
-            { type: call.type, schemaType: call.name }
-          )
+        ? buildHoverContent({ type: 'function', text: call.name }, call.type)
         : null
       if (content) {
         return { contents: content }
@@ -56,7 +54,7 @@ export function getHoverInfo(
     }
 
     // Evaluate type if schema is available
-    let typeInfo: TypeInfo | null = null
+    let typeInfo: FormattedType | null = null
     if (options.schema) {
       const fieldType = isFieldNode(nodeInfo)
         ? resolveFieldType(query.query, positionInQuery, {
@@ -65,11 +63,10 @@ export function getHoverInfo(
           })
         : null
       if (fieldType) {
-        typeInfo = { type: fieldType, schemaType: nodeInfo.text }
+        typeInfo = fieldType
       } else {
         try {
-          const resultType = typeEvaluate(ast, options.schema)
-          typeInfo = typeNodeToInfo(resultType, nodeInfo.text)
+          typeInfo = formatType(typeEvaluate(ast, options.schema), options.schema)
         } catch {
           // Type evaluation failed, continue without type info
         }
@@ -252,58 +249,20 @@ function getGroqFunctionDoc(name: string): string | null {
 }
 
 /**
- * Convert a groq-js TypeNode to a human-readable TypeInfo
- */
-function typeNodeToInfo(typeNode: TypeNode, fieldName: string): TypeInfo | null {
-  // Simplified type display
-  const typeStr = formatTypeNode(typeNode)
-
-  return {
-    type: typeStr,
-    schemaType: fieldName,
-  }
-}
-
-/**
- * Format a TypeNode as a human-readable string
- */
-function formatTypeNode(node: TypeNode): string {
-  switch (node.type) {
-    case 'null':
-      return 'null'
-    case 'boolean':
-      return 'boolean'
-    case 'number':
-      return 'number'
-    case 'string':
-      return node.value !== undefined ? `"${node.value}"` : 'string'
-    case 'array':
-      return `array<${formatTypeNode(node.of)}>`
-    case 'object':
-      return 'object'
-    case 'union':
-      if (node.of.length <= 3) {
-        return node.of.map(formatTypeNode).join(' | ')
-      }
-      return `union<${node.of.length} types>`
-    case 'unknown':
-      return 'unknown'
-    case 'inline':
-      return node.name
-    default:
-      return 'unknown'
-  }
-}
-
-/**
  * Build hover content from node info and type info
  */
-function buildHoverContent(nodeInfo: NodeInfo, typeInfo: TypeInfo | null): MarkupContent | null {
+function buildHoverContent(
+  nodeInfo: NodeInfo,
+  typeInfo: FormattedType | null
+): MarkupContent | null {
   const parts: Array<string> = []
 
   // Type information
   if (typeInfo) {
-    parts.push('```groq', `${nodeInfo.text}: ${typeInfo.type}`, '```')
+    parts.push('```groq', `${nodeInfo.text}: ${typeInfo.text}`, '```')
+    for (const note of typeInfo.notes) {
+      parts.push('', `_${note}_`)
+    }
   } else {
     parts.push(`**${nodeInfo.text}** (${nodeInfo.type})`)
   }

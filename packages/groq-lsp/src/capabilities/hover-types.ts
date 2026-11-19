@@ -16,6 +16,7 @@ import {
 } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
 import { leadingDefinitions } from '../content-mapper/groq-scanner.js'
+import { type FormattedType, formatTypes } from './hover-format.js'
 
 export interface FieldTypeOptions {
   schema: SchemaType
@@ -23,11 +24,14 @@ export interface FieldTypeOptions {
 }
 
 const SCOPE_KEY = '__scope'
-const MAX_OBJECT_ATTRIBUTES = 4
 
+/**
+ * A scope an identifier is read in: the element of a filter `[`, a projection `{`, or the array a
+ * `| order(` or `| score(` call sorts, which opens at its `|`.
+ */
 interface Frame {
   open: number
-  bracket: '[' | '{'
+  bracket: '[' | '{' | '|'
 }
 
 /**
@@ -37,48 +41,84 @@ export function resolveFieldType(
   query: string,
   position: number,
   options: FieldTypeOptions
-): string | null {
+): FormattedType | null {
   const masked = maskStrings(query)
   const word = wordAt(masked, position)
   if (!word || isInString(query, masked, word.start) || !isFieldReference(masked, word)) {
     return null
   }
 
-  const frames = enclosingFrames(masked, word.start)
+  let frames = enclosingFrames(masked, word.start)
   const filter = frames.at(-1)
   if (word.text === '_type' && filter?.bracket === '[' && !hasMemberPrefix(masked, word.start)) {
     const names = typeNamesInFilter(query, masked, filter, options)
     if (names) {
-      return names.join(' | ')
+      return { text: names.join(' | '), notes: [] }
     }
   }
 
   const base = memberBaseStart(masked, word.start)
-  const prefix =
+  let prefix =
     base === undefined
       ? '@'
       : query.slice(base, word.start - (masked.charAt(word.start - 1) === '.' ? 1 : 0))
+  const parent = parentScope(frames, prefix)
+  if (!parent) {
+    return null
+  }
+  ;({ frames, prefix } = parent)
   const scopeTypes = scopeTypesAt(query, masked, frames, prefix, options)
   if (!scopeTypes) {
     return null
   }
 
+  const scoped = flatten(scopeTypes, options.schema)
+  const baseMayBeNull = base !== undefined && scoped.some((type) => type.type === 'null')
   const found: Array<TypeNode> = []
-  for (const object of flatten(scopeTypes, options.schema).filter(isObject)) {
+  for (const object of scoped.filter(isObject)) {
     const attribute = object.attributes[word.text]
     if (attribute) {
-      found.push(...unionMembers(attribute.value).filter((member) => member.type !== 'null'))
+      found.push(attribute.value)
+      if (attribute.optional) {
+        found.push({ type: 'null' })
+      }
     }
   }
+  if (found.length === 0) {
+    return null
+  }
+  if (baseMayBeNull) {
+    found.push({ type: 'null' })
+  }
+  return formatTypes(found, options.schema, { bareLiterals: word.text === '_type' })
+}
 
-  const formatted = unique(found.map((type) => formatSchemaType(type, word.text === '_type')))
-  return formatted.length > 0 ? formatted.join(' | ') : null
+/**
+ * `^` reads the scope around the one it is written in, so each `^` at the start of `prefix`
+ * drops the innermost frame. `null` when there are more of them than frames.
+ */
+function parentScope(
+  frames: Array<Frame>,
+  prefix: string
+): { frames: Array<Frame>; prefix: string } | null {
+  let up = 0
+  let rest = prefix
+  while (rest.startsWith('^')) {
+    up++
+    rest = rest.slice(1).replace(/^\./, '')
+  }
+  if (up === 0) {
+    return { frames, prefix }
+  }
+  return up <= frames.length
+    ? { frames: frames.slice(0, frames.length - up), prefix: rest || '@' }
+    : null
 }
 
 export interface CallType {
   /** `namespace::name`. */
   name: string
-  type: string
+  type: FormattedType
 }
 
 const NAMESPACED_CALL = /([A-Za-z_]\w*)\s*::\s*([A-Za-z_]\w*)\s*\(/g
@@ -127,12 +167,7 @@ export function resolveCallType(
   if (!type) {
     return null
   }
-  const members = unionMembers(type)
-  const present = members.filter((member) => member.type !== 'null')
-  const formatted = unique(
-    (present.length > 0 ? present : members).map((member) => formatSchemaType(member, false))
-  ).join(' | ')
-  return formatted ? { name: hovered.name, type: formatted } : null
+  return { name: hovered.name, type: formatTypes([type], options.schema) }
 }
 
 interface Word {
@@ -218,22 +253,37 @@ function isFieldReference(masked: string, word: Word): boolean {
  * group or call, and do not change what an identifier refers to.
  */
 function enclosingFrames(masked: string, position: number): Array<Frame> {
-  const stack: Array<{ char: string; index: number }> = []
+  const stack: Array<{ char: string; index: number; pipe: number | undefined }> = []
   for (let index = 0; index < position; index++) {
     const char = masked.charAt(index)
     if (char === '[' || char === '{' || char === '(') {
-      stack.push({ char, index })
+      stack.push({ char, index, pipe: char === '(' ? pipedCall(masked, index) : undefined })
     } else if (char === ']' || char === '}' || char === ')') {
       stack.pop()
     }
   }
   const frames: Array<Frame> = []
-  for (const { char, index } of stack) {
+  for (const { char, index, pipe } of stack) {
     if (char === '[' || char === '{') {
       frames.push({ open: index, bracket: char })
+    } else if (pipe !== undefined) {
+      frames.push({ open: pipe, bracket: '|' })
     }
   }
   return frames
+}
+
+/**
+ * The `|` of `| order(` or `| score(` when `open` is the `(` that follows it. The arguments of
+ * these calls are read in the scope of the elements of the array piped in.
+ */
+function pipedCall(masked: string, open: number): number | undefined {
+  const name = /\b(order|score)\s*$/.exec(masked.slice(0, open))
+  if (!name) {
+    return undefined
+  }
+  const pipe = trimmedEnd(masked, name.index) - 1
+  return masked.charAt(pipe) === '|' && masked.charAt(pipe - 1) !== '|' ? pipe : undefined
 }
 
 function matchingClose(masked: string, open: number): number | undefined {
@@ -277,18 +327,20 @@ function postfixStart(masked: string, end: number): number | undefined {
   let start = end
   while (start > 0) {
     const char = masked.charAt(start - 1)
-    if (char === ']' || char === ')') {
+    if (char === ']' || char === ')' || char === '}') {
       const open = matchingOpen(masked, start - 1)
       if (open === undefined) {
         break
       }
       start = open
-    } else if (isIdentifierChar(char) || char === '*') {
-      while (
-        start > 0 &&
-        (isIdentifierChar(masked.charAt(start - 1)) || masked.charAt(start - 1) === '*')
-      ) {
+    } else if (isPostfixChar(char)) {
+      const nameEnd = start
+      while (start > 0 && isPostfixChar(masked.charAt(start - 1))) {
         start--
+      }
+      const pipe = masked.charAt(nameEnd) === '(' ? pipedCall(masked, nameEnd) : undefined
+      if (pipe !== undefined) {
+        return postfixStart(masked, pipe) ?? start
       }
       const previous = masked.charAt(start - 1)
       if (previous !== '.' && !(previous === '>' && masked.charAt(start - 2) === '-')) {
@@ -303,6 +355,10 @@ function postfixStart(masked: string, end: number): number | undefined {
     }
   }
   return start < end ? start : undefined
+}
+
+function isPostfixChar(char: string | undefined): boolean {
+  return isIdentifierChar(char) || char === '*' || char === '@' || char === '^'
 }
 
 function trimmedEnd(masked: string, end: number): number {
@@ -421,56 +477,12 @@ function flatten(type: TypeNode, schema: SchemaType, seen = new Set<string>()): 
   }
 }
 
-function unionMembers(type: TypeNode): Array<TypeNode> {
-  return type.type === 'union' ? type.of.flatMap(unionMembers) : [type]
-}
-
 function assertNever(value: never): never {
   throw new Error(`Unhandled type: ${JSON.stringify(value)}`)
 }
 
 function unique(values: Array<string>): Array<string> {
   return [...new Set(values)]
-}
-
-/**
- * Format a schema type for display. Literal strings keep their quotes unless they are type names.
- */
-function formatSchemaType(type: TypeNode, bareLiterals: boolean, depth = 0): string {
-  switch (type.type) {
-    case 'null':
-    case 'boolean':
-    case 'number':
-    case 'unknown':
-      return type.type
-    case 'string':
-      if (type.value === undefined) {
-        return 'string'
-      }
-      return bareLiterals ? type.value : `"${type.value}"`
-    case 'array':
-      return `array<${formatSchemaType(type.of, false, depth + 1)}>`
-    case 'inline':
-      return type.name
-    case 'union':
-      return unique(
-        unionMembers(type)
-          .filter((member) => member.type !== 'null')
-          .map((member) => formatSchemaType(member, bareLiterals, depth + 1))
-      ).join(' | ')
-    case 'object': {
-      const entries = Object.entries(type.attributes)
-      if (depth > 0 || entries.length === 0 || entries.length > MAX_OBJECT_ATTRIBUTES) {
-        return 'object'
-      }
-      const fields = entries.map(
-        ([name, attribute]) => `${name}: ${formatSchemaType(attribute.value, false, depth + 1)}`
-      )
-      return `{ ${fields.join(', ')} }`
-    }
-    default:
-      return assertNever(type)
-  }
 }
 
 /**
