@@ -5,7 +5,7 @@
  * how the content mapper and `sanity typegen` type the query, so a hover shows what the generated
  * types say. A field hovers as its value there, or as what its projection makes of it when one
  * follows, as in `items[] { … }` or `author-> { … }`. A projection key hovers as the value it is
- * given, a custom function call as what it returns, and a `$param` as the type the generated
+ * given, a function call as what it returns, and a `$param` as the type the generated
  * `QueryParams` gives it. {@link typeOfRange} describes the scope each part is read in.
  */
 
@@ -169,19 +169,21 @@ export function resolveParamType(
 }
 
 export interface CallType {
-  /** `namespace::name`. */
+  /** The function's name, `namespace::name` for a namespaced one. */
   name: string
+  /** Whether the query defines the function or `functions` holds it, rather than GROQ. */
+  custom: boolean
   type: FormattedType
 }
 
-const NAMESPACED_CALL = /([A-Za-z_]\w*)\s*::\s*([A-Za-z_]\w*)\s*\(/g
+const CALL = /([A-Za-z_]\w*)\s*(?:::\s*([A-Za-z_]\w*)\s*)?\(/g
 const NOT_FUNCTIONS = new Set(['in', 'match', 'asc', 'desc', 'fn', 'true', 'false', 'null'])
 
 /**
- * Describe what the custom function call under `position` returns, or `null` when `position` is
- * not on the name or the parentheses of a call to a function the query defines or `functions`
- * holds, or groq-js cannot type it. The arguments of the call are left to
- * {@link resolveFieldType}.
+ * Describe what the function call under `position` returns, or `null` when `position` is not on
+ * the name or the parentheses of a call, or groq-js cannot type it. A pipe function, as
+ * `| order(…)`, returns what it makes of the array piped in. The arguments of the call are left
+ * to {@link resolveFieldType}.
  */
 export function resolveCallType(
   query: string,
@@ -192,23 +194,36 @@ export function resolveCallType(
   const definitions = leadingDefinitions(query)
   const preamble = definitions.at(-1)?.end ?? 0
 
-  for (const match of masked.matchAll(NAMESPACED_CALL)) {
-    const name = `${match[1]}::${match[2]}`
+  for (const match of masked.matchAll(CALL)) {
+    const [, first, second] = match
     const open = match.index + match[0].length - 1
     const close = matchingClose(masked, open)
+    const before = masked.slice(0, match.index)
     if (
       close === undefined ||
       match.index < preamble ||
-      /\bfn\s*$/.test(masked.slice(0, match.index)) ||
-      !(definitions.some((definition) => definition.name === name) || options.functions?.has(name))
+      NOT_FUNCTIONS.has(first!) ||
+      /(::|(?<!\.)\.|\$)\s*$/.test(before) ||
+      /\bfn\s*$/.test(before)
     ) {
       continue
     }
-    if ((position >= match.index && position <= open) || position === close) {
-      const range: MarkedRange = { start: match.index, end: close + 1, as: 'expression' }
-      const type = formatted(typeOfRange(query, range, options), options.schema)
-      return type ? { name, type } : null
+    if (!((position >= match.index && position <= open) || position === close)) {
+      continue
     }
+
+    const name = second === undefined ? first! : `${first}::${second}`
+    const pipe = second === undefined ? pipeBefore(masked, match.index) : undefined
+    const start = pipe === undefined ? match.index : (postfixStart(masked, pipe) ?? match.index)
+    const range: MarkedRange = { start, end: close + 1, as: 'expression' }
+    const type = formatted(typeOfRange(query, range, options), options.schema)
+    if (!type) {
+      return null
+    }
+    const custom =
+      definitions.some((definition) => definition.name === name) ||
+      Boolean(options.functions?.has(name))
+    return { name, custom, type }
   }
   return null
 }

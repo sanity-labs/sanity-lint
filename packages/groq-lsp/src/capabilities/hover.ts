@@ -59,11 +59,14 @@ export function getHoverInfo(
 
     if (typeOptions) {
       const call = resolveCallType(query.query, positionInQuery, typeOptions)
-      const content = call
-        ? buildHoverContent({ type: 'function', text: call.name }, call.type)
-        : null
-      if (content) {
-        return { contents: content }
+      if (call) {
+        const nodeInfo: NodeInfo = { type: 'function', text: call.name }
+        const documentation = call.custom ? null : builtinFunctionDoc(call.name)
+        if (documentation) {
+          nodeInfo.documentation = documentation
+        }
+        const content = buildHoverContent(nodeInfo, call.type)
+        return content ? { contents: content } : null
       }
     }
 
@@ -110,6 +113,12 @@ function isFieldNode(nodeInfo: NodeInfo): boolean {
 
 function literalContent(text: string): MarkupContent {
   return { kind: 'markdown', value: ['```groq', text, '```'].join('\n') }
+}
+
+/** The documentation of a GROQ function, `pt::text` documented with its namespace. */
+function builtinFunctionDoc(name: string): string | null {
+  const [namespace, member] = name.split('::')
+  return member === undefined ? getGroqFunctionDoc(name) : getGroqNamespaceDoc(namespace!)
 }
 
 const LITERAL_WORDS = new Set(['true', 'false', 'null'])
@@ -161,7 +170,7 @@ function findNodeAtPosition(queryText: string, position: number): NodeInfo | nul
   }
 
   // Check if it's a GROQ function
-  const funcDoc = getGroqFunctionDoc(word)
+  const funcDoc = getGroqFunctionDoc(word) ?? getGroqNamespaceDoc(word)
   if (funcDoc) {
     return {
       type: 'function',
@@ -260,6 +269,14 @@ function getGroqFunctionDoc(name: string): string | null {
     ['boost', 'boost(condition, value) - Boosts score in text search'],
     ['score', 'score(conditions) - Returns relevance score'],
     ['order', 'order(field, direction?) - Sorts results'],
+  ])
+
+  return docs.get(name) ?? null
+}
+
+/** Documentation for a namespace of GROQ functions, as `pt` in `pt::text`. */
+function getGroqNamespaceDoc(name: string): string | null {
+  const docs = new Map<string, string>([
     ['pt', 'pt::text(blocks) - Extracts plain text from Portable Text'],
     ['geo', 'geo::distance(a, b) - Calculates distance between points'],
     ['math', 'math::sum(array), math::avg(array), etc. - Math operations'],
