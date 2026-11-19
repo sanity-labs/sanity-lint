@@ -1,5 +1,15 @@
 # @sanity/groq-lint
 
+## 1.0.10
+
+### Patch Changes
+
+- 28ebc5f: `repeated-dereference` counts each nested projection, `[]` map and filter on its own, so `asset->` in sibling sub-projections, or in custom functions inlined at several calls, is no longer reported as dereferencing the same reference twice, once per enclosing projection.
+
+  The language server no longer reports findings in the bodies of prepended groq-content-mapper functions on the calling query. It reports them on the function's name where it is defined, in its functions file or in the query that defines it.
+
+- 4947f2c: A GROQ document of only `fn` definitions (and comments), like a `.groq` file of shared custom functions, is no longer a syntax error.
+
 ## 1.0.9
 
 ### Patch Changes
