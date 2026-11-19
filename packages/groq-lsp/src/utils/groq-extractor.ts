@@ -75,6 +75,9 @@ function extractFromGroqFile(content: string): ExtractionResult {
 const EMBEDDED_QUERY_PREFIX =
   /\bgroq\s*(?=`)|\bdefineQuery\s*\(\s*(?=`)|\/\*\s*groq\s*\*\/\s*(?=`)/g
 
+/** A `${` that an odd number of backslashes does not escape. */
+const INTERPOLATION = /(?<!\\)(?:\\\\)*\$\{/
+
 /**
  * Extract GROQ from JavaScript/TypeScript files
  * Looks for groq`...`, defineQuery(`...`) and /* groq *\/ `...` templates
@@ -94,11 +97,13 @@ function extractFromJsTs(content: string): ExtractionResult {
       continue
     }
 
+    const query = content.slice(queryStart, queryEnd)
     queries.push({
-      query: content.slice(queryStart, queryEnd),
+      query,
       start: queryStart,
       end: queryEnd,
       ...offsetToLineColumn(content, queryStart),
+      ...(INTERPOLATION.test(query) && { interpolated: true }),
     })
 
     EMBEDDED_QUERY_PREFIX.lastIndex = queryEnd + 1

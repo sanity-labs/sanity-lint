@@ -214,6 +214,16 @@ Automatically validates GROQ queries on document change:
 - **Performance rules** - Always enabled (join-in-filter, pagination, etc.)
 - **Schema-aware rules** - When schema is available (invalid-type-filter, unknown-field)
 
+Queries that interpolate fragments are linted with the fragments inlined, as they are sent:
+
+```ts
+import { author } from './fragments'
+
+const query = defineQuery(`*[_type == "article"]{ author->${author} }`)
+```
+
+A fragment can be declared in the same file or imported, through relative paths, `tsconfig.json` `paths` and `baseUrl`, and packages in `node_modules` such as the packages of a workspace. Fragments are `groq` templates, `defineQuery()` calls, strings, `+` concatenations of those, and `.groq` files. A query with a `${}` that cannot be resolved this way, such as a function call, is not linted. Editing an open fragment re-lints the queries that use it.
+
 ### Completion
 
 Provides intelligent completions based on context:
@@ -285,6 +295,23 @@ Extracts GROQ queries from source files.
 const { queries, errors } = extractQueries(content, 'typescript')
 // Returns: { queries: GroqQuery[], errors: string[] }
 ```
+
+### `resolveQueryFragments`
+
+Inlines the `${}` fragments of the interpolated queries `extractQueries` found, so diagnostics lint the query that runs. The host reads files; `realpath` is optional.
+
+```typescript
+import { readFile, realpath } from 'node:fs/promises'
+
+const host = {
+  readFile: (file) => readFile(file, 'utf8').catch(() => undefined),
+  realpath,
+}
+const resolved = await resolveQueryFragments(content, '/path/to/file.ts', queries, host)
+const diagnostics = computeDocumentDiagnostics(resolved, { schema })
+```
+
+`@sanity-labs/groq-lsp/fragments` has the resolver without the language server's dependencies: `resolveEmbeddedQueries(content, file, host)` returns each `groq` template and `defineQuery()` call of a file with its fragments inlined, for tools such as an editor's run-query command.
 
 ### `computeDocumentDiagnostics`
 
