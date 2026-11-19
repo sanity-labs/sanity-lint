@@ -173,8 +173,10 @@ function lintDefinition(
   const stubs: Array<string> = []
   for (const call of definition.calls) {
     const source = sourceOf(call)
+    // No stub for built-ins (`pt::text`, `string::split`, …) or unknown names: groq-js
+    // resolves the former, and a missing custom function fails the lint below.
     if (source === undefined) {
-      return []
+      continue
     }
     stubs.push(groqFunctionStub(source))
   }

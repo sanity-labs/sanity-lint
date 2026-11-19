@@ -304,6 +304,18 @@ describe('diagnostics and hover with shared functions', () => {
     ])
   })
 
+  it('reports a finding in a body that calls a GROQ built-in on its definition', () => {
+    const text = `fn post::card($post) = $post{"text": pt::text(body), "a": author->name, "b": author->bio};
+*[_type == "post"][0]{"card": post::card(@)}`
+    const { diagnostics } = computeQueryDiagnostics(queryAt(text))
+    expect(diagnostics.map(({ code, range }) => ({ code, range }))).toEqual([
+      {
+        code: 'repeated-dereference',
+        range: { start: { line: 0, character: 3 }, end: { line: 0, character: 13 } },
+      },
+    ])
+  })
+
   it('hovers in a query that calls a shared function', () => {
     const text = '*[_type == "post"]{"image": image::field(mainImage), _id}'
     const offset = text.indexOf('_id')
