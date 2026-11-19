@@ -1,5 +1,24 @@
 # @sanity/groq-lsp
 
+## 1.2.1
+
+### Patch Changes
+
+- f2a88ac: Build with tsdown instead of tsup. Entry points, exports, `.d.ts` files and the `wasm` folder are unchanged; internal chunk file names differ, and built-in imports keep their `node:` prefix.
+- 0cac734: Completion lists each field once. Schemas from `sanity schema extract` declare system fields such as `_id`, `_rev` and `_createdAt`, which used to appear twice next to the built-in system field items.
+- 3ea987f: author: @452740336
+  author: @Omission-create
+  author: @rock2089
+  author: @XananasX7
+
+  Link each package's npm page to its README and the issue tracker.
+
+- Updated dependencies [f2a88ac]
+- Updated dependencies [3ea987f]
+  - @sanity-labs/lint-core@1.0.2
+  - @sanity-labs/groq-lint@1.0.11
+  - @sanity-labs/groq-wasm@1.2.3
+
 ## 1.2.0
 
 ### Minor Changes

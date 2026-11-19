@@ -1,5 +1,14 @@
 # @sanity/prettier-plugin-groq
 
+## 1.0.12
+
+### Patch Changes
+
+- f2a88ac: Build with tsdown instead of tsup. Entry points, exports, `.d.ts` files and the `wasm` folder are unchanged; internal chunk file names differ, and built-in imports keep their `node:` prefix.
+- Updated dependencies [f2a88ac]
+- Updated dependencies [3ea987f]
+  - @sanity-labs/groq-wasm@1.2.3
+
 ## 1.0.11
 
 ### Patch Changes
