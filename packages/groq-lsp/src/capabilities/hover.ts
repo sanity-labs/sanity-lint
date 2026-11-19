@@ -8,6 +8,7 @@ import type { Hover, MarkupContent } from 'vscode-languageserver'
 import { parse, typeEvaluate, type TypeNode, type SchemaType } from 'groq-js'
 import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
 import type { GroqQuery, TypeInfo } from '../types.js'
+import { resolveFieldType } from './hover-types.js'
 
 /**
  * Options for computing hover information
@@ -41,11 +42,21 @@ export function getHoverInfo(
     // Evaluate type if schema is available
     let typeInfo: TypeInfo | null = null
     if (options.schema) {
-      try {
-        const resultType = typeEvaluate(ast, options.schema)
-        typeInfo = typeNodeToInfo(resultType, nodeInfo.text)
-      } catch {
-        // Type evaluation failed, continue without type info
+      const fieldType = isFieldNode(nodeInfo)
+        ? resolveFieldType(query.query, positionInQuery, {
+            schema: options.schema,
+            functions: options.functions,
+          })
+        : null
+      if (fieldType) {
+        typeInfo = { type: fieldType, schemaType: nodeInfo.text }
+      } else {
+        try {
+          const resultType = typeEvaluate(ast, options.schema)
+          typeInfo = typeNodeToInfo(resultType, nodeInfo.text)
+        } catch {
+          // Type evaluation failed, continue without type info
+        }
       }
     }
 
@@ -71,6 +82,10 @@ interface NodeInfo {
   type: string
   text: string
   documentation?: string
+}
+
+function isFieldNode(nodeInfo: NodeInfo): boolean {
+  return nodeInfo.type === 'field' || nodeInfo.type === 'system-field' || nodeInfo.type === 'filter'
 }
 
 /**
