@@ -77,7 +77,7 @@ npx @sanity-labs/groq-lint --json query.groq
 
 ## Rules
 
-**29 lint rules** (16 GROQ + 13 Schema) to catch common issues.
+**30 lint rules** (17 GROQ + 13 Schema) to catch common issues.
 
 ### GROQ Rules
 
@@ -95,6 +95,7 @@ npx @sanity-labs/groq-lint --json query.groq
 | `groq-join-to-get-id`               | warn     | Unnecessary join to get `_id`              |
 | `groq-repeated-dereference`         | warn     | Same reference dereferenced multiple times |
 | `groq-match-on-id`                  | warn     | Using `match` on `_id` field               |
+| `groq-duplicate-projection-key`     | error    | Same key projected more than once          |
 | `groq-count-in-correlated-subquery` | warn     | `count()` in correlated subquery           |
 | `groq-deep-pagination-param`        | warn     | Pagination offset from parameter           |
 | `groq-invalid-type-filter`          | error    | Invalid `_type` filter (schema-aware)      |

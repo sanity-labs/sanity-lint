@@ -82,6 +82,7 @@ const result = lint(query, { schema })
 | `join-to-get-id`               | warning  | Using `->` to get `_id` (use `._ref` instead)          |
 | `computed-value-in-filter`     | error    | Computed values in filter prevent optimization         |
 | `match-on-id`                  | info     | Using `match` on `_id` with wildcard                   |
+| `duplicate-projection-key`     | error    | Same key projected more than once in one object        |
 | `order-on-expr`                | error    | Ordering on computed values                            |
 | `deep-pagination`              | warning  | Large offset in slice (>=1000)                         |
 | `deep-pagination-param`        | warning  | Pagination offset from parameter                       |

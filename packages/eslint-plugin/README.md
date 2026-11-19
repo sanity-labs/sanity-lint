@@ -137,6 +137,7 @@ These rules lint GROQ queries in:
 | `sanity/groq-order-on-expr`                | error   | Avoid ordering on computed values               |
 | `sanity/groq-repeated-dereference`         | info    | Avoid repeated `->` on same attribute           |
 | `sanity/groq-match-on-id`                  | info    | Avoid match on `_id` with wildcard              |
+| `sanity/groq-duplicate-projection-key`     | error   | Same key projected more than once               |
 | `sanity/groq-count-in-correlated-subquery` | info    | Avoid `count()` on correlated subqueries        |
 | `sanity/groq-very-large-query`             | error   | Query exceeds 10KB                              |
 | `sanity/groq-extremely-large-query`        | error   | Query exceeds 100KB                             |

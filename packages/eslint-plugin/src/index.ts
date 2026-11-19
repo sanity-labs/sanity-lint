@@ -77,6 +77,7 @@ const recommended: Array<Linter.Config> = [
 
       // Errors - these are serious performance or correctness issues
       'sanity/groq-join-in-filter': 'error',
+      'sanity/groq-duplicate-projection-key': 'error',
 
       // Warnings - performance issues that should be addressed
       'sanity/groq-deep-pagination': 'warn',
@@ -147,6 +148,7 @@ const groq: Array<Linter.Config> = [
     rules: {
       // Errors - serious performance or correctness issues
       'sanity/groq-join-in-filter': 'error',
+      'sanity/groq-duplicate-projection-key': 'error',
       'sanity/groq-extremely-large-query': 'error',
 
       // Warnings - performance issues
