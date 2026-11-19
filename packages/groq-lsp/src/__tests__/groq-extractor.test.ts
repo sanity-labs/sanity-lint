@@ -272,3 +272,59 @@ describe('extractQueries: defineQuery and /* groq */ comments', () => {
     expect(result.queries).toHaveLength(0)
   })
 })
+
+describe('extractQueries: comments and strings', () => {
+  it('ignores `groq` followed by a backtick in comments', () => {
+    const content = [
+      '// The wrapper adds the `.groq` loader, which prepends `functions`',
+      '/**',
+      ' * Every `.groq` result. Typegen only sees `defineQuery`,',
+      ' * and groq`*[_type == "example"]` in docs is prose.',
+      ' */',
+      'const q = groq`*[_type == "post"]`',
+    ].join('\n')
+    const result = extractQueries(content, 'typescript')
+
+    expect(result.queries.map((q) => q.query)).toEqual(['*[_type == "post"]'])
+    expect(result.queries[0]?.line).toBe(5)
+  })
+
+  it('ignores `groq` followed by a backtick in strings and template text', () => {
+    const content = [
+      'const a = "use the groq` tag"',
+      "const b = 'groq`'",
+      'const c = `files ending in .groq` + defineQuery(`*[_type == "c"]`)',
+    ].join('\n')
+    const result = extractQueries(content, 'typescript')
+
+    expect(result.queries.map((q) => q.query)).toEqual(['*[_type == "c"]'])
+  })
+
+  it('extracts queries inside template literal interpolations', () => {
+    const content = 'const html = `<pre>${groq`*[_type == "a"]{${"x"}}`}</pre>`'
+    const result = extractQueries(content, 'typescript')
+
+    expect(result.queries.map((q) => q.query)).toEqual(['*[_type == "a"]{${"x"}}'])
+  })
+
+  it('keeps quotes in regular expressions from hiding later queries', () => {
+    const content = 'const re = /["\'`]/g\nconst q = groq`*[_type == "post"]`'
+    const result = extractQueries(content, 'typescript')
+
+    expect(result.queries.map((q) => q.query)).toEqual(['*[_type == "post"]'])
+  })
+
+  it('limits an apostrophe in JSX text to its line', () => {
+    const content = 'const el = <p>Don\'t</p>\nconst q = groq`*[_type == "post"]`'
+    const result = extractQueries(content, 'typescriptreact')
+
+    expect(result.queries.map((q) => q.query)).toEqual(['*[_type == "post"]'])
+  })
+
+  it('still accepts a /* groq */ marker, but not one inside another comment', () => {
+    const content = '/* groq */ `*[_type == "a"]`\n// see /* groq */ `*[_type == "b"]`'
+    const result = extractQueries(content, 'typescript')
+
+    expect(result.queries.map((q) => q.query)).toEqual(['*[_type == "a"]'])
+  })
+})
