@@ -115,6 +115,127 @@ function parentScope(
     : null
 }
 
+export interface StringLiteral {
+  /** The literal as written, quotes included. */
+  text: string
+  /** The name the literal gives a projection or object attribute, when it is the key of one. */
+  key?: string
+  /** The type of the value given to that key, when the schema says. */
+  keyType: FormattedType | null
+}
+
+/**
+ * Describe the string literal that contains `position`, or `null` when `position` is not in one.
+ *
+ * A string is a value, so it never names a document type or a field: `"post"` in
+ * `_type == "post"` hovers as itself. A string that is the key of a projection or object, as
+ * `"overview"` in `{"overview": pt::text(overview)}`, hovers as the type of the value it is given.
+ */
+export function resolveStringLiteral(
+  query: string,
+  position: number,
+  options?: FieldTypeOptions
+): StringLiteral | null {
+  const masked = maskStrings(query)
+  const range = stringRangeAt(query, position)
+  if (!range) {
+    return null
+  }
+  const text = query.slice(range.start, range.end)
+  if (!/^\s*:(?!:)/.test(masked.slice(range.end))) {
+    return { text, keyType: null }
+  }
+  const key = keyName(text)
+  const keyType = options ? projectionKeyType(query, masked, range, key, options) : null
+  return { text, key, keyType }
+}
+
+interface StringRange {
+  start: number
+  end: number
+}
+
+/** The string literal, quotes included, that `position` is in: from its opening quote to past its closing one. */
+function stringRangeAt(query: string, position: number): StringRange | null {
+  let start: number | undefined
+  let quote = ''
+  for (let index = 0; index < query.length; index++) {
+    const char = query.charAt(index)
+    if (start === undefined) {
+      if (char === '"' || char === "'") {
+        start = index
+        quote = char
+      }
+    } else if (char === '\\') {
+      index++
+    } else if (char === quote) {
+      if (position >= start && position <= index) {
+        return { start, end: index + 1 }
+      }
+      start = undefined
+    }
+  }
+  return null
+}
+
+function projectionKeyType(
+  query: string,
+  masked: string,
+  range: StringRange,
+  key: string,
+  options: FieldTypeOptions
+): FormattedType | null {
+  const frames = enclosingFrames(masked, range.start)
+  const projection = frames.at(-1)
+  if (projection?.bracket !== '{') {
+    return null
+  }
+  const close = matchingClose(masked, projection.open)
+  if (close === undefined) {
+    return null
+  }
+  const start = postfixStart(masked, projection.open) ?? projection.open
+  const preamble = query.slice(0, leadingDefinitions(query).at(-1)?.end ?? 0)
+  if (start < preamble.length) {
+    return null
+  }
+  const type = scopeTypesAt(
+    query,
+    masked,
+    frames.slice(0, -1),
+    query.slice(start, close + 1),
+    options,
+    preamble
+  )
+  if (!type) {
+    return null
+  }
+
+  const found: Array<TypeNode> = []
+  for (const object of flatten(type, options.schema).filter(isObject)) {
+    const attribute = object.attributes[key]
+    if (attribute) {
+      found.push(attribute.value)
+      if (attribute.optional) {
+        found.push({ type: 'null' })
+      }
+    }
+  }
+  return found.length === 0 ? null : formatTypes(found, options.schema)
+}
+
+function keyName(literal: string): string {
+  try {
+    const value: unknown = JSON.parse(literal)
+    if (typeof value === 'string') {
+      return value
+    }
+  } catch {
+    // A single-quoted literal is not JSON; its text is the key.
+  }
+  return literal.slice(1, -1)
+}
+
 export interface CallType {
   /** `namespace::name`. */
   name: string

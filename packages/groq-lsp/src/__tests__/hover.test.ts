@@ -370,6 +370,81 @@ describe('hover expands object types', () => {
   })
 })
 
+const CODY_QUERY = `{
+  "settings": *[_type == "page"][0] { "ogImage": image::field(coverImage) },
+  "home": *[_type == "page"][0] { title, "overview": pt::text(body) }
+}`
+
+describe('hover string literals', () => {
+  it('hovers a string in a filter as the literal, not a looked-up type', () => {
+    expect(hoverText(CODY_QUERY, '"page"')).toBe(fenced('"page"'))
+    expect(hoverText(CODY_QUERY, 'page', 0)).toBe(fenced('"page"'))
+    expect(hoverText('*[_type in ["page", "post"]]', '"post"')).toBe(fenced('"post"'))
+  })
+
+  it('hovers a string that matches a field or key name as the literal', () => {
+    expect(hoverText('*[_type == "page" && title == "title"]', '"title"')).toBe(fenced('"title"'))
+    expect(hoverText('*[_type == "page"]{"x": "overview"}', '"overview"')).toBe(
+      fenced('"overview"')
+    )
+  })
+
+  it('hovers a string with spaces, in a filter and as a key', () => {
+    expect(hoverText('*[_type == "page" && title == "hello big world"]', 'big')).toBe(
+      fenced('"hello big world"')
+    )
+    expect(hoverText('*[_type == "page"]{"my title": title}', 'title', 0)).toBe(
+      fenced('my title: string')
+    )
+    expect(hoverText('*[_type == "page"]{"my title": title}', ' title"')).toBe(
+      fenced('my title: string')
+    )
+  })
+
+  it('hovers a key whose value is a function the query defines', () => {
+    const query =
+      'fn local::title($page) = $page{title};\n*[_type == "page"][0]{"t": local::title(@)}'
+    expect(hoverText(query, '"t"')).toBe(fenced('t: {\n  title: string;\n}'))
+  })
+
+  it('hovers a string without a schema as the literal', () => {
+    expect(hoverText('*[_type == "page"]', '"page"', 0, false)).toBe(fenced('"page"'))
+  })
+
+  it('does not treat the brackets or escapes of a string as code', () => {
+    const literal = String.raw`"a\"b{["`
+    expect(hoverText(`*[_type == "page" && title == ${literal}]`, 'b{')).toBe(fenced(literal))
+  })
+
+  it('hovers a projection key as the type of its value', () => {
+    expect(hoverText(CODY_QUERY, '"overview"')).toBe(fenced('overview: string'))
+    expect(hoverText(CODY_QUERY, 'overview', 0)).toBe(fenced('overview: string'))
+  })
+
+  it('hovers a projection key whose value is a function call as the shape it returns', () => {
+    expect(hoverText(CODY_QUERY, '"ogImage"')).toContain('ogImage: {\n  crop: {')
+  })
+
+  it('hovers a key of an object literal as the type of its value', () => {
+    expect(hoverText(CODY_QUERY, '"settings"')).toContain('settings: {\n  ogImage: {')
+    expect(hoverText('{"n": count(*[_type == "page"])}', '"n"')).toBe(fenced('n: number'))
+  })
+
+  it('hovers a key in a projection nested in a filter or another projection', () => {
+    expect(hoverText('*[_type == "page"][0]{seo{"d": description}}', '"d"')).toBe(
+      fenced('d: string')
+    )
+    expect(hoverText('*[_type == "post"]{"x": *[_type == "page"]{"t": title}}', '"t"')).toBe(
+      fenced('t: string')
+    )
+  })
+
+  it('hovers a key as unknown when its value is, and as its name without a schema', () => {
+    expect(hoverText('*[_type == "page"]{"x": $param}', '"x"')).toBe(fenced('x: unknown'))
+    expect(hoverText(CODY_QUERY, '"overview"', 0, false)).toBe('**overview** (field)')
+  })
+})
+
 describe('hover custom function calls', () => {
   const call = 'image::field(coverImage)'
   const callStart = COVER_QUERY.indexOf(call)
