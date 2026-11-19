@@ -95,6 +95,50 @@ describe('getCompletions', () => {
     })
   })
 
+  describe('duplicate labels', () => {
+    const schemaWithSystemFields: SchemaType = [
+      {
+        type: 'document',
+        name: 'slugPage',
+        attributes: Object.fromEntries(
+          [
+            '_id',
+            '_type',
+            '_rev',
+            '_createdAt',
+            '_updatedAt',
+            '_key',
+            '_ref',
+            'slug',
+            'slugTitle',
+          ].map((name) => [name, { type: 'objectAttribute', value: { type: 'string' } }])
+        ),
+      },
+    ] as SchemaType
+
+    it('lists each label once when the schema declares system fields', () => {
+      const query = makeQuery('*[_type == "slugPage"]{ _')
+      const completions = getCompletions(query, query.query.length, {
+        schema: schemaWithSystemFields,
+      })
+      const labels = completions.map((c) => c.label)
+
+      expect(labels).toHaveLength(new Set(labels).size)
+      for (const name of ['_createdAt', '_id', '_key', '_ref', '_rev']) {
+        expect(labels.filter((l) => l === name)).toHaveLength(1)
+      }
+    })
+
+    it('keeps distinct labels that share a prefix', () => {
+      const query = makeQuery('*[_type == "slugPage"]{ slug')
+      const labels = getCompletions(query, query.query.length, {
+        schema: schemaWithSystemFields,
+      }).map((c) => c.label)
+
+      expect(labels).toEqual(['slug', 'slugTitle'])
+    })
+  })
+
   describe('function completions', () => {
     it('should suggest functions', () => {
       const query = makeQuery('cou')
