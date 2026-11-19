@@ -709,6 +709,12 @@ describe('hover custom function calls', () => {
     expect(outer).not.toContain('hotspot')
   })
 
+  it('resolves a call spread into a projection', () => {
+    expect(hoverText('*[_type == "page"][0]{...image::field(coverImage)}', 'field', 0)).toBe(
+      expected
+    )
+  })
+
   it('resolves a call outside any projection', () => {
     const query = '*[_type == "page"][0].coverImage'
     expect(hoverText(`image::field(${query})`, 'image::field')).toBe(
@@ -728,9 +734,42 @@ describe('hover custom function calls', () => {
     expect(hoverText(query, 'local::title', 0)).not.toContain('local::title: ')
   })
 
-  it('keeps the existing hover for built-in functions', () => {
-    expect(hoverText('*[_type == "page"]{"n": count(body)}', 'count')).toContain('count(array)')
-    expect(hoverText('*[_type == "page"]{"t": pt::text(body)}', 'text')).not.toContain('pt::text:')
+  it('hovers a built-in function call with what it returns and its documentation', () => {
+    const count = hoverText('*[_type == "page"]{"n": count(body)}', 'count')
+    expect(count).toContain(fenced('count: number'))
+    expect(count).toContain('count(array)')
+    const text = hoverText('*[_type == "page"]{"t": pt::text(body)}', 'text')
+    expect(text).toContain(fenced('pt::text: string'))
+    expect(text).toContain('Extracts plain text from Portable Text')
+  })
+
+  it('does not document a namespaced call with the global function its namespace is named for', () => {
+    const split = hoverText('*[_type == "page"]{"t": string::split(title, " ")}', 'split')
+    expect(split).toContain('string::split: ')
+    expect(split).not.toContain('Converts value to string')
+    const now = hoverText('*[_type == "page"]{"t": dateTime::now()}', 'now')
+    expect(now).toContain('dateTime::now: ')
+    expect(now).not.toContain('Parses an ISO 8601 date string')
+  })
+
+  it('hovers built-in calls in filters and projections as groq-js types them', () => {
+    expect(hoverText('*[_type == "page" && defined(slug.current)]', 'defined')).toContain(
+      fenced('defined: boolean')
+    )
+    expect(hoverText('*[_type == "page" && count(tags) > 0]', 'count')).toContain(
+      fenced('count: number | null')
+    )
+    expect(hoverText('*[_type == "page"]{"t": coalesce(subtitle, title)}', 'coalesce')).toContain(
+      fenced('coalesce: string')
+    )
+    expect(
+      hoverText('*[_type == "post"]{"v": select(views > 10 => "many", "few")}', 'select')
+    ).toContain(fenced('select: "few" | "many"'))
+  })
+
+  it('hovers a pipe function as what it makes of the array piped in', () => {
+    const query = '*[_type == "post"]{views} | order(views desc)'
+    expect(hoverText(query, 'order')).toContain(fenced('order: Array<{\n  views: number;\n}>'))
   })
 
   it('ignores calls in strings and calls the functions do not define', () => {
