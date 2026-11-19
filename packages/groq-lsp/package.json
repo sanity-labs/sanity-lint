@@ -48,7 +48,7 @@
     "vscode-uri": "^3.2.0"
   },
   "devDependencies": {
-    "@sanity-labs/groq-content-mapper": "^0.6.2",
+    "@sanity-labs/groq-content-mapper": "^0.7.0",
     "@types/picomatch": "^4.0.3",
     "tsup": "^9.0.0",
     "typescript": "^6.0.3",

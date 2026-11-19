@@ -178,8 +178,8 @@ snapshots:
 					"version": "2.0.1",
 				},
 				"vitest": {
-					"specifier": "^5.1.0",
-					"version": "5.1.0",
+					"specifier": "^5.1.1",
+					"version": "5.1.1",
 				},
 			},
 		},
@@ -217,8 +217,8 @@ snapshots:
 					"version": "26.6.6",
 				},
 				"@vitest/coverage-v8": {
-					"specifier": "^5.1.0",
-					"version": "5.1.0",
+					"specifier": "^5.1.1",
+					"version": "5.1.1",
 				},
 				"husky": {
 					"specifier": "^9.1.7",
@@ -444,8 +444,8 @@ snapshots:
 			},
 			"devDependencies": {
 				"@sanity-labs/groq-content-mapper": {
-					"specifier": "^0.6.2",
-					"version": "0.6.2",
+					"specifier": "^0.7.0",
+					"version": "0.7.0",
 				},
 				"@types/picomatch": {
 					"specifier": "^4.0.3",
@@ -5255,7 +5255,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -5689,8 +5689,8 @@ snapshots:
 			"engines": {"node": ">=20.19 <22 || >=22.12"},
 		},
 
-		"@sanity-labs/groq-content-mapper@0.6.2": {
-			"integrity": "sha512-DvJLjYlMBoxzeQTjlken1eH9PZT9Im9ofNcm9DwqPHfX1G7TpJ8mYqzfdfObwkWJw5yclGPKVQJvQ4B2OzpKZA==",
+		"@sanity-labs/groq-content-mapper@0.7.0": {
+			"integrity": "sha512-6LvUMgk3ZqHgtfy85hZE5/Wk0IUoixXqk2vUgnsHSLkdEp2UiOUPA9nU/t8GVYpCHK3/GgNniOdVRO2KvwJDyg==",
 			"engines": {"node": "^22.18.0 || >=24.11.0"},
 			"peerDependencies": {
 				"react": {
@@ -5745,7 +5745,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -5895,7 +5895,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 				"xstate": {
@@ -5960,7 +5960,7 @@ snapshots:
 					"optional": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 				"yaml": {
@@ -6069,7 +6069,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 				"xstate": {
@@ -6161,7 +6161,7 @@ snapshots:
 			"engines": {"node": ">=22.12.0"},
 			"peerDependencies": {
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -6279,7 +6279,7 @@ snapshots:
 			"hasBin": true,
 			"peerDependencies": {
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -6350,7 +6350,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -6424,7 +6424,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 				"xstate": {
@@ -6450,7 +6450,7 @@ snapshots:
 			"integrity": "sha512-1z199kB46I1F+3z7Z0bwKepUf81BAZ766jhpozVfC8nHaN/ceqQby7lh95KbrwqnlpxbIRu7dWpzXMBdTvm1xA==",
 			"peerDependencies": {
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 				"xstate": {
@@ -6481,7 +6481,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -6585,7 +6585,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 				"xstate": {
@@ -6647,7 +6647,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -6685,7 +6685,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 				"xstate": {
@@ -6721,7 +6721,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 				"xstate": {
@@ -6807,7 +6807,7 @@ snapshots:
 					"version": "19.3.0",
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -6881,7 +6881,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -6916,7 +6916,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -7032,7 +7032,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -7102,7 +7102,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 				"xstate": {
@@ -7817,16 +7817,16 @@ snapshots:
 			},
 		},
 
-		"@vitest/coverage-v8@5.1.0": {
-			"integrity": "sha512-OY9aShBQG5KOIw2zCo9fDoCHI9RHliNHJ//nM7m6jGg41Hyke9JOGWmeMlK74xYErsxMoK8mIB3gAeEyFVA7LA==",
+		"@vitest/coverage-v8@5.1.1": {
+			"integrity": "sha512-xL4NkbVx/UqqDHaXSOyvB8qsSoLQ+dVNGR9H2Bh/4ggQtmaPFNPUC9gZQwKZePLOQ6WDcgwXVnPulFW9eCHt0w==",
 			"peerDependencies": {
 				"@vitest/browser": {
-					"specifier": "5.1.0",
+					"specifier": "5.1.1",
 					"optional": true,
 				},
 				"vitest": {
-					"specifier": "5.1.0",
-					"version": "5.1.0",
+					"specifier": "5.1.1",
+					"version": "5.1.1",
 				},
 			},
 			"dependencies": {
@@ -7854,8 +7854,8 @@ snapshots:
 			},
 		},
 
-		"@vitest/mocker@5.1.0": {
-			"integrity": "sha512-5umB9/jlWcqVS6fsrFmv5Gdnpu6wAUio/lEOwAmvB7v+lFo/IW2B9FhAD0p19GCULTgMzLCdUmuCDCnAzWgppQ==",
+		"@vitest/mocker@5.1.1": {
+			"integrity": "sha512-b2OgTB4+3ImWIVafXKazJXwLKwQxUNnix6b3xUvUTMh7RyXlrtzoxfZr8aEz9zkHOMAS4K5lu3TvFWoiVeVTQg==",
 			"peerDependencies": {
 				"msw": {
 					"specifier": "^2.4.9 || ^3.0.0",
@@ -7869,14 +7869,14 @@ snapshots:
 			},
 			"dependencies": {
 				"@jridgewell/trace-mapping": "0.3.31",
-				"@vitest/spy": "5.1.0",
+				"@vitest/spy": "5.1.1",
 				"estree-walker": "3.0.3",
 				"magic-string": "1.4.5",
 			},
 		},
 
-		"@vitest/spy@5.1.0": {
-			"integrity": "sha512-2DPO5OMHWKrBngC+fCmTQqemNF0gidRhp3lxbBmRhW+M1XJrfgPpqNqWVevXtn2f2ufD5ZaR1B6B641aAlcX5A==",
+		"@vitest/spy@5.1.1": {
+			"integrity": "sha512-6K8C6alQG1/Yc8/ZI22iJS7JEsxPdVzqtqDq+/xM4Z0mGVykemMVjLhqMy/q6/IHYG3kKD8hKSwRen/ZdyI9vQ==",
 		},
 
 		"@xstate/react@6.1.0": {
@@ -9547,7 +9547,7 @@ snapshots:
 			"peerDependencies": {
 				"vitest": {
 					"specifier": ">=2.0.0",
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"optional": true,
 				},
 			},
@@ -10845,7 +10845,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -11980,7 +11980,7 @@ snapshots:
 					"below": true,
 				},
 				"vitest": {
-					"version": "5.1.0",
+					"version": "5.1.1",
 					"below": true,
 				},
 			},
@@ -13108,8 +13108,8 @@ snapshots:
 			},
 		},
 
-		"vitest@5.1.0": {
-			"integrity": "sha512-MzmNFnrwa8v8lF1bLxw3UJ4EREwVOVb75VqJZmUDRjJ6EluK/x9th7qTbaeDk41WxE1GxWqmTXcdsfobfH5sOA==",
+		"vitest@5.1.1": {
+			"integrity": "sha512-trVmzUFOSraCZcI3uZIMD5FqBh4atFkC/XuJP/IU7qtyQay0FCs3Ia+0QiQ2JJwGyWG/xrcBoJNel2+O7kEZ0g==",
 			"engines": {"node": "^22.12.0 || ^24.0.0 || >=26.0.0"},
 			"hasBin": true,
 			"peerDependencies": {
@@ -13127,11 +13127,11 @@ snapshots:
 					"optional": true,
 				},
 				"@vitest/browser-playwright": {
-					"specifier": "5.1.0",
+					"specifier": "5.1.1",
 					"optional": true,
 				},
 				"@vitest/browser-preview": {
-					"specifier": "5.1.0",
+					"specifier": "5.1.1",
 					"optional": true,
 				},
 				"@vitest/browser-webdriverio": {
@@ -13139,16 +13139,16 @@ snapshots:
 					"optional": true,
 				},
 				"@vitest/coverage-istanbul": {
-					"specifier": "5.1.0",
+					"specifier": "5.1.1",
 					"optional": true,
 				},
 				"@vitest/coverage-v8": {
-					"specifier": "5.1.0",
-					"version": "5.1.0",
+					"specifier": "5.1.1",
+					"version": "5.1.1",
 					"optional": true,
 				},
 				"@vitest/ui": {
-					"specifier": "5.1.0",
+					"specifier": "5.1.1",
 					"optional": true,
 				},
 				"happy-dom": {
@@ -13167,7 +13167,7 @@ snapshots:
 			},
 			"dependencies": {
 				"@types/chai": "5.2.3",
-				"@vitest/mocker": "5.1.0",
+				"@vitest/mocker": "5.1.1",
 				"chai": "6.3.0",
 				"es-module-lexer": "2.3.2",
 				"expect-type": "1.4.0",
