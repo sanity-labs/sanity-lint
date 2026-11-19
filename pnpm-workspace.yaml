@@ -6,7 +6,7 @@ allowBuilds:
   keytar: false
   sharp: false
 catalog:
-  vitest: ^5.1.0
+  vitest: ^5.1.1
   groq-js: ^2.0.1
 minimumReleaseAgeExclude:
   - '@sanity/client@8.10.1 || 8.11.0'
