@@ -53,6 +53,7 @@ const schema: SchemaType = [
       },
       dereferencesTo: 'author',
     }),
+    tags: attribute({ type: 'array', of: string }, true),
     seo: attribute({ type: 'inline', name: 'seo' }),
     coverImage: attribute({
       type: 'object',
@@ -500,6 +501,75 @@ describe('hover string literals', () => {
   it('hovers a key as unknown when its value is, and as its name without a schema', () => {
     expect(hoverText('*[_type == "page"]{"x": $param}', '"x"')).toBe(fenced('x: unknown'))
     expect(hoverText(CODY_QUERY, '"overview"', 0, false)).toBe('**overview** (field)')
+  })
+})
+
+describe('hover parameters', () => {
+  const PROJECT_QUERY = '*[_type == "page" && slug.current == $slug][0] { title }'
+
+  it('hovers a parameter compared to a field as the type of the field, without null', () => {
+    expect(hoverText(PROJECT_QUERY, '$slug')).toBe(fenced('$slug: string'))
+    expect(hoverText(PROJECT_QUERY, 'slug', 1)).toBe(fenced('$slug: string'))
+    expect(hoverText(PROJECT_QUERY, '$slug')).not.toContain('_id')
+  })
+
+  it('hovers the parameter from the $ and from the last letter', () => {
+    const query = PROJECT_QUERY
+    const dollar = query.indexOf('$slug')
+    expect(hoverTextAt(query, dollar)).toBe(fenced('$slug: string'))
+    expect(hoverTextAt(query, dollar + '$slug'.length)).toBe(fenced('$slug: string'))
+  })
+
+  it('infers the type from the document types the filter keeps', () => {
+    expect(hoverText('*[_type == "post" && title == $t]', '$t')).toBe(fenced('$t: number'))
+    expect(hoverText('*[_type == "page" && title == $t]', '$t')).toBe(fenced('$t: string'))
+    expect(hoverText('*[_type == "page" && $t == title]', '$t')).toBe(fenced('$t: string'))
+    expect(hoverText('*[_type == "page" && title != $t]', '$t')).toBe(fenced('$t: string'))
+    expect(hoverText('*[_type == "post" && views > $min]', '$min')).toBe(fenced('$min: number'))
+  })
+
+  it('infers an array for a parameter a value is tested against with in', () => {
+    expect(hoverText('*[_type == "page" && title in $titles]', '$titles')).toBe(
+      fenced('$titles: Array<string>')
+    )
+    expect(hoverText('*[_type == "page" && $tag in tags]', '$tag')).toBe(fenced('$tag: string'))
+  })
+
+  it('makes a match operand a string and a subscript or slice bound a number', () => {
+    expect(hoverText('*[title match $q]', '$q')).toBe(fenced('$q: string'))
+    expect(hoverText('*[_type == "page"][0...$n]', '$n')).toBe(fenced('$n: number'))
+    expect(hoverText('*[_type == "page"][$from..$to]', '$to')).toBe(fenced('$to: number'))
+    expect(hoverText('*[_type == "page"][$i]', '$i')).toBe(fenced('$i: number'))
+  })
+
+  it('joins what every use of the parameter says', () => {
+    const query = '*[_type == "page" && title == $x || _type == "post" && views == $x]'
+    expect(hoverText(query, '$x', 1)).toBe(fenced('$x: number | string'))
+    expect(hoverText(query, '$x', 0)).toBe(fenced('$x: number | string'))
+  })
+
+  it('reads the operand in the scope it is written in', () => {
+    const query =
+      '*[_type == "post"]{"p": *[_type == "page" && _id == ^._id && slug.current == $s]}'
+    expect(hoverText(query, '$s')).toBe(fenced('$s: string'))
+    expect(hoverText('*[_type == "page"]{"p": coalesce(title, "") == $c}', '$c')).toBe(
+      fenced('$c: string')
+    )
+  })
+
+  it('hovers a parameter the query does not type as unknown', () => {
+    expect(hoverText('*[_type == "page"]{"a": $x}', '$x')).toBe(fenced('$x: unknown'))
+    expect(hoverText('*[_type == "page"]{"a": count($x)}', '$x')).toBe(fenced('$x: unknown'))
+    expect(hoverText('*[_type == "page" && nope == $x]', '$x')).toBe(fenced('$x: unknown'))
+    expect(hoverText('*[_type == "page" && $a == $b]', '$b')).toBe(fenced('$b: unknown'))
+  })
+
+  it('hovers a parameter without a schema as its name', () => {
+    expect(hoverText(PROJECT_QUERY, '$slug', 0, false)).toBe('**$slug** (parameter)')
+  })
+
+  it('still hovers the field next to a parameter as the field', () => {
+    expect(hoverText(PROJECT_QUERY, 'current')).toBe(fenced('current: string | null'))
   })
 })
 
