@@ -684,6 +684,19 @@ describe('hover parameters', () => {
     expect(hoverText('*[_type == "page" && "a" == $mode]', '$mode')).toBe(fenced('$mode: string'))
   })
 
+  it('prints a boolean result as boolean, and a lone literal as that literal', () => {
+    const query = '*[_type == "page"]{"defined": defined(subtitle), "yes": true, "no": false}'
+    expect(hoverText(query, '"defined"')).toBe(fenced('defined: boolean'))
+    expect(hoverText(query, '"yes"')).toBe(fenced('yes: true'))
+    expect(hoverText(query, '"no"')).toBe(fenced('no: false'))
+  })
+
+  it('prints a boolean in a nested projection field as boolean', () => {
+    const query = '*[_type == "page"]{"outer": {"defined": defined(subtitle)}}'
+    expect(hoverText(query, '"defined"')).toBe(fenced('defined: boolean'))
+    expect(hoverText(query, '"outer"')).toBe(fenced('outer: {\n  defined: boolean;\n}'))
+  })
+
   it('reads an operand in a projection of a dereference', () => {
     const query = '*[_type == "page"]{"same": author->{"is": name == $name}}'
     expect(hoverText(query, '$name')).toBe(fenced('$name: string'))
@@ -823,7 +836,7 @@ describe('hover custom function calls', () => {
 
   it('hovers built-in calls in filters and projections as groq-js types them', () => {
     expect(hoverText('*[_type == "page" && defined(slug.current)]', 'defined')).toContain(
-      fenced('defined: false | true')
+      fenced('defined: boolean')
     )
     expect(hoverText('*[_type == "page" && count(tags) > 0]', 'count')).toContain(
       fenced('count: number | null')
