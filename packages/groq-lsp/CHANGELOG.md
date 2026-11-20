@@ -1,5 +1,17 @@
 # @sanity/groq-lsp
 
+## 1.4.2
+
+### Patch Changes
+
+- 32fff29: Update `groq-js` to ^2.0.3. `select()` at the root of a query now types every alternative whose condition can be true, instead of only the fallback: `{"v": select(true => "many", "few")}` hovers as `"many"`, and `select($x == 1 => "a", "b")` as `"a" | "b"`. A `select()` with no fallback is nullable when it is not guaranteed to match an alternative, since it evaluates to `null` then: `select(views > 10 => "many")` hovers as `"many" | null`, while `select(true => "many")` stays `"many"`.
+- 8c17df3: Hover prints `boolean` instead of `false | true` or `true | false`, including inside larger unions such as `boolean | null` and in nested object fields, as `@sanity/codegen` does. A type that is only `true` or only `false` still prints as that literal.
+- 98c33c7: Hovering the closing parenthesis of a function call now shows what the call returns when its last argument is a number or a parameter. It used to show the argument, so the `)` in `round(views, 2)` showed `2` instead of `round: number`.
+- Updated dependencies [32fff29]
+  - @sanity-labs/lint-core@1.0.4
+  - @sanity-labs/groq-lint@1.3.2
+  - @sanity-labs/groq-wasm@1.2.4
+
 ## 1.4.1
 
 ### Patch Changes
