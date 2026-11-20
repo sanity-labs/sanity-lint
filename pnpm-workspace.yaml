@@ -10,7 +10,7 @@ catalog:
   groq-js: ^2.0.3
 minimumReleaseAgeExclude:
   - '@sanity/client@8.10.1 || 8.11.0'
-  - '@sanity/codegen@8.3.2 || 8.3.4'
+  - '@sanity/codegen@8.3.4'
   - '@sanity/access-ui@6.24.0'
   - '@sanity/diff@6.24.0'
   - '@sanity/mutator@6.24.0'
