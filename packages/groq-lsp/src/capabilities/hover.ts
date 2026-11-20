@@ -38,6 +38,19 @@ export function getHoverInfo(
 ): Hover | null {
   try {
     const typeOptions = options.schema && { schema: options.schema, functions: options.functions }
+    // Before parameters and numbers: one that ends a call's arguments ends where the closing
+    // parenthesis starts, and the parenthesis is the call's.
+    const call = typeOptions && resolveCallType(query.query, positionInQuery, typeOptions)
+    if (call) {
+      const nodeInfo: NodeInfo = { type: 'function', text: call.name }
+      const documentation = call.custom ? null : builtinFunctionDoc(call.name)
+      if (documentation) {
+        nodeInfo.documentation = documentation
+      }
+      const content = buildHoverContent(nodeInfo, call.type)
+      return content ? { contents: content } : null
+    }
+
     const param = resolveParamType(query.query, positionInQuery, typeOptions)
     if (param) {
       const content = buildHoverContent(
@@ -61,19 +74,6 @@ export function getHoverInfo(
     const number = resolveNumberLiteral(query.query, positionInQuery)
     if (number !== null) {
       return { contents: literalContent(number) }
-    }
-
-    if (typeOptions) {
-      const call = resolveCallType(query.query, positionInQuery, typeOptions)
-      if (call) {
-        const nodeInfo: NodeInfo = { type: 'function', text: call.name }
-        const documentation = call.custom ? null : builtinFunctionDoc(call.name)
-        if (documentation) {
-          nodeInfo.documentation = documentation
-        }
-        const content = buildHoverContent(nodeInfo, call.type)
-        return content ? { contents: content } : null
-      }
     }
 
     // Find the node at the cursor position
