@@ -9,4 +9,5 @@
   author->{ name, "avatar": image.asset->url },
   categories[]->{ title, slug },
   _createdAt
-}[0...10] | order(_createdAt desc)
+}[0...10]
+  | order(_createdAt desc)
