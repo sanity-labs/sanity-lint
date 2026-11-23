@@ -62,7 +62,7 @@ describe('formatGroqFile', () => {
     const content =
       '// Image helpers\nfn image::asset($asset)=$asset->{url};\nfn image::field($image)=$image{crop,"asset":image::asset(asset)};\n'
     expect(applyFormat(content, await formatGroqFile(content))).toBe(
-      '// Image helpers\nfn image::asset($asset) = $asset-> { url };\nfn image::field($image) = $image { crop, "asset": image::asset(asset) };\n'
+      '// Image helpers\nfn image::asset($asset) = $asset->{ url };\nfn image::field($image) = $image { crop, "asset": image::asset(asset) };\n'
     )
   })
 
