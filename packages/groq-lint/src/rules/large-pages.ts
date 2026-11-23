@@ -1,12 +1,14 @@
 import type { Rule } from '@sanity-labs/lint-core'
 import { walk } from '../walker'
+import { isDocumentStream } from './query-plan'
 
 const LARGE_PAGE_THRESHOLD = 100
 
 /**
  * Rule: large-pages
  *
- * Detects slice expressions that fetch more than 100 results at once.
+ * Detects slices of a document stream that fetch more than 100 results at
+ * once. Slices of one document's attribute array are not checked.
  */
 export const largePages: Rule = {
   id: 'large-pages',
@@ -17,7 +19,7 @@ export const largePages: Rule = {
 
   check(ast, context) {
     walk(ast, (node) => {
-      if (node.type === 'Slice') {
+      if (node.type === 'Slice' && isDocumentStream(node.base)) {
         // In groq-js, left/right are direct numbers (or undefined)
         const left = node.left as number | undefined
         const right = node.right as number | undefined

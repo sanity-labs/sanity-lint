@@ -1,25 +1,14 @@
 import type { Rule } from '@sanity-labs/lint-core'
 import type { ExprNode } from 'groq-js'
 import { walk } from '../walker'
+import { containsParentRef } from './query-plan'
 
 const COMPARISON_OPS = new Set(['==', '!=', '<', '>', '<=', '>='])
-
-/**
- * Check if an expression tree contains a Parent reference (^)
- */
-function containsParentRef(node: ExprNode): boolean {
-  let found = false
-  walk(node, (n) => {
-    if (n.type === 'Parent') {
-      found = true
-    }
-  })
-  return found
-}
+const INDEX_COERCIONS = new Set(['dateTime', 'lower'])
 
 /**
  * Check if a node is a "literal" for purposes of this rule.
- * Literals include: Value, Parameter, now()
+ * Literals include: Value, Parameter, now(), dateTime(<literal>), lower(<literal>)
  */
 function isLiteral(node: ExprNode): boolean {
   if (node.type === 'Value') {
@@ -32,6 +21,12 @@ function isLiteral(node: ExprNode): boolean {
   // now() is considered a literal (computed at query time, not per-document)
   if (node.type === 'FuncCall' && node.name === 'now') {
     return true
+  }
+
+  // The index evaluates these coercions itself, so `dateTime("…")` is a literal
+  if (node.type === 'FuncCall' && INDEX_COERCIONS.has(node.name) && node.args.length === 1) {
+    const arg = node.args[0]
+    return arg !== undefined && isLiteral(arg)
   }
 
   // Arithmetic on literals is still a literal (e.g., 2+1)

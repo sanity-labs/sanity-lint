@@ -76,23 +76,23 @@ const result = lint(query, { schema })
 
 ## Rules
 
-| Rule                           | Severity | Description                                            |
-| ------------------------------ | -------- | ------------------------------------------------------ |
-| `join-in-filter`               | error    | Dereference (`->`) inside filter prevents optimization |
-| `join-to-get-id`               | warning  | Using `->` to get `_id` (use `._ref` instead)          |
-| `computed-value-in-filter`     | error    | Computed values in filter prevent optimization         |
-| `match-on-id`                  | info     | Using `match` on `_id` with wildcard                   |
-| `duplicate-projection-key`     | error    | Same key projected more than once in one object        |
-| `order-on-expr`                | error    | Ordering on computed values                            |
-| `deep-pagination`              | warning  | Large offset in slice (>=1000)                         |
-| `deep-pagination-param`        | warning  | Pagination offset from parameter                       |
-| `large-pages`                  | warning  | Fetching >100 results from index 0                     |
-| `non-literal-comparison`       | error    | Comparing two non-literal expressions                  |
-| `repeated-dereference`         | info     | Multiple `->` on same attribute in projection          |
-| `count-in-correlated-subquery` | info     | `count()` on correlated subqueries                     |
-| `very-large-query`             | error    | Query exceeds 10KB                                     |
-| `extremely-large-query`        | error    | Query exceeds 100KB                                    |
-| `many-joins`                   | warning  | Query has >10 dereference operators                    |
+| Rule                           | Severity | Description                                          |
+| ------------------------------ | -------- | ---------------------------------------------------- |
+| `join-in-filter`               | error    | Dereference (`->`) inside a document filter          |
+| `join-to-get-id`               | warning  | Using `->` to get `_id` (use `._ref` instead)        |
+| `computed-value-in-filter`     | error    | Arithmetic or in-memory function in a dataset filter |
+| `match-on-id`                  | info     | Using `match` on `_id` with wildcard                 |
+| `duplicate-projection-key`     | error    | Same key projected more than once in one object      |
+| `order-on-expr`                | error    | Ordering on computed values                          |
+| `deep-pagination`              | warning  | Document offset >= 1000 (`[1000...]`, `[5000]`)      |
+| `deep-pagination-param`        | warning  | Document offset from a parameter                     |
+| `large-pages`                  | warning  | Fetching >100 documents from index 0                 |
+| `non-literal-comparison`       | error    | Comparing two non-literal expressions                |
+| `repeated-dereference`         | info     | Multiple `->` on same attribute in projection        |
+| `count-in-correlated-subquery` | info     | `count()` on a subquery not batched on `^`           |
+| `very-large-query`             | error    | Query exceeds 10KB                                   |
+| `extremely-large-query`        | error    | Query exceeds 100KB                                  |
+| `many-joins`                   | warning  | Query has >10 distinct joins                         |
 
 ## WASM Acceleration
 

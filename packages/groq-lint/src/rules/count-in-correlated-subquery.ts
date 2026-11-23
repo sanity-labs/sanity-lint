@@ -1,15 +1,38 @@
 import type { Rule } from '@sanity-labs/lint-core'
 import type { ExprNode } from 'groq-js'
 import { walk } from '../walker'
+import { containsParentRef, isDocumentStream } from './query-plan'
+
+function conjuncts(node: ExprNode): Array<ExprNode> {
+  if (node.type === 'And') {
+    return [...conjuncts(node.left), ...conjuncts(node.right)]
+  }
+  if (node.type === 'Group') {
+    return conjuncts(node.base)
+  }
+  return [node]
+}
 
 /**
- * Check if an expression tree contains a Parent reference (^)
+ * `x == ^.y` (with `^` on exactly one side) or `references(^.y)`
  */
-function containsParentRef(node: ExprNode): boolean {
+function isBatchKey(node: ExprNode): boolean {
+  if (node.type === 'OpCall' && node.op === '==') {
+    return containsParentRef(node.left) !== containsParentRef(node.right)
+  }
+  return node.type === 'FuncCall' && node.name === 'references'
+}
+
+/**
+ * Whether a document filter in `node` has a `^` condition that cannot be batched
+ */
+function hasUnbatchedCorrelation(node: ExprNode): boolean {
   let found = false
   walk(node, (n) => {
-    if (n.type === 'Parent') {
-      found = true
+    if (n.type === 'Filter' && isDocumentStream(n.base)) {
+      if (conjuncts(n.expr).some((term) => containsParentRef(term) && !isBatchKey(term))) {
+        found = true
+      }
     }
   })
   return found
@@ -18,8 +41,11 @@ function containsParentRef(node: ExprNode): boolean {
 /**
  * Rule: count-in-correlated-subquery
  *
- * Detects count() calls on correlated subqueries, which don't execute
- * as efficient aggregations.
+ * Detects count() on a correlated subquery whose `^` condition is not an
+ * equality or `references()`. Equalities and `references()` are batched into
+ * one index read keyed on the parent value. Other conditions (`>`, `<`, `in`,
+ * `match`, ...) read every document matched by the rest of the subquery, then
+ * filter that batch in memory for each row.
  */
 export const countInCorrelatedSubquery: Rule = {
   id: 'count-in-correlated-subquery',
@@ -30,33 +56,17 @@ export const countInCorrelatedSubquery: Rule = {
 
   check(ast, context) {
     walk(ast, (node) => {
-      if (node.type === 'FuncCall') {
-        const name = node.name
-        if (name !== 'count') {
-          return
-        }
-
-        const args = (node as { args?: Array<ExprNode> }).args ?? []
-        if (args.length !== 1) {
-          return
-        }
-
-        const arg = args[0]
-        if (!arg) {
-          return
-        }
-
-        // Check if the argument is a filter with a parent reference
-        if (arg.type === 'Filter') {
-          if (containsParentRef(arg as ExprNode)) {
-            context.report({
-              message:
-                'count() on correlated subquery does not execute as an efficient aggregation.',
-              severity: 'info',
-              help: 'This pattern may be slow on large datasets. Consider restructuring the query.',
-            })
-          }
-        }
+      if (node.type !== 'FuncCall' || node.name !== 'count' || node.args.length !== 1) {
+        return
+      }
+      const arg = node.args[0]
+      if (arg && hasUnbatchedCorrelation(arg)) {
+        context.report({
+          message:
+            'count() on a correlated subquery whose `^` condition is not an equality or `references()` can be slow.',
+          severity: 'info',
+          help: 'Every document matched by the rest of the subquery is read, then filtered in memory for each row. Compare with `==` against `^` or use `references(^._id)` so the subquery is batched.',
+        })
       }
     })
   },

@@ -25,6 +25,12 @@ tester.run('non-literal-comparison', nonLiteralComparison, {
 
     // Outside filter
     '*[_type == "post"]{ "match": a == b }',
+
+    // The index evaluates dateTime() of a literal
+    '*[_type == "book" && dateTime(_createdAt) > dateTime("2020-01-01T00:00:00Z")]',
+
+    // A coercion of ^ is a batch key
+    '*[_type == "author"]{ "n": count(*[_type == "book" && lower(title) == lower(^.name)]) }',
   ],
 
   invalid: [
@@ -36,6 +42,16 @@ tester.run('non-literal-comparison', nonLiteralComparison, {
     {
       name: 'attribute equality',
       code: '*[a == b]',
+      errors: [{ ruleId: 'non-literal-comparison' }],
+    },
+    {
+      name: 'dateTime() of two attributes',
+      code: '*[dateTime(_createdAt) > dateTime(_updatedAt)]',
+      errors: [{ ruleId: 'non-literal-comparison' }],
+    },
+    {
+      name: 'lower() of two attributes',
+      code: '*[lower(title) == lower(subtitle)]',
       errors: [{ ruleId: 'non-literal-comparison' }],
     },
     {
