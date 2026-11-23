@@ -52,6 +52,14 @@ minimumReleaseAgeExclude:
   - '@oxlint/binding-win32-ia32-msvc@1.95.0'
   - '@oxlint/binding-win32-x64-msvc@1.95.0'
   - oxlint@1.95.0
+  - '@sanity-labs/groq-content-mapper@0.7.6'
+  - '@typescript-eslint/parser@8.74.0'
+  - '@typescript-eslint/project-service@8.74.0'
+  - '@typescript-eslint/scope-manager@8.74.0'
+  - '@typescript-eslint/tsconfig-utils@8.74.0'
+  - '@typescript-eslint/types@8.74.0'
+  - '@typescript-eslint/typescript-estree@8.74.0'
+  - '@typescript-eslint/visitor-keys@8.74.0'
 overrides:
   vitest>vite: ^8.3.8
   ws@8.19.0: ^8.23.0
