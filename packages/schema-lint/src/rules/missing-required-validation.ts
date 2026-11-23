@@ -3,7 +3,15 @@ import type { SchemaRule } from '../types'
 /**
  * Field names that typically should have required validation
  */
-const TYPICALLY_REQUIRED_FIELDS = ['title', 'name', 'slug', 'email', 'url', 'headline', 'heading']
+const TYPICALLY_REQUIRED_FIELDS = new Set([
+  'title',
+  'name',
+  'slug',
+  'email',
+  'url',
+  'headline',
+  'heading',
+])
 
 /**
  * Rule: missing-required-validation
@@ -30,7 +38,7 @@ export const missingRequiredValidation: SchemaRule = {
     for (const field of schema.fields) {
       const name = field.name.toLowerCase()
 
-      if (TYPICALLY_REQUIRED_FIELDS.includes(name) && !field.hasValidation) {
+      if (TYPICALLY_REQUIRED_FIELDS.has(name) && !field.hasValidation) {
         context.report({
           message: `Field "${field.name}" in document type should have validation`,
           severity: 'warning',

@@ -165,7 +165,7 @@ function getFieldCompletions(
         if (fieldName.toLowerCase().includes(prefix.toLowerCase())) {
           completions.push({
             label: fieldName,
-            kind: 5 as CompletionItemKind, // Field
+            kind: 5, // Field
             detail: `Field on ${documentType}`,
             insertText: fieldName,
           })
@@ -197,7 +197,7 @@ function getSystemFieldCompletions(prefix: string): Array<CompletionItem> {
       ? [
           {
             label: f.name,
-            kind: 5 as CompletionItemKind, // Field
+            kind: 5, // Field
             detail: 'System field',
             documentation: f.doc,
             insertText: f.name,
@@ -249,7 +249,7 @@ function getFunctionCompletions(prefix: string): Array<CompletionItem> {
       ? [
           {
             label: f.name,
-            kind: 3 as CompletionItemKind, // Function
+            kind: 3, // Function
             detail: f.sig,
             documentation: f.doc,
             insertText: f.name.includes('::') ? f.name : `${f.name}($1)`,

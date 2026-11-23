@@ -17,17 +17,11 @@
  */
 
 import type { ExprNode, SchemaType, SyntaxNode, TypeNode } from 'groq-js'
-import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
+import { withGroqFunctions } from '../content-mapper/functions.js'
+import type { GroqFunction } from '../content-mapper/functions.js'
 import { leadingDefinitions } from '../content-mapper/groq-scanner.js'
-import {
-  children,
-  nested,
-  parseQuery,
-  ROOT_SCOPE,
-  type Scope,
-  typeInScope,
-  union,
-} from './groq-probe.js'
+import { children, nested, parseQuery, ROOT_SCOPE, typeInScope, union } from './groq-probe.js'
+import type { Scope } from './groq-probe.js'
 
 export interface RangeTypeOptions {
   schema: SchemaType
@@ -233,7 +227,10 @@ function scopeOf(node: SyntaxNode, step: Step, next: Step | undefined, scope: Sc
           fallback: probe,
         }))
       }
-      const alternative = step.key === 'alternatives' ? node.alternatives[step.index!] : undefined
+      const alternative =
+        step.key === 'alternatives' && step.index !== undefined
+          ? node.alternatives[step.index]
+          : undefined
       return alternative && next?.key === 'value'
         ? nested(scope, (probe) => ({
             type: 'Select',

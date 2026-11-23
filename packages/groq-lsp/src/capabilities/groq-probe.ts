@@ -8,15 +8,8 @@
  * types the content mapper and `sanity typegen` generate read a query the same way.
  */
 
-import {
-  parse,
-  typeEvaluate,
-  type ExprNode,
-  type MapNode,
-  type ObjectNode,
-  type SchemaType,
-  type TypeNode,
-} from 'groq-js'
+import { parse, typeEvaluate } from 'groq-js'
+import type { ExprNode, MapNode, ObjectNode, SchemaType, TypeNode } from 'groq-js'
 
 /** The attribute a probe object carries the part of the query it types in. */
 const PROBE = '__groqLspProbe'
@@ -114,7 +107,8 @@ export function union(types: Array<TypeNode>): TypeNode {
     unique.set(JSON.stringify(type), type)
   }
   const of = [...unique.values()]
-  return of.length === 1 ? of[0]! : { type: 'union', of }
+  const [only] = of
+  return only && of.length === 1 ? only : { type: 'union', of }
 }
 
 function some(node: ExprNode, predicate: (node: ExprNode) => boolean): boolean {
@@ -215,8 +209,10 @@ function openerOf(char: string): string | undefined {
 export function sliceParams(query: string): Array<string> {
   const names = new Set<string>()
   for (const bounds of sliceBounds(withoutLiterals(query))) {
-    for (const match of bounds.matchAll(PARAMETER)) {
-      names.add(match[1]!)
+    for (const [, name] of bounds.matchAll(PARAMETER)) {
+      if (name !== undefined) {
+        names.add(name)
+      }
     }
   }
   return [...names]

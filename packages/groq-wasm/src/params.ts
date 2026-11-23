@@ -6,7 +6,8 @@
  */
 
 import { createUtf8OffsetMapper } from './offsets.js'
-import { WasmError, type QueryParam, type WasmParamReference } from './types.js'
+import { WasmError } from './types.js'
+import type { QueryParam, WasmParamReference } from './types.js'
 import { callExtractParams } from './wasm-loader.js'
 
 /**
@@ -59,6 +60,7 @@ export function extractParams(query: string): Array<QueryParam> {
     throw new WasmError(`Extract params failed: ${message}`, 'WASM_ERROR')
   }
 
+  // oxlint-disable-next-line typescript/no-unsafe-assignment -- the JSON comes from this package's own Rust build and matches WasmParamReference
   const wasmReferences: Array<WasmParamReference> = JSON.parse(resultJson)
   const toPosition = createUtf8OffsetMapper(query)
   const params = new Map<string, QueryParam>()

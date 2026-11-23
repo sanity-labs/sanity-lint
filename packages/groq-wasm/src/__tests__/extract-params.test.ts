@@ -148,7 +148,8 @@ describe('extractParams', () => {
       try {
         extractParams(query)
       } catch (error) {
-        expect((error as WasmError).code).toBe('PARSE_ERROR')
+        expect(error).toBeInstanceOf(WasmError)
+        expect(error instanceof WasmError ? error.code : undefined).toBe('PARSE_ERROR')
       }
     }
     expect(() => lint('*[_type == ]')).toThrow(WasmError)

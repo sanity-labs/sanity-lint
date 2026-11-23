@@ -8,7 +8,7 @@ const HEADING_LEVEL_PATTERNS = [/^(heading|header)Level$/i, /^h[1-6]$/i, /Level$
 /**
  * Values that suggest heading level options
  */
-const HEADING_LEVEL_VALUES = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+const HEADING_LEVEL_VALUES = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
 
 /**
  * Rule: heading-level-in-schema
@@ -47,7 +47,7 @@ export const headingLevelInSchema: SchemaRule = {
         const hasHeadingLevels = field.options.list.some((item) => {
           const value =
             typeof item === 'object' && item !== null ? (item as { value?: string }).value : item
-          return typeof value === 'string' && HEADING_LEVEL_VALUES.includes(value.toLowerCase())
+          return typeof value === 'string' && HEADING_LEVEL_VALUES.has(value.toLowerCase())
         })
 
         if (hasHeadingLevels) {

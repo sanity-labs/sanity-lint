@@ -8,7 +8,7 @@ const RESERVED_PREFIXES = ['_']
 /**
  * Reserved Sanity field names
  */
-const RESERVED_NAMES = [
+const RESERVED_NAMES = new Set([
   '_id',
   '_type',
   '_rev',
@@ -18,7 +18,7 @@ const RESERVED_NAMES = [
   '_ref',
   '_weak',
   '_strengthenOnPublish',
-]
+])
 
 /**
  * Rule: reserved-field-name
@@ -43,7 +43,7 @@ export const reservedFieldName: SchemaRule = {
       // Check for reserved prefixes
       for (const prefix of RESERVED_PREFIXES) {
         if (name.startsWith(prefix)) {
-          const isExactReserved = RESERVED_NAMES.includes(name)
+          const isExactReserved = RESERVED_NAMES.has(name)
 
           context.report({
             message: `Field name "${name}" uses reserved prefix "${prefix}"`,

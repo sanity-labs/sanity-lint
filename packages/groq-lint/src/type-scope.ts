@@ -227,11 +227,15 @@ export class SchemaTypeResolver {
     }
     if (resolved.type === 'union') {
       const members = resolved.of.filter((member) => member.type !== 'null')
-      const elements = members.map((member) => this.elementType(member))
-      if (elements.length === 0 || elements.some((element) => !element)) {
-        return undefined
+      const elements: Array<TypeNode> = []
+      for (const member of members) {
+        const element = this.elementType(member)
+        if (!element) {
+          return undefined
+        }
+        elements.push(element)
       }
-      return { type: 'union', of: elements as Array<TypeNode> }
+      return elements.length === 0 ? undefined : { type: 'union', of: elements }
     }
     return undefined
   }

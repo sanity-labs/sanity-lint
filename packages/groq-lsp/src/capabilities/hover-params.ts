@@ -27,12 +27,12 @@ import {
   ownScope,
   parseQuery,
   ROOT_SCOPE,
-  type Scope,
   sliceParams,
   typeInScope,
   union,
   withoutLiterals,
 } from './groq-probe.js'
+import type { Scope } from './groq-probe.js'
 
 interface Comparison {
   name: string
@@ -73,7 +73,7 @@ export function inferParamTypes(query: string, schema: SchemaType): Map<string, 
   }
 
   const params = new Map<string, TypeNode>()
-  const inOrder = [...withoutLiterals(query).matchAll(PARAMETER)].map((match) => match[1]!)
+  const inOrder = [...withoutLiterals(query).matchAll(PARAMETER)].flatMap((match) => match[1] ?? [])
   for (const name of [...inOrder, ...types.keys()]) {
     const candidates = types.get(name)
     if (candidates && !params.has(name)) {
@@ -139,11 +139,12 @@ function walk(node: ExprNode, scope: Scope, found: Found): void {
 function noteComparison(node: OpCallNode, scope: Scope, found: Found): void {
   const left = asParameter(node.left)
   const right = asParameter(node.right)
-  if (!left === !right) {
+  const parameter = left ?? right
+  if (!parameter || (left && right)) {
     return
   }
   found.comparisons.push({
-    name: (left ?? right)!.name,
+    name: parameter.name,
     counterpart: left ? node.right : node.left,
     op: node.op,
     paramOnLeft: Boolean(left),

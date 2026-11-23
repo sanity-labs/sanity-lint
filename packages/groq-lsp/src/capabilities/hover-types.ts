@@ -9,13 +9,17 @@
  * `QueryParams` gives it. {@link typeOfRange} describes the scope each part is read in.
  */
 
-import { parse, type SchemaType, type TypeNode } from 'groq-js'
-import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
+import { parse } from 'groq-js'
+import type { SchemaType, TypeNode } from 'groq-js'
+import { withGroqFunctions } from '../content-mapper/functions.js'
+import type { GroqFunction } from '../content-mapper/functions.js'
 import { leadingDefinitions } from '../content-mapper/groq-scanner.js'
 import { withoutLiterals } from './groq-probe.js'
-import { type FormattedType, formatTypes } from './hover-format.js'
+import { formatTypes } from './hover-format.js'
+import type { FormattedType } from './hover-format.js'
 import { inferParamTypes } from './hover-params.js'
-import { type MarkedRange, typeOfRange } from './hover-scope.js'
+import { typeOfRange } from './hover-scope.js'
+import type { MarkedRange } from './hover-scope.js'
 
 export interface FieldTypeOptions {
   schema: SchemaType
@@ -228,8 +232,9 @@ export function resolveCallType(
     const before = masked.slice(0, match.index)
     if (
       close === undefined ||
+      first === undefined ||
       match.index < preamble ||
-      NOT_FUNCTIONS.has(first!) ||
+      NOT_FUNCTIONS.has(first) ||
       /(::|(?<!\.)\.|\$)\s*$/.test(before) ||
       /\bfn\s*$/.test(before)
     ) {
@@ -239,7 +244,7 @@ export function resolveCallType(
       continue
     }
 
-    const name = second === undefined ? first! : `${first}::${second}`
+    const name = second === undefined ? first : `${first}::${second}`
     const pipe = second === undefined ? pipeBefore(masked, match.index) : undefined
     const start = pipe === undefined ? match.index : (postfixStart(masked, pipe) ?? match.index)
     const range = markedRange(masked, start, close + 1)
@@ -467,7 +472,13 @@ function endsOperand(masked: string, end: number): boolean {
 /** The start of the name of the function called with the `(` at `open`, namespace included. */
 function callNameStart(masked: string, open: number): number | undefined {
   const name = /([A-Za-z_]\w*)(\s*::\s*[A-Za-z_]\w*)?\s*$/.exec(masked.slice(0, open))
-  if (!name || NOT_FUNCTIONS.has(name[1]!) || /\$\s*$/.test(masked.slice(0, name.index))) {
+  const callee = name?.[1]
+  if (
+    !name ||
+    callee === undefined ||
+    NOT_FUNCTIONS.has(callee) ||
+    /\$\s*$/.test(masked.slice(0, name.index))
+  ) {
     return undefined
   }
   return name.index

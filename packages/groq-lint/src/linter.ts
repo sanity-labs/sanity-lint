@@ -1,4 +1,5 @@
-import { parse, type SchemaType } from 'groq-js'
+import { parse } from 'groq-js'
+import type { SchemaType } from 'groq-js'
 import type { Finding, Rule, RuleContext, LinterConfig } from '@sanity-labs/lint-core'
 import { DEFINITIONS_SENTINEL, isDefinitionsOnly } from './definitions'
 import { rules as allRules } from './rules'

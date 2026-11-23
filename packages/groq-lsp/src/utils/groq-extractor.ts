@@ -128,7 +128,7 @@ function findNonCodeRanges(content: string): Array<TextRange> {
 
   let i = 0
   while (i < content.length) {
-    const char = content[i]!
+    const char = content.charAt(i)
     const next = content[i + 1]
     if (char === '/' && next === '/') {
       const end = content.indexOf('\n', i)
@@ -177,7 +177,7 @@ function findNonCodeRanges(content: string): Array<TextRange> {
       if (char === '{') {
         braceDepth++
       } else if (char === '}' && braceDepth === 0 && outerBraceDepths.length > 0) {
-        braceDepth = outerBraceDepths.pop()!
+        braceDepth = outerBraceDepths.pop() ?? 0
         i = skipTemplateText(i + 1)
         lastSignificant = '`'
         continue

@@ -169,7 +169,9 @@ describe('SchemaLoader', () => {
       loader.loadFromPath(schemaPath)
 
       // Wait a bit and modify the file
-      await new Promise((resolve) => setTimeout(resolve, 50))
+      await new Promise((resolve) => {
+        setTimeout(resolve, 50)
+      })
       writeFileSync(schemaPath, '[{"type": "document"}]')
 
       expect(loader.needsReload()).toBe(true)
@@ -193,7 +195,9 @@ describe('SchemaLoader', () => {
       loader.loadFromPath(schemaPath)
 
       // Wait and modify
-      await new Promise((resolve) => setTimeout(resolve, 50))
+      await new Promise((resolve) => {
+        setTimeout(resolve, 50)
+      })
       writeFileSync(schemaPath, '[{"name": "updated"}]')
 
       const result = loader.reloadIfNeeded()

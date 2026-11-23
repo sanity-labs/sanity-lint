@@ -1,3 +1,4 @@
+/* oxlint-disable typescript/no-unsafe-type-assertion -- the fixtures are partial ASTs: only the fields the extractor reads are set */
 import { describe, expect, it } from 'vitest'
 import type { TSESTree } from '@typescript-eslint/types'
 import { extractSchemaFromDefineType } from '../schema-extractor'

@@ -7,13 +7,8 @@
 import type { Finding, SourceSpan } from '@sanity-labs/lint-core'
 
 import { createUtf8OffsetMapper } from './offsets.js'
-import {
-  mapRuleId,
-  mapSeverity,
-  WasmError,
-  type WasmFinding,
-  type WasmLintConfig,
-} from './types.js'
+import { mapRuleId, mapSeverity, WasmError } from './types.js'
+import type { WasmFinding, WasmLintConfig } from './types.js'
 import { callLint } from './wasm-loader.js'
 
 /**
@@ -44,6 +39,7 @@ export function lint(query: string, config?: WasmLintConfig): Array<Finding> {
   try {
     // Call WASM function - returns JSON string
     const resultJson = callLint(query)
+    // oxlint-disable-next-line typescript/no-unsafe-assignment -- the JSON comes from this package's own Rust build and matches WasmFinding
     const wasmFindings: Array<WasmFinding> = JSON.parse(resultJson)
 
     // Filter by config if provided

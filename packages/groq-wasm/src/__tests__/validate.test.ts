@@ -214,7 +214,7 @@ describe('validate', () => {
       format(']')
     } catch (error) {
       expect(error).toBeInstanceOf(WasmError)
-      expect((error as WasmError).code).toBe('PARSE_ERROR')
+      expect(error instanceof WasmError ? error.code : undefined).toBe('PARSE_ERROR')
     }
   })
 })

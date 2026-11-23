@@ -13,6 +13,8 @@ async function importLazy() {
   return import('../index.lazy.js')
 }
 
+type LazyEntry = Awaited<ReturnType<typeof importLazy>>
+
 function wasmResponse(bytes: Uint8Array = wasmBytes, status = 200, statusText = 'OK'): Response {
   return new Response(bytes, { status, statusText })
 }
@@ -197,7 +199,8 @@ describe('@sanity-labs/groq-wasm/lazy', () => {
       const fetchMock = vi.fn()
       vi.stubGlobal('fetch', fetchMock)
 
-      const built = (await import(lazyBundle.href)) as typeof import('../index.lazy.js')
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the bundle is loaded by URL; it is built from the source entry typed above
+      const built = (await import(lazyBundle.href)) as LazyEntry
       expect(fetchMock).not.toHaveBeenCalled()
       expectNotInitialized(() => built.lint('*[_type == "post"][0...10]'))
       expectNotInitialized(() => built.format('*[_type == "post"][0...10]'))

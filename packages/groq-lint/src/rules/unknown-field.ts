@@ -9,7 +9,7 @@
  */
 
 import type { Rule, RuleContext, Suggestion } from '@sanity-labs/lint-core'
-import type { ExprNode, MapNode, ObjectNode, OpCallNode, ProjectionNode, SchemaType } from 'groq-js'
+import type { ExprNode, ObjectNode, SchemaType } from 'groq-js'
 import { walk } from '../walker'
 
 /**
@@ -75,7 +75,7 @@ function findSimilarFields(
  */
 function extractTypeFromFilter(node: ExprNode): string | null {
   if (node.type === 'OpCall') {
-    const opNode = node as OpCallNode
+    const opNode = node
     if (opNode.op !== '==') {
       return null
     }
@@ -203,7 +203,7 @@ export const unknownField: Rule = {
       // Handle Map nodes: *[_type == "post"]{ title }
       // AST structure: Map { base: Filter, expr: Projection { base: This, expr: Object } }
       if (node.type === 'Map') {
-        const mapNode = node as MapNode
+        const mapNode = node
         const documentType = findDocumentTypeFromFilter(mapNode.base)
         if (!documentType) {
           return
@@ -213,13 +213,13 @@ export const unknownField: Rule = {
         if (mapNode.expr.type !== 'Projection') {
           return
         }
-        const projection = mapNode.expr as ProjectionNode
+        const projection = mapNode.expr
 
         // The projection's expr should be an Object
         if (projection.expr.type !== 'Object') {
           return
         }
-        const objNode = projection.expr as ObjectNode
+        const objNode = projection.expr
 
         // Get available fields for this type
         const schemaFields = getFieldsForType(schema, documentType)

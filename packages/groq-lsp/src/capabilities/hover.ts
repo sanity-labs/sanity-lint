@@ -6,7 +6,8 @@
 
 import type { Hover, MarkupContent } from 'vscode-languageserver'
 import type { SchemaType } from 'groq-js'
-import { type GroqFunction, withGroqFunctions } from '../content-mapper/functions.js'
+import { withGroqFunctions } from '../content-mapper/functions.js'
+import type { GroqFunction } from '../content-mapper/functions.js'
 import type { GroqQuery } from '../types.js'
 import { parseQuery, withoutLiterals } from './groq-probe.js'
 import type { FormattedType } from './hover-format.js'
@@ -123,8 +124,8 @@ function literalContent(text: string): MarkupContent {
 
 /** The documentation of a GROQ function, `pt::text` documented with its namespace. */
 function builtinFunctionDoc(name: string): string | null {
-  const [namespace, member] = name.split('::')
-  return member === undefined ? getGroqFunctionDoc(name) : getGroqNamespaceDoc(namespace!)
+  const [namespace = name, member] = name.split('::')
+  return member === undefined ? getGroqFunctionDoc(name) : getGroqNamespaceDoc(namespace)
 }
 
 const LITERAL_WORDS = new Set(['true', 'false', 'null'])

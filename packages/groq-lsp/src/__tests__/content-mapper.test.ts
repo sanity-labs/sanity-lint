@@ -148,11 +148,8 @@ describe('custom GROQ functions', () => {
     const configs = new ContentMapperConfigs()
     for (const [index, query] of queries.entries()) {
       const file = write(`queries/q${index}.groq`, query)
-      const module = groqLoader.call(
-        { resourcePath: file, addDependency: () => undefined },
-        query
-      ) as string
-      const delivered = JSON.parse(module.replace(/^export default /, '').trim()) as string
+      const module = groqLoader.call({ resourcePath: file, addDependency: () => undefined }, query)
+      const delivered: unknown = JSON.parse(module.replace(/^export default /, '').trim())
       const functions = configs.forFile(file)?.functions?.functions ?? new Map()
       expect(withGroqFunctions(query, functions)).toBe(delivered)
     }

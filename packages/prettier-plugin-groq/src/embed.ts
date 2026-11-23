@@ -14,17 +14,17 @@
  * ```
  */
 
-import { doc, type AstPath, type Doc, type Options, type Plugin, type Printer } from 'prettier'
-// @ts-expect-error - Prettier internal module
-import { printers as estreePrinters } from 'prettier/plugins/estree.mjs'
+import { doc } from 'prettier'
+import type { AstPath, Doc, Options, Plugin, Printer } from 'prettier'
+import { printers as estreePrinters } from 'prettier/plugins/estree'
 import { parsers } from './index.js'
 
 // Get the default estree printer to wrap
-const defaultEstreePrinter = estreePrinters.estree as Printer
+const defaultEstreePrinter = estreePrinters.estree
 const defaultEmbed = defaultEstreePrinter.embed
 
 // Tags and function names that indicate GROQ content
-const GROQ_IDENTIFIERS = ['groq', 'defineQuery']
+const GROQ_IDENTIFIERS = new Set(['groq', 'defineQuery'])
 
 const PLACEHOLDER_PREFIX = '$__expr'
 const PLACEHOLDER_SUFFIX = '__'
@@ -140,7 +140,7 @@ function getCallName(node: EstreeLikeNode): string | null {
  */
 function isGroqTaggedTemplate(node: EstreeLikeNode): boolean {
   const tagName = getTagName(node)
-  return tagName !== null && GROQ_IDENTIFIERS.includes(tagName)
+  return tagName !== null && GROQ_IDENTIFIERS.has(tagName)
 }
 
 /**
@@ -148,7 +148,7 @@ function isGroqTaggedTemplate(node: EstreeLikeNode): boolean {
  */
 function isGroqFunctionCall(node: EstreeLikeNode): boolean {
   const callName = getCallName(node)
-  return callName !== null && GROQ_IDENTIFIERS.includes(callName)
+  return callName !== null && GROQ_IDENTIFIERS.has(callName)
 }
 
 /**
@@ -267,6 +267,11 @@ interface EstreeLikeNode {
   }>
 }
 
+function defaultEmbedFor(path: AstPath<EstreeLikeNode>, options: Options): EmbedFn | null {
+  const embedder = defaultEmbed?.(path, options)
+  return typeof embedder === 'function' ? embedder : null
+}
+
 type EmbedFn = (
   textToDoc: (text: string, options: Options) => Promise<Doc>,
   print: (selector?: string | number | Array<string | number> | AstPath) => Doc,
@@ -277,7 +282,7 @@ type EmbedFn = (
 /**
  * The embed function for estree that handles GROQ
  */
-function embed(path: AstPath<EstreeLikeNode>, options: Options): EmbedFn | undefined {
+function embed(path: AstPath<EstreeLikeNode>, options: Options): EmbedFn | null {
   const node = path.node
 
   // Handle tagged template literals: groq`...`
@@ -285,7 +290,7 @@ function embed(path: AstPath<EstreeLikeNode>, options: Options): EmbedFn | undef
     const content = extractFromTemplate(node)
     if (!content) {
       // Fall back to default embed behavior
-      return defaultEmbed ? (defaultEmbed(path, options) as EmbedFn | undefined) : undefined
+      return defaultEmbedFor(path, options)
     }
 
     return async (textToDoc, print): Promise<Doc | undefined> => {
@@ -320,7 +325,7 @@ function embed(path: AstPath<EstreeLikeNode>, options: Options): EmbedFn | undef
     const content = extractFromFunctionCall(node)
     if (!content) {
       // Fall back to default embed behavior
-      return defaultEmbed ? (defaultEmbed(path, options) as EmbedFn | undefined) : undefined
+      return defaultEmbedFor(path, options)
     }
 
     return async (textToDoc, print): Promise<Doc | undefined> => {
@@ -351,7 +356,7 @@ function embed(path: AstPath<EstreeLikeNode>, options: Options): EmbedFn | undef
   }
 
   // Fall back to default embed behavior for all other nodes
-  return defaultEmbed ? (defaultEmbed(path, options) as EmbedFn | undefined) : undefined
+  return defaultEmbedFor(path, options)
 }
 
 /**
@@ -359,7 +364,7 @@ function embed(path: AstPath<EstreeLikeNode>, options: Options): EmbedFn | undef
  */
 const estreePrinter: Printer = {
   ...defaultEstreePrinter,
-  embed: embed as Printer['embed'],
+  embed,
 }
 
 /**

@@ -13,12 +13,27 @@
  * ```
  */
 
-import { parse, type ExprNode } from 'groq-js'
+import { parse } from 'groq-js'
+import type { ExprNode } from 'groq-js'
 
 export interface GroqParseError {
   message: string
   position?: number
   query: string
+}
+
+class GroqQueryParseError extends Error implements GroqParseError {
+  readonly query: string
+  readonly position?: number
+
+  constructor(message: string, query: string, position?: number) {
+    super(message)
+    this.name = 'GroqQueryParseError'
+    this.query = query
+    if (position !== undefined) {
+      this.position = position
+    }
+  }
 }
 
 /**
@@ -28,26 +43,17 @@ export interface GroqParseError {
 export function parseGroq(query: string): ExprNode {
   const trimmed = query.trim()
   if (!trimmed) {
-    const error: GroqParseError = {
-      message: 'Empty GROQ query',
-      query,
-    }
-    throw error
+    throw new GroqQueryParseError('Empty GROQ query', query)
   }
 
   try {
     return parse(trimmed)
   } catch (error_) {
-    const error: GroqParseError = {
-      message: error_ instanceof Error ? error_.message : String(error_),
-      query,
-    }
+    const message = error_ instanceof Error ? error_.message : String(error_)
     // Extract position from groq-js error message if available
-    const posMatch = error.message.match(/position (\d+)/)
-    if (posMatch && posMatch[1]) {
-      error.position = Number.parseInt(posMatch[1], 10)
-    }
-    throw error
+    const posMatch = message.match(/position (\d+)/)
+    const position = posMatch?.[1] ? Number.parseInt(posMatch[1], 10) : undefined
+    throw new GroqQueryParseError(message, query, position)
   }
 }
 
@@ -74,7 +80,10 @@ export function assertValidGroq(query: string, context?: string): void {
   try {
     parseGroq(query)
   } catch (error_) {
-    const error = error_ as GroqParseError
+    if (!(error_ instanceof GroqQueryParseError)) {
+      throw error_
+    }
+    const error = error_
     let message = `Invalid GROQ syntax: ${error.message}`
     if (context) {
       message = `${context}: ${message}`

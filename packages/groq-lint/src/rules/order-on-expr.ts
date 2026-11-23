@@ -20,7 +20,7 @@ function isAllowedWrappedAttribute(node: ExprNode): boolean {
     return false
   }
 
-  const name = node.name as string
+  const name = node.name
   const namespace = (node as { namespace?: string }).namespace
   const args = (node as { args?: Array<ExprNode> }).args ?? []
 

@@ -1,8 +1,9 @@
-import nkzw from '@nkzw/oxlint-config'
+import cloudflare from '@cloudflare/oxlint-config'
 import { defineConfig } from 'oxlint'
 
 export default defineConfig({
-  extends: [nkzw],
+  extends: [cloudflare],
+  env: cloudflare.env,
   ignorePatterns: [
     'dist',
     'node_modules',

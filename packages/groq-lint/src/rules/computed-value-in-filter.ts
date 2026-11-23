@@ -2,7 +2,7 @@ import type { Rule } from '@sanity-labs/lint-core'
 import type { ExprNode } from 'groq-js'
 import { walk } from '../walker'
 
-const ARITHMETIC_OPS = ['+', '-', '*', '/']
+const ARITHMETIC_OPS = new Set(['+', '-', '*', '/'])
 
 /**
  * Check if an expression tree contains a Parent reference (^)
@@ -34,7 +34,7 @@ function isLiteral(node: ExprNode): boolean {
   // Arithmetic on literals is still a literal
   if (node.type === 'OpCall') {
     const op = (node as { op?: string }).op
-    if (ARITHMETIC_OPS.includes(op ?? '')) {
+    if (ARITHMETIC_OPS.has(op ?? '')) {
       const left = (node as { left?: ExprNode }).left
       const right = (node as { right?: ExprNode }).right
       if (left && right && isLiteral(left) && isLiteral(right)) {
@@ -52,7 +52,7 @@ function isLiteral(node: ExprNode): boolean {
 function isArithmeticOp(
   node: ExprNode
 ): node is ExprNode & { op: string; left: ExprNode; right: ExprNode } {
-  return node.type === 'OpCall' && ARITHMETIC_OPS.includes((node as { op?: string }).op ?? '')
+  return node.type === 'OpCall' && ARITHMETIC_OPS.has((node as { op?: string }).op ?? '')
 }
 
 /**

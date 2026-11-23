@@ -2,9 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   getFunctionDefinition,
   getFunctionReferences,
-  type FileSpan,
-  type FunctionNavigationContext,
 } from '../capabilities/function-navigation.js'
+import type { FileSpan, FunctionNavigationContext } from '../capabilities/function-navigation.js'
 import type { GroqFunction } from '../content-mapper/functions.js'
 import { findFunctionCalls, parseDefinitions } from '../content-mapper/groq-scanner.js'
 import { isDefinitionsOnly } from '../functions.js'
@@ -119,7 +118,7 @@ describe('custom function navigation', () => {
       '/p/queries/hero.groq',
       '/p/queries/slugPage.groq',
     ])
-    expect(textOf(references[0]!)).toBe('image::richText')
+    expect(textOf(references[0])).toBe('image::richText')
   })
 
   it('finds the calls of a function a query defines in that query only', () => {

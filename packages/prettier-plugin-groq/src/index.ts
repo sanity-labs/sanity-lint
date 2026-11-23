@@ -1,6 +1,7 @@
 import type { Parser, Plugin, Printer, SupportLanguage } from 'prettier'
 
-import { groqParser, type GroqAst } from './parser.js'
+import { groqParser } from './parser.js'
+import type { GroqAst } from './parser.js'
 import { groqPrinter } from './wasm-printer.js'
 
 const languages: Array<SupportLanguage> = [

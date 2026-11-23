@@ -6,7 +6,8 @@
  */
 
 import { createUtf8OffsetMapper } from './offsets.js'
-import { WasmError, type ValidateError, type ValidateResult } from './types.js'
+import { WasmError } from './types.js'
+import type { ValidateError, ValidateResult } from './types.js'
 import { callValidate } from './wasm-loader.js'
 
 /**

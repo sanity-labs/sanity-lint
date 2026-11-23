@@ -11,7 +11,8 @@
  */
 
 import { WasmError } from './types.js'
-import { initWasm, isWasmInitialized, type WasmInitSource } from './wasm-loader.js'
+import { initWasm, isWasmInitialized } from './wasm-loader.js'
+import type { WasmInitSource } from './wasm-loader.js'
 
 export { initWasm, type WasmInitSource }
 export * from './public.js'
