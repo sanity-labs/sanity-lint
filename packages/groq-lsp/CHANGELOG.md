@@ -1,5 +1,14 @@
 # @sanity/groq-lsp
 
+## 1.4.7
+
+### Patch Changes
+
+- Updated dependencies [5bc2c27]
+- Updated dependencies [4d97f21]
+  - @sanity-labs/groq-wasm@1.3.1
+  - @sanity-labs/groq-lint@1.4.1
+
 ## 1.4.6
 
 ### Patch Changes
