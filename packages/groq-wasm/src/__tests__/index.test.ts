@@ -145,12 +145,14 @@ describe('@sanity-labs/groq-wasm', () => {
       )
     })
 
-    it('keeps the first pipe stage on the line when it fits and breaks only the stage that overflows', () => {
+    it('puts every stage of a pipe chain on its own line when the chain does not fit', () => {
       const query =
         '*[_type == $type] | score(boost(title match $q, 3), body match $q) | order(_score desc)'
+      expect(format(query, { width: 100 })).toBe(query)
       expect(format(query, { width: 70 })).toBe(
         [
-          '*[_type == $type] | score(boost(title match $q, 3), body match $q)',
+          '*[_type == $type]',
+          '  | score(boost(title match $q, 3), body match $q)',
           '  | order(_score desc)',
         ].join('\n')
       )
