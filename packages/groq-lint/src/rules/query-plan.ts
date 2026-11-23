@@ -27,6 +27,7 @@ export function isDocumentStream(node: ExprNode): boolean {
     case 'Map':
     case 'Projection':
     case 'Slice':
+    case 'ArrayCoerce':
     case 'PipeFuncCall':
     case 'Group':
       return isDocumentStream(node.base)

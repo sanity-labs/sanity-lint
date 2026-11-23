@@ -85,6 +85,11 @@ tester.run('join-in-filter', joinInFilter, {
       errors: [{ ruleId: 'join-in-filter' }],
     },
     {
+      name: 'join in filter after flatten',
+      code: '*[_type == "book"][][author->name == "x"]',
+      errors: [{ ruleId: 'join-in-filter' }],
+    },
+    {
       name: 'join in array filter inside a dataset filter',
       code: '*[_type == "book" && count(reviews[@->rating > 3]) > 0]',
       errors: [{ ruleId: 'join-in-filter' }],

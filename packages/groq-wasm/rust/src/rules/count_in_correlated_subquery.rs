@@ -176,6 +176,14 @@ mod tests {
     }
 
     #[test]
+    fn non_equality_after_flatten_fires() {
+        assert_fires(
+            RULE,
+            r#"*[_type == "book"][0...3]{"n": count(*[][_createdAt > ^._createdAt])}"#,
+        );
+    }
+
+    #[test]
     fn non_equality_alongside_equality_fires() {
         assert_fires(
             RULE,

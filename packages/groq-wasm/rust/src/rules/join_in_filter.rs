@@ -79,6 +79,11 @@ mod tests {
     }
 
     #[test]
+    fn join_in_filter_after_flatten_fires() {
+        assert_fires(RULE, r#"*[_type == "book"][][author->name == "x"][0...10]"#);
+    }
+
+    #[test]
     fn join_in_array_filter_inside_dataset_filter_fires() {
         assert_fires(
             RULE,

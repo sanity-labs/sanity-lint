@@ -62,6 +62,7 @@ pub(crate) fn is_document_stream(graph: &IrGraph, node_id: NodeId) -> bool {
         NodeKind::Filter { base, .. }
         | NodeKind::Projection { base, .. }
         | NodeKind::Slice { base, .. }
+        | NodeKind::ArrayCoerce { base }
         | NodeKind::FunctionCall {
             pipe_base: Some(base),
             ..
@@ -79,14 +80,14 @@ pub(crate) fn involves_parent(graph: &IrGraph, node_id: NodeId) -> bool {
     is_parent(graph.node(node_id)) || graph.descendants(node_id).any(is_parent)
 }
 
-/// Whether the innermost filter enclosing `node` filters the dataset (`*`) directly.
-pub(crate) fn in_dataset_filter(graph: &IrGraph, node: &Node) -> bool {
+/// Whether the innermost filter enclosing `node` filters a document stream.
+pub(crate) fn in_document_filter(graph: &IrGraph, node: &Node) -> bool {
     let mut scope_id = Some(node.scope);
     while let Some(id) = scope_id {
         let scope = graph.scope(id);
         if scope.kind == ScopeKind::Filter {
             if let NodeKind::Filter { base, .. } = &graph.node(scope.introducing_node).kind {
-                return matches!(graph.node(*base).kind, NodeKind::Dataset);
+                return is_document_stream(graph, *base);
             }
             return false;
         }

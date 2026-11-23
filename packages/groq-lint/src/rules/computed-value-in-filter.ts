@@ -1,7 +1,7 @@
 import type { Rule } from '@sanity-labs/lint-core'
 import type { ExprNode } from 'groq-js'
 import { walk } from '../walker'
-import { containsParentRef, enclosingFilters } from './query-plan'
+import { containsParentRef, enclosingFilters, isDocumentStream } from './query-plan'
 
 const ARITHMETIC_OPS = new Set(['+', '-', '*', '/'])
 
@@ -50,6 +50,11 @@ function isArithmeticOp(
   return node.type === 'OpCall' && ARITHMETIC_OPS.has((node as { op?: string }).op ?? '')
 }
 
+function isInDocumentFilter(node: ExprNode, parents: Array<ExprNode>): boolean {
+  const filter = enclosingFilters(node, parents)[0]
+  return filter !== undefined && isDocumentStream(filter.base)
+}
+
 function accessesElement(node: ExprNode): boolean {
   if (node.type === 'AccessElement') {
     return true
@@ -89,7 +94,7 @@ function inMemoryTerm(node: ExprNode): string | undefined {
  *
  * Detects arithmetic operators (+, -, *, /) inside filter expressions,
  * unless one side references a parent scope (^). Also detects function calls
- * in a dataset filter that are evaluated in memory: `upper()`, `length()`,
+ * in a document filter that are evaluated in memory: `upper()`, `length()`,
  * `round()`, `coalesce()`, `select()`, `string::split(...)[i]` and
  * `defined(arr[i])`.
  */
@@ -127,11 +132,7 @@ export const computedValueInFilter: Rule = {
       }
 
       const term = inMemoryTerm(node)
-      if (
-        term &&
-        enclosingFilters(node, walkContext.parents)[0]?.base.type === 'Everything' &&
-        !containsParentRef(node)
-      ) {
+      if (term && isInDocumentFilter(node, walkContext.parents) && !containsParentRef(node)) {
         context.report({
           message: `${term} in filter is evaluated in memory for every candidate document.`,
           severity: 'warning',

@@ -137,6 +137,16 @@ mod tests {
     }
 
     #[test]
+    fn deep_slice_of_flattened_documents_fires() {
+        assert_fires(DEEP, "*[][1000...1010]");
+        assert_fires(LARGE, "*[][0...200]");
+        assert_ok(
+            DEEP,
+            r#"*[_type == "book"][0...10]{"r": reviews[][1500...1600]}"#,
+        );
+    }
+
+    #[test]
     fn start_of_exactly_1000_fires() {
         assert_fires(DEEP, r#"*[_type == "book"][1000...1010]"#);
         assert_ok(DEEP, r#"*[_type == "book"][999...1010]"#);

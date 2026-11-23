@@ -56,6 +56,11 @@ tester.run('count-in-correlated-subquery', countInCorrelatedSubquery, {
       errors: [{ ruleId: 'count-in-correlated-subquery' }],
     },
     {
+      name: 'non-equality after flatten',
+      code: '*[_type == "book"]{ "n": count(*[][_createdAt > ^._createdAt]) }',
+      errors: [{ ruleId: 'count-in-correlated-subquery' }],
+    },
+    {
       name: 'non-equality next to an equality',
       code: '*[_type == "author"]{ "n": count(*[author._ref == ^._id && _createdAt > ^._createdAt]) }',
       errors: [{ ruleId: 'count-in-correlated-subquery' }],

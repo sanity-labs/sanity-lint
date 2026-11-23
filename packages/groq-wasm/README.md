@@ -200,7 +200,7 @@ The following rules are available. They run on Rust groq-lint's IR. `join-in-fil
 - `dateTime("…")` is a literal, and `lower(^.name)` is a batch key.
 - A join inside a filter over an attribute array in a projection is not reported. The suggested rewrite is `a._ref in *[b == "c"]._id`, which the index serves.
 - Repeated joins on the same reference count once.
-- `upper()`, `length()`, `round()`, `coalesce()`, `select()`, `string::split(...)[i]` and `defined(arr[i])` in a dataset filter are reported, because they are evaluated in memory.
+- `upper()`, `length()`, `round()`, `coalesce()`, `select()`, `string::split(...)[i]` and `defined(arr[i])` in a filter over documents are reported, because they are evaluated in memory.
 
 | Rule ID                        | Severity | Description                                          |
 | ------------------------------ | -------- | ---------------------------------------------------- |

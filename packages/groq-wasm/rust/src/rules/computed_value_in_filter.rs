@@ -1,4 +1,4 @@
-//! Function calls in a dataset filter that the planner evaluates in memory.
+//! Function calls in a document filter that the planner evaluates in memory.
 //!
 //! Reported under the upstream `computed_value_in_filter` id, next to the
 //! upstream arithmetic check. Functions the index evaluates itself, such as
@@ -8,7 +8,7 @@
 use groq_lint::ir::{IrGraph, Node, NodeId, NodeKind};
 use groq_lint::rules::{Hit, Rule};
 
-use super::{in_dataset_filter, involves_parent, is_global_call};
+use super::{in_document_filter, involves_parent, is_global_call};
 
 const IN_MEMORY_FUNCTIONS: [&str; 5] = ["upper", "length", "round", "coalesce", "select"];
 
@@ -30,7 +30,7 @@ impl Rule for InMemoryFunctionInFilter {
     fn check(&self, graph: &IrGraph) -> Vec<Hit> {
         graph
             .nodes()
-            .filter(|node| in_dataset_filter(graph, node) && !involves_parent(graph, node.id))
+            .filter(|node| in_document_filter(graph, node) && !involves_parent(graph, node.id))
             .filter_map(|node| in_memory_term(graph, node))
             .collect()
     }
@@ -101,6 +101,12 @@ mod tests {
             r#"*[_type == "book" && select(rating > 3 => "good", "bad") == "good"]"#,
         );
         assert_fires(RULE, r#"*[_type == "book" && defined(reviews[0])]"#);
+    }
+
+    #[test]
+    fn in_memory_function_in_chained_filter_fires() {
+        assert_fires(RULE, r#"*[_type == "book"][upper(title) == "X"]"#);
+        assert_fires(RULE, r#"*[_type == "book"][][length(title) > 10]"#);
     }
 
     #[test]

@@ -44,6 +44,8 @@ tester.run('computed-value-in-filter', computedValueInFilter, {
       '*[_type == "book" && select(rating > 3 => "good", "bad") == "good"]',
       '*[_type == "book" && string::split(title, " ")[0] == "The"]',
       '*[_type == "book" && defined(reviews[0])]',
+      '*[_type == "book"][upper(title) == "X"]',
+      '*[_type == "book"][][length(title) > 10]',
     ].map((code) => ({
       name: `in-memory function: ${code}`,
       code,

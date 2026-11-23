@@ -26,6 +26,7 @@ describe('deep-pagination', () => {
       '*[_type == "book"][0...10]{ "r": reviewsInline[200000...200010] }',
       '*[_type == "book"][0...10]{ "r": reviews[1500..1600]->title }',
       '*[_type == "book"][0...10]{ "r": reviews[5000] }',
+      '*[_type == "book"][0...10]{ "r": reviews[][1500...1600] }',
     ],
 
     invalid: [
@@ -52,6 +53,11 @@ describe('deep-pagination', () => {
       {
         name: 'deep offset after projection',
         code: '*[_type == "post"]{ title }[1000...1010]',
+        errors: [{ ruleId: 'deep-pagination' }],
+      },
+      {
+        name: 'deep offset after flatten',
+        code: '*[][1000...1010]',
         errors: [{ ruleId: 'deep-pagination' }],
       },
       {
