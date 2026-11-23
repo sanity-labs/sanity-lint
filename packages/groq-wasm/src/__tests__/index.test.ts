@@ -120,6 +120,16 @@ describe('@sanity-labs/groq-wasm', () => {
       expect(isValidSyntax(functions)).toBe(true)
     })
 
+    it('keeps a pipe on the line of a query that fits, and breaks before it when the query does not', () => {
+      const query = '*[_type=="post"]|order(_createdAt desc)[0...10]{title}'
+      expect(format(query)).toBe('*[_type == "post"] | order(_createdAt desc)[0...10] { title }')
+      expect(format(query, { width: 30 })).toBe(
+        ['*[_type == "post"]', '  | order(_createdAt desc)[0...10] {', '    title', '  }'].join(
+          '\n'
+        )
+      )
+    })
+
     it('still rejects definitions followed by an incomplete query, or not ended with ;', () => {
       for (const query of [
         'fn a::b($x) = $x{a}; *[',
