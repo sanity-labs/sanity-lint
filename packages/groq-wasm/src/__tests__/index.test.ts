@@ -92,8 +92,12 @@ describe('@sanity-labs/groq-wasm', () => {
       expect(format(functions)).toBe(
         [
           '// Image helpers',
-          'fn image::asset($asset) = $asset-> { url, metadata { lqip, dimensions } };',
-          'fn image::field($image) = $image { crop, hotspot, "asset": image::asset(asset) };',
+          'fn image::asset($asset) = $asset->{ url, metadata { lqip, dimensions } };',
+          'fn image::field($image) = $image {',
+          '  crop,',
+          '  hotspot,',
+          '  "asset": image::asset(asset)',
+          '};',
           'fn image::richText($blocks) = $blocks[] {',
           '  ...,',
           '  _type == "image" => {',
@@ -112,7 +116,7 @@ describe('@sanity-labs/groq-wasm', () => {
           '};',
         ].join('\n')
       )
-      expect(format('fn a::b($x)=$x{a}; // the end')).toBe('fn a::b($x) = $x { a };\n// the end')
+      expect(format('fn a::b($x)=$x{a}; // the end')).toBe('fn a::b($x) = $x { a }; // the end')
       expect(isValidSyntax(functions)).toBe(true)
     })
 
