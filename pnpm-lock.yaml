@@ -397,8 +397,8 @@ snapshots:
 				"@sanity-labs/groq-wasm": "workspace:*",
 				"@sanity-labs/lint-core": "workspace:*",
 				"@sanity/codegen": {
-					"specifier": "^8.3.2",
-					"version": "8.3.2",
+					"specifier": "^8.3.4",
+					"version": "8.3.4",
 				},
 				"groq-js": "catalog:",
 			},
@@ -6029,7 +6029,7 @@ snapshots:
 				"@sanity/cli-build": "7.3.0",
 				"@sanity/cli-core": "3.15.1",
 				"@sanity/client": "8.16.0",
-				"@sanity/codegen": "8.3.2",
+				"@sanity/codegen": "8.3.4",
 				"@sanity/descriptors": "1.3.0",
 				"@sanity/export": "7.1.1",
 				"@sanity/generate-help-url": "4.0.0",
@@ -6296,8 +6296,8 @@ snapshots:
 			},
 		},
 
-		"@sanity/codegen@8.3.2": {
-			"integrity": "sha512-ssxBTwACIRvvJgDdVpyRrcN5TQF5e2UvfQF0UO4yQoGJtrVbW1+TrzeHUMKPq10wAgmljl93hsdtkBPLdFZhvQ==",
+		"@sanity/codegen@8.3.4": {
+			"integrity": "sha512-5ejP7pf+av7Nv+BE3qGYvii6bs21YA42rTyoj7z2z/folzgWvtEOMUludpl12zaiWvmblg5+8xrV4tj2Her7ag==",
 			"engines": {"node": ">=22.12"},
 			"peerDependencies": {
 				"oxfmt": {
