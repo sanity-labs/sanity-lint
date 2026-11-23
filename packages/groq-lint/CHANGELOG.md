@@ -1,5 +1,13 @@
 # @sanity/groq-lint
 
+## 1.4.1
+
+### Patch Changes
+
+- Updated dependencies [5bc2c27]
+- Updated dependencies [4d97f21]
+  - @sanity-labs/groq-wasm@1.3.1
+
 ## 1.4.0
 
 ### Minor Changes

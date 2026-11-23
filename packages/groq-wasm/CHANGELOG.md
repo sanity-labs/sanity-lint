@@ -1,5 +1,12 @@
 # @sanity-labs/groq-wasm
 
+## 1.3.1
+
+### Patch Changes
+
+- 5bc2c27: The query plan lint rules now come from Rust groq-lint instead of copies in this package. Findings are unchanged.
+- 4d97f21: `format()` lays out a `|` pipe chain all-or-nothing. A chain that fits stays on one line, and otherwise every stage goes on its own line with a leading `|`, instead of keeping the first stage on the opening line.
+
 ## 1.3.0
 
 ### Minor Changes
