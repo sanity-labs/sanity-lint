@@ -239,7 +239,7 @@ dependencies = [
 [[package]]
 name = "groq-lint"
 version = "0.1.0"
-source = "git+https://github.com/atombender/groq-lint.git#edeffdd9e45bff08c382679a2242a16865b494c2"
+source = "git+https://github.com/stipsan/groq-lint.git?branch=cody%2Fquery-plan-parity-ba13#cf26c19c0b9aca08eccccb280591cd5643cd143a"
 dependencies = [
  "clap",
  "colored",

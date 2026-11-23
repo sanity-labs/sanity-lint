@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # GROQ tools from atombender
-groq-lint = { git = "https://github.com/atombender/groq-lint.git" }
+groq-lint = { git = "https://github.com/stipsan/groq-lint.git", branch = "cody/query-plan-parity-ba13" }
 groq-format = { git = "https://github.com/stipsan/groq-format.git", branch = "cody/prettier-style-layout-2ecc" }
 # Direct parser access (`ParseResult::referenced_params`, and structured
 # `ParseError`s with UTF-8 byte spans for `validate`). Same git source
