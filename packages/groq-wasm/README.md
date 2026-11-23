@@ -193,7 +193,7 @@ interface ParamReference {
 
 ## Lint Rules
 
-The following rules are available. They run on Rust groq-lint's IR. `join-in-filter`, `computed-value-in-filter`, `deep-pagination`, `deep-pagination-param`, `large-pages`, `non-literal-comparison`, `count-in-correlated-subquery` and `many-joins` are reimplemented in `rust/src/rules/` so their findings match the Content Lake query plan:
+The following rules are available. They come from Rust groq-lint. `join-in-filter`, `computed-value-in-filter`, `deep-pagination`, `deep-pagination-param`, `large-pages`, `non-literal-comparison`, `count-in-correlated-subquery` and `many-joins` match the Content Lake query plan:
 
 - Slices of one document's attribute array (`reviews[1500..1600]`) are not pagination.
 - A correlated `count()` is only reported when its `^` condition is not `==` or `references()`, because those are batched into one index read.
