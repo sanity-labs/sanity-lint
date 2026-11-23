@@ -1,5 +1,11 @@
 # @sanity-labs/groq-wasm
 
+## 1.2.6
+
+### Patch Changes
+
+- 286428f: `format()` uses a new groq-format layout for filters, projections and calls. There is no space between `->` and a projection (`$asset->{ url }`), a projection that does not fit the line width breaks one member per line, and a trailing `//` comment stays on the line it follows.
+
 ## 1.2.5
 
 ### Patch Changes
