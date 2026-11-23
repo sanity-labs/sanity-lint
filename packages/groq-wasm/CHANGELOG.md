@@ -1,5 +1,11 @@
 # @sanity-labs/groq-wasm
 
+## 1.2.7
+
+### Patch Changes
+
+- f5e6548: `format()` keeps a `|` pipeline on one line when it fits, and otherwise puts each stage on its own line with a leading `|`. A trailing slice or projection stays on the last stage.
+
 ## 1.2.6
 
 ### Patch Changes
