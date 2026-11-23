@@ -1,6 +1,6 @@
 {
   "name": "@sanity-labs/prettier-plugin-groq",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "publishConfig": {
     "access": "public"
   },
