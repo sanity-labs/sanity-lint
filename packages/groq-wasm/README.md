@@ -193,22 +193,29 @@ interface ParamReference {
 
 ## Lint Rules
 
-The following rules are available (from Rust groq-lint):
+The following rules are available. They run on Rust groq-lint's IR. `join-in-filter`, `computed-value-in-filter`, `deep-pagination`, `deep-pagination-param`, `large-pages`, `non-literal-comparison`, `count-in-correlated-subquery` and `many-joins` are reimplemented in `rust/src/rules/` so their findings match the Content Lake query plan:
+
+- Slices of one document's attribute array (`reviews[1500..1600]`) are not pagination.
+- A correlated `count()` is only reported when its `^` condition is not `==` or `references()`, because those are batched into one index read.
+- `dateTime("…")` is a literal, and `lower(^.name)` is a batch key.
+- A join inside a filter over an attribute array in a projection is not reported. The suggested rewrite is `a._ref in *[b == "c"]._id`, which the index serves.
+- Repeated joins on the same reference count once.
+- `upper()`, `length()`, `round()`, `coalesce()`, `select()`, `string::split(...)[i]` and `defined(arr[i])` in a filter over documents are reported, because they are evaluated in memory.
 
 | Rule ID                        | Severity | Description                                          |
 | ------------------------------ | -------- | ---------------------------------------------------- |
-| `join-in-filter`               | error    | Dereference (->) inside filter prevents optimization |
+| `join-in-filter`               | error    | Dereference (->) inside a document filter            |
 | `join-to-get-id`               | warning  | Using -> to get \_id (use .\_ref instead)            |
-| `computed-value-in-filter`     | error    | Computed values in filter prevent optimization       |
+| `computed-value-in-filter`     | error    | Arithmetic or in-memory function in a dataset filter |
 | `match-on-id`                  | info     | Using match on \_id with wildcard                    |
 | `order-on-expr`                | error    | Ordering on computed values                          |
-| `deep-pagination`              | warning  | Large offset in slice (>=1000)                       |
-| `large-pages`                  | warning  | Fetching >100 results from index 0                   |
+| `deep-pagination`              | warning  | Document offset >= 1000 (`[1000...]`, `[5000]`)      |
+| `large-pages`                  | warning  | Fetching >100 documents from index 0                 |
 | `non-literal-comparison`       | error    | Comparing two non-literal expressions                |
-| `count-in-correlated-subquery` | info     | count() on correlated subqueries                     |
+| `count-in-correlated-subquery` | info     | count() on a subquery not batched on `^`             |
 | `very-large-query`             | error    | Query exceeds 10KB                                   |
 | `extremely-large-query`        | error    | Query exceeds 100KB                                  |
-| `many-joins`                   | warning  | Query has >10 dereference operators                  |
+| `many-joins`                   | warning  | Query has >10 distinct joins                         |
 | `unlimited-query`              | warning  | Top-level query without a slice or element limit     |
 
 ## Error Handling

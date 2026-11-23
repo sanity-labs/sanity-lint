@@ -18,6 +18,7 @@ export const WASM_RULES = new Set([
   'match-on-id',
   'order-on-expr',
   'deep-pagination',
+  'deep-pagination-param',
   'large-pages',
   'non-literal-comparison',
   'count-in-correlated-subquery',

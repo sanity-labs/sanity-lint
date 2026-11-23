@@ -7,6 +7,8 @@ use groq_parser::parser::{ParseError, Parser};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
+mod rules;
+
 // Initialize panic hook for better error messages
 #[wasm_bindgen(start)]
 pub fn init() {
@@ -34,7 +36,7 @@ pub struct JsFinding {
 /// A JSON string containing an array of findings
 #[wasm_bindgen]
 pub fn lint(query: &str) -> Result<String, JsValue> {
-    match groq_lint::lint(query) {
+    match rules::lint(query) {
         Ok(findings) => {
             let js_findings: Vec<JsFinding> = findings
                 .into_iter()

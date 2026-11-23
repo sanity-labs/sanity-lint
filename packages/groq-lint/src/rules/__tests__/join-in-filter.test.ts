@@ -31,6 +31,13 @@ tester.run('join-in-filter', joinInFilter, {
 
     // Multiple projections with joins
     '*[_type == "post"]{ author-> }{ name }',
+
+    // Filters over one document's attribute array inside a projection
+    '*[_type == "book"]{ "r": reviews[@->title == "x"] }',
+    '*[_type == "book"]{ "r": reviewsInline[@->name == "x"] }',
+
+    // The suggested rewrite
+    '*[_type == "book" && author._ref in *[_type == "author" && name == "Ada"]._id]',
   ],
 
   invalid: [
@@ -70,6 +77,21 @@ tester.run('join-in-filter', joinInFilter, {
     {
       name: 'join with comparison operators',
       code: '*[author->age > 30]',
+      errors: [{ ruleId: 'join-in-filter' }],
+    },
+    {
+      name: 'join in filter after another filter',
+      code: '*[_type == "post"][author->name == "Bob"]',
+      errors: [{ ruleId: 'join-in-filter' }],
+    },
+    {
+      name: 'join in filter after flatten',
+      code: '*[_type == "book"][][author->name == "x"]',
+      errors: [{ ruleId: 'join-in-filter' }],
+    },
+    {
+      name: 'join in array filter inside a dataset filter',
+      code: '*[_type == "book" && count(reviews[@->rating > 3]) > 0]',
       errors: [{ ruleId: 'join-in-filter' }],
     },
     {
