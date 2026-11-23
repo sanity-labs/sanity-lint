@@ -225,7 +225,7 @@ snapshots:
 					"version": "9.1.7",
 				},
 				"lint-staged": {
-					"specifier": "^17.6.1",
+					"specifier": "^17.6.2",
 					"version": "17.6.2",
 				},
 				"oxlint": {
@@ -242,7 +242,7 @@ snapshots:
 				},
 				"tsrs": "0.25.0-ts7.1.0-beta",
 				"turbo": {
-					"specifier": "^2.11.12",
+					"specifier": "^2.11.13",
 					"version": "2.11.13",
 				},
 				"typescript": {
@@ -430,7 +430,7 @@ snapshots:
 					"version": "4.0.7",
 				},
 				"vscode-languageserver": {
-					"specifier": "^11.0.0",
+					"specifier": "^11.0.1",
 					"version": "11.0.1",
 				},
 				"vscode-languageserver-textdocument": {
@@ -444,7 +444,7 @@ snapshots:
 			},
 			"devDependencies": {
 				"@sanity-labs/groq-content-mapper": {
-					"specifier": "^0.7.0",
+					"specifier": "^0.7.5",
 					"version": "0.7.5",
 				},
 				"@types/picomatch": {
