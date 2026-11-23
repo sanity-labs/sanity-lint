@@ -5,13 +5,14 @@
 
 import { dirname, extname } from 'node:path'
 import type { ContentMapperConfig } from '../content-mapper/config.js'
-import { type GroqFunction, walk } from '../content-mapper/functions.js'
+import { walk } from '../content-mapper/functions.js'
+import type { GroqFunction } from '../content-mapper/functions.js'
 import {
   findFunctionCalls,
-  type FunctionNameSpan,
   leadingDefinitions,
   parseDefinitions,
 } from '../content-mapper/groq-scanner.js'
+import type { FunctionNameSpan } from '../content-mapper/groq-scanner.js'
 import { extractQueries, findQueryAtOffset } from '../utils/groq-extractor.js'
 
 /** The document a request is about, and how to read the other files it leads to. */

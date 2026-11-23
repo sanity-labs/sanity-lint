@@ -4,7 +4,7 @@ import type { TSESTree } from '@typescript-eslint/types'
  * Known function names that take GROQ queries as their first argument.
  * Used by next-sanity and other Sanity packages.
  */
-const GROQ_FUNCTION_NAMES = ['defineQuery', 'groq']
+const GROQ_FUNCTION_NAMES = new Set(['defineQuery', 'groq'])
 
 /**
  * Check if a node is a tagged template literal with a GROQ tag.
@@ -38,7 +38,7 @@ export function isGroqFunctionCall(node: TSESTree.CallExpression): boolean {
   const callee = node.callee
 
   // defineQuery(...) or groq(...)
-  if (callee.type === 'Identifier' && GROQ_FUNCTION_NAMES.includes(callee.name)) {
+  if (callee.type === 'Identifier' && GROQ_FUNCTION_NAMES.has(callee.name)) {
     return true
   }
 

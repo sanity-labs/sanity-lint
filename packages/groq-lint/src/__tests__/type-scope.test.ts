@@ -1,12 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { parse, type ExprNode, type SchemaType, type TypeNode } from 'groq-js'
-import {
-  ROOT_SCOPE,
-  SchemaTypeResolver,
-  nestedScope,
-  walkScoped,
-  type TypeScope,
-} from '../type-scope'
+import { parse } from 'groq-js'
+import type { ExprNode, SchemaType, TypeNode } from 'groq-js'
+import { ROOT_SCOPE, SchemaTypeResolver, nestedScope, walkScoped } from '../type-scope'
+import type { TypeScope } from '../type-scope'
 
 const str = (value?: string): TypeNode =>
   value === undefined ? { type: 'string' } : { type: 'string', value }

@@ -8,9 +8,11 @@
  * - File watching for hot-reload
  */
 
-import { readFileSync, existsSync, statSync, watch, type FSWatcher } from 'node:fs'
+import { readFileSync, existsSync, statSync, watch } from 'node:fs'
+import type { FSWatcher } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { FileChangeType, type FileEvent } from 'vscode-languageserver'
+import { FileChangeType } from 'vscode-languageserver'
+import type { FileEvent } from 'vscode-languageserver'
 import { URI } from 'vscode-uri'
 import type { SchemaType } from 'groq-js'
 import type { SchemaState } from '../types.js'
@@ -57,6 +59,7 @@ export class SchemaLoader {
       }
 
       const content = readFileSync(schemaPath, 'utf8')
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the schema file is Sanity's own `schema extract` output; its shape is not validated here
       const schema = JSON.parse(content) as SchemaType
       const stats = statSync(schemaPath)
 

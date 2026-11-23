@@ -21,21 +21,12 @@
     "changeset": "changeset",
     "release": "changeset publish"
   },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "oxlint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yml,yaml}": [
-      "prettier --write"
-    ]
-  },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
+    "@cloudflare/oxlint-config": "^0.2.0",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
-    "@nkzw/oxlint-config": "^3.0.0",
     "@types/node": "^26.6.6",
     "@vitest/coverage-v8": "^5.1.1",
     "husky": "^9.1.7",

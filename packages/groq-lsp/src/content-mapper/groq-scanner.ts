@@ -94,8 +94,10 @@ function callSpans(tokens: Array<Token>): Array<FunctionNameSpan> {
   for (let index = 0; index < tokens.length; index++) {
     const name = callAt(tokens, index)
     const definesIt = tokens[index - 1]?.kind === 'identifier' && tokens[index - 1]?.text === 'fn'
-    if (name && !definesIt) {
-      calls.push({ name, start: tokens[index]!.start, end: tokens[index + 2]!.end })
+    const first = tokens[index]
+    const last = tokens[index + 2]
+    if (name && !definesIt && first && last) {
+      calls.push({ name, start: first.start, end: last.end })
     }
   }
   return calls

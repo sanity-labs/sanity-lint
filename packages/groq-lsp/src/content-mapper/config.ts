@@ -18,8 +18,11 @@
 import { statSync } from 'node:fs'
 import { dirname, extname, resolve } from 'node:path'
 import { getTsconfig, parseTsconfig } from 'get-tsconfig'
-import { type LoadedGroqFunctions, loadGroqFunctions } from './functions.js'
-import { compileInclude, type Include } from './include.js'
+import type { Cache } from 'get-tsconfig'
+import { loadGroqFunctions } from './functions.js'
+import type { LoadedGroqFunctions } from './functions.js'
+import { compileInclude } from './include.js'
+import type { Include } from './include.js'
 
 export const CONTENT_MAPPER_PACKAGE = '@sanity-labs/groq-content-mapper'
 
@@ -200,7 +203,7 @@ export function readContentMapperConfig(
  */
 export class ContentMapperConfigs {
   private nearest = new Map<string, string | null>()
-  private lookupCache = new Map<string, unknown>()
+  private lookupCache: Cache<unknown> = new Map()
   private loaded = new Map<string, Loaded>()
 
   /** The mapper's configuration for `file`, absolute, or `undefined` when it has none. */
@@ -208,7 +211,7 @@ export class ContentMapperConfigs {
     const folder = dirname(file)
     let configPath = this.nearest.get(folder)
     if (configPath === undefined) {
-      const found = getTsconfig(folder, 'tsconfig.json', this.lookupCache as never)
+      const found = getTsconfig(folder, 'tsconfig.json', this.lookupCache)
       configPath = found ? resolve(found.path) : null
       this.nearest.set(folder, configPath)
     }

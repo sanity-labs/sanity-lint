@@ -63,6 +63,7 @@ export function loadSchemaSync(absolutePath: string): SchemaType | null {
     }
 
     const content = readFileSync(absolutePath, 'utf8')
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the schema file is Sanity's own `schema extract` output; its shape is not validated here
     const schema = JSON.parse(content) as SchemaType
     schemaCache.set(absolutePath, schema)
     return schema

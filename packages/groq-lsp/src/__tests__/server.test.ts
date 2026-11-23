@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
+import { spawn } from 'node:child_process'
+import type { ChildProcessWithoutNullStreams } from 'node:child_process'
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -10,9 +11,8 @@ import {
   FileChangeType,
   StreamMessageReader,
   StreamMessageWriter,
-  type MessageConnection,
-  type TextEdit,
 } from 'vscode-languageserver/node'
+import type { MessageConnection, TextEdit } from 'vscode-languageserver/node'
 
 const serverPath = fileURLToPath(new URL('../../dist/server.js', import.meta.url))
 
@@ -45,7 +45,7 @@ describe.skipIf(!existsSync(serverPath))('language server (stdio)', () => {
   ): Promise<PublishedDiagnostics> => {
     const deadline = Date.now() + 4000
     for (;;) {
-      const hit = published.filter((d) => d.uri === uri).findLast(predicate)
+      const hit = published.filter((d) => d.uri === uri && predicate(d)).at(-1)
       if (hit) {
         return hit
       }

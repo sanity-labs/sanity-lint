@@ -38,12 +38,17 @@ const SIMPLE_ESCAPES = new Map([
 ])
 
 function unescapeString(raw: string): string {
-  return raw.replaceAll(/\\(?:u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|([\s\S]))/g, (_, u, x, c) => {
-    if (u || x) {
-      return String.fromCharCode(Number.parseInt(u || x, 16))
+  return raw.replaceAll(
+    /\\(?:u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|([\s\S]))/g,
+    (_: string, u: string | undefined, x: string | undefined, c: string | undefined) => {
+      const hex = u ?? x
+      if (hex !== undefined) {
+        return String.fromCharCode(Number.parseInt(hex, 16))
+      }
+      const char = c ?? ''
+      return SIMPLE_ESCAPES.get(char) ?? char
     }
-    return SIMPLE_ESCAPES.get(c) ?? c
-  })
+  )
 }
 
 interface Scan {

@@ -200,6 +200,10 @@ snapshots:
 					"specifier": "^3.0.3",
 					"version": "3.0.3",
 				},
+				"@cloudflare/oxlint-config": {
+					"specifier": "^0.2.0",
+					"version": "0.2.0",
+				},
 				"@commitlint/cli": {
 					"specifier": "^21.2.4",
 					"version": "21.2.4",
@@ -207,10 +211,6 @@ snapshots:
 				"@commitlint/config-conventional": {
 					"specifier": "^21.2.4",
 					"version": "21.2.4",
-				},
-				"@nkzw/oxlint-config": {
-					"specifier": "^3.0.0",
-					"version": "3.0.0",
 				},
 				"@types/node": {
 					"specifier": "^26.6.6",
@@ -2800,6 +2800,38 @@ snapshots:
 			},
 		},
 
+		"@cloudflare/oxlint-config@0.2.0": {
+			"integrity": "sha512-HENc8yIzCuIPvUyQbX47UKv2kgA26iZt1XRsrlQXayJG6cWmBNlnHXfPy7oNCghqWpTBcbFRdGwsHd1Ahe3zhw==",
+			"engines": {"node": "^22.18.0 || >=24.0.0"},
+			"peerDependencies": {
+				"eslint": {
+					"version": "10.15.0",
+					"below": true,
+				},
+				"eslint-plugin-perfectionist": {
+					"version": "5.14.0",
+					"below": true,
+				},
+				"oxlint": {
+					"specifier": "^1.94.0",
+					"version": "1.94.0",
+					"optional": true,
+				},
+				"tsrs": {
+					"specifier": ">=7.1.0-beta.tsrs2",
+					"version": "0.25.0-ts7.1.0-beta",
+					"optional": true,
+				},
+				"vite-plus": {
+					"specifier": ">=1.7.0",
+					"optional": true,
+				},
+			},
+			"dependencies": {
+				"@nkzw/oxlint-config": "4.1.0",
+			},
+		},
+
 		"@commitlint/cli@21.2.4": {
 			"integrity": "sha512-g3M/wrQdElqGH5vROIeL2QiYIxrzqUkhCgsDyDlWfKEyQdCt10OyMB28W2cJtpZ+VNGMvmaN923infr1hOfyrg==",
 			"engines": {"node": ">=22.12.0"},
@@ -4492,44 +4524,47 @@ snapshots:
 			"optional": true,
 		},
 
-		"@nkzw/eslint-plugin@2.0.0": {
-			"integrity": "sha512-IoU8kOqHfnf7se2dGxMD/7RPm6WVjzjOjWSo7FulRx3lJzuZvXioSkT5Nd82l66DH3Pl2whw74lPT1di3KMwFA==",
+		"@nkzw/eslint-plugin@3.0.0": {
+			"integrity": "sha512-J6Ms/OzUxx7BNBggCKOqFWbESgAJYjvXvekCjjpxVJA2fBv5xOsC5P+2WDYqQUMCvDOU3GxBgG/jrmbqf+/wQA==",
 			"peerDependencies": {
 				"eslint": {
 					"specifier": ">= 9",
 					"version": "10.15.0",
+					"optional": true,
 				},
 			},
 		},
 
-		"@nkzw/oxlint-config@3.0.0": {
-			"integrity": "sha512-eBLEwZp7Q0HMPr5ixSBH+Brv4+ZFUJkjSnrpBJNHjBzusi4uau91VWVlzFUePascXWAmv2LVR3emwE8666oViw==",
+		"@nkzw/oxlint-config@4.1.0": {
+			"integrity": "sha512-uFJxSqD8LPGe+uYVh+EC9BwndUGr3h7+aHQhKcdUANNSV4c1vvRoOqqHUTlML5RnHtvABtapW1ZyY4gkz6sKOA==",
 			"peerDependencies": {
 				"eslint": {
 					"version": "10.15.0",
 					"below": true,
 				},
+				"eslint-plugin-perfectionist": {
+					"specifier": "^5.14.0",
+					"version": "5.14.0",
+					"optional": true,
+				},
 				"oxlint": {
 					"specifier": ">=1.94.0",
 					"version": "1.94.0",
-				},
-				"supports-color": {
-					"version": "8.1.1",
-					"below": true,
+					"optional": true,
 				},
 				"tsrs": {
-					"specifier": ">=0.25.0-ts7.1.0-beta",
+					"specifier": ">=0.25.0-ts7.1.0-beta || ^7.1.0-beta.tsrs2",
 					"version": "0.25.0-ts7.1.0-beta",
+					"optional": true,
 				},
-				"typescript": {
-					"version": "7.0.2",
-					"below": true,
+				"vite-plus": {
+					"specifier": ">=1.7.0",
+					"optional": true,
 				},
 			},
 			"dependencies": {
-				"@nkzw/eslint-plugin": "2.0.0",
+				"@nkzw/eslint-plugin": "3.0.0",
 				"eslint-plugin-no-only-tests": "3.4.0",
-				"eslint-plugin-perfectionist": "5.14.0",
 			},
 		},
 
@@ -7964,6 +7999,7 @@ snapshots:
 							"version": "7.0.2",
 						},
 					},
+					"optional": true,
 				},
 			],
 		},
@@ -7997,6 +8033,7 @@ snapshots:
 							"version": "7.0.2",
 						},
 					},
+					"optional": true,
 				},
 			],
 		},
@@ -8045,6 +8082,7 @@ snapshots:
 							"version": "7.0.2",
 						},
 					},
+					"optional": true,
 				},
 			],
 		},
@@ -8066,6 +8104,7 @@ snapshots:
 					"version": "7.0.2",
 				},
 			},
+			"optional": true,
 			"dependencies": {
 				"@eslint-community/eslint-utils": "4.10.1",
 				"@typescript-eslint/scope-manager": "8.73.0",
@@ -9558,6 +9597,7 @@ snapshots:
 					"below": true,
 				},
 			},
+			"optional": true,
 			"dependencies": {
 				"@typescript-eslint/types": "8.73.0",
 				"@typescript-eslint/utils": "8.73.0",
@@ -11262,6 +11302,7 @@ snapshots:
 		"natural-orderby@5.0.0": {
 			"integrity": "sha512-kKHJhxwpR/Okycz4HhQKKlhWe4ASEfPgkSWNmKFHd7+ezuQlxkA5cM3+XkBPvm1gmHen3w53qsYAv+8GwRrBlg==",
 			"engines": {"node": ">=18"},
+			"optional": true,
 		},
 
 		"next-sanity@13.5.1": {
@@ -13144,6 +13185,7 @@ snapshots:
 							"version": "7.0.2",
 						},
 					},
+					"optional": true,
 				},
 			],
 		},

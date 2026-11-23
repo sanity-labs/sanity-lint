@@ -1,5 +1,6 @@
 import { resolveImport } from './resolve-import.js'
-import { tokenize, type Token } from './tokenize.js'
+import { tokenize } from './tokenize.js'
+import type { Token } from './tokenize.js'
 import type { FragmentHost, ResolvedQuery } from './types.js'
 
 interface ImportBinding {
@@ -76,8 +77,9 @@ function parseImport(module: Module, i: number): number {
     j++
   }
   const bindings: Array<{ local: string; imported: string }> = []
-  if (isIdent(tokens[j]) && !isIdent(tokens[j], 'from')) {
-    bindings.push({ local: (tokens[j] as { value: string }).value, imported: 'default' })
+  const defaultBinding = tokens[j]
+  if (defaultBinding?.kind === 'ident' && defaultBinding.value !== 'from') {
+    bindings.push({ local: defaultBinding.value, imported: 'default' })
     j++
     if (isPunct(tokens[j], ',')) {
       j++

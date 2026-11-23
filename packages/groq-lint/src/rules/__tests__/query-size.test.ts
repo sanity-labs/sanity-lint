@@ -1,3 +1,4 @@
+import { describe } from 'vitest'
 import { RuleTester } from '@sanity-labs/lint-core/testing'
 
 import { veryLargeQuery } from '../very-large-query'

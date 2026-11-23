@@ -31,7 +31,7 @@ export const countInCorrelatedSubquery: Rule = {
   check(ast, context) {
     walk(ast, (node) => {
       if (node.type === 'FuncCall') {
-        const name = node.name as string
+        const name = node.name
         if (name !== 'count') {
           return
         }

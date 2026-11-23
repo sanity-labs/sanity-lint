@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { format as prettierFormat, type Options } from 'prettier'
+import { format as prettierFormat } from 'prettier'
+import type { Options } from 'prettier'
 import { assertValidGroq } from '@sanity-labs/lint-core/testing'
 import plugin from '../index.js'
 

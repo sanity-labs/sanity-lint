@@ -4,7 +4,8 @@
  * Wraps the Rust groq-format library compiled to WASM.
  */
 
-import { WasmError, type WasmFormatConfig } from './types.js'
+import { WasmError } from './types.js'
+import type { WasmFormatConfig } from './types.js'
 import { callFormat } from './wasm-loader.js'
 
 /**

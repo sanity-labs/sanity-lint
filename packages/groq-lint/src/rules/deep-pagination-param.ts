@@ -23,11 +23,17 @@ export const deepPaginationParam: Rule = {
       if (node.type === 'Slice') {
         // In groq-js, left is always a number (or undefined).
         // This check is for future parser compatibility where left might be a Parameter node.
-        const left = node.left as unknown
-        if (left && typeof left === 'object' && (left as { type?: string }).type === 'Parameter') {
-          const paramNode = left as { type: string; name: string }
+        const left: unknown = node.left
+        if (
+          typeof left === 'object' &&
+          left !== null &&
+          'type' in left &&
+          left.type === 'Parameter' &&
+          'name' in left &&
+          typeof left.name === 'string'
+        ) {
           context.report({
-            message: `Slice offset uses parameter $${paramNode.name}. If given a large value, this will cause slow deep pagination.`,
+            message: `Slice offset uses parameter $${left.name}. If given a large value, this will cause slow deep pagination.`,
             severity: 'info',
             help: 'Consider using cursor-based pagination with _id instead, or validate the parameter value.',
           })

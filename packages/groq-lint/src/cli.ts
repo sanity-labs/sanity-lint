@@ -3,12 +3,20 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { glob } from 'node:fs/promises'
 import { createRequire } from 'node:module'
+import { text } from 'node:stream/consumers'
 import { lint } from './linter'
 import { formatFindings, summarizeFindings } from '@sanity-labs/lint-core'
 import type { SchemaType } from 'groq-js'
 
 const require = createRequire(import.meta.url)
-const { version } = require('../package.json') as { version: string }
+const packageJson: unknown = require('../package.json')
+const version =
+  typeof packageJson === 'object' &&
+  packageJson !== null &&
+  'version' in packageJson &&
+  typeof packageJson.version === 'string'
+    ? packageJson.version
+    : 'unknown'
 
 interface CliOptions {
   format: 'pretty' | 'json'
@@ -93,6 +101,7 @@ function loadSchema(path: string): SchemaType | undefined {
       process.exit(1)
     }
     const content = readFileSync(path, 'utf8')
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the schema file is Sanity's own `schema extract` output; its shape is not validated here
     return JSON.parse(content) as SchemaType
   } catch (error) {
     console.error(`Error loading schema: ${error instanceof Error ? error.message : error}`)
@@ -120,11 +129,7 @@ function extractQueriesFromSource(content: string): Array<string> {
 }
 
 async function readStdin(): Promise<string> {
-  const chunks: Array<Buffer> = []
-  for await (const chunk of process.stdin) {
-    chunks.push(chunk)
-  }
-  return Buffer.concat(chunks).toString('utf8')
+  return text(process.stdin)
 }
 
 /**

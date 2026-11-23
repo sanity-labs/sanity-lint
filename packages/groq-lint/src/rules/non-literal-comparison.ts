@@ -2,7 +2,7 @@ import type { Rule } from '@sanity-labs/lint-core'
 import type { ExprNode } from 'groq-js'
 import { walk } from '../walker'
 
-const COMPARISON_OPS = ['==', '!=', '<', '>', '<=', '>=']
+const COMPARISON_OPS = new Set(['==', '!=', '<', '>', '<=', '>='])
 
 /**
  * Check if an expression tree contains a Parent reference (^)
@@ -71,7 +71,7 @@ export const nonLiteralComparison: Rule = {
 
       if (node.type === 'OpCall') {
         const op = (node as { op?: string }).op
-        if (!COMPARISON_OPS.includes(op ?? '')) {
+        if (!COMPARISON_OPS.has(op ?? '')) {
           return
         }
 

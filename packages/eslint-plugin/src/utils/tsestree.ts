@@ -8,6 +8,6 @@ import type { TSESTree } from '@typescript-eslint/types'
  * TypeScript treats them as unrelated, so the bridge needs a double assertion.
  */
 export function asTSESTree<T extends TSESTree.Node>(node: Rule.Node): T {
-  // oxlint-disable-next-line quality/no-chained-type-assertions -- ESTree and TSESTree types do not overlap
+  // oxlint-disable-next-line quality/no-chained-type-assertions, typescript/no-unsafe-type-assertion -- ESTree and TSESTree types do not overlap
   return node as unknown as T
 }

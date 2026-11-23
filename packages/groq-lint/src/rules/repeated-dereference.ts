@@ -18,12 +18,12 @@ function getDerefBaseName(node: ExprNode): string | null {
 
   // Walk down to find the root AccessAttribute
   let current = base
-  while (current.type === 'AccessAttribute' && (current as { base?: ExprNode }).base) {
-    current = (current as { base: ExprNode }).base
+  while (current.type === 'AccessAttribute' && current.base) {
+    current = current.base
   }
 
   if (current.type === 'AccessAttribute') {
-    return (current as { name?: string }).name ?? null
+    return current.name
   }
 
   return null
@@ -39,7 +39,8 @@ function inNestedScope(node: ExprNode, parents: Array<ExprNode>): boolean {
   return parents.some(
     (parent, index) =>
       SCOPED_NODE_TYPES.has(parent.type) &&
-      (parent as { expr?: ExprNode }).expr === (parents[index + 1] ?? node)
+      'expr' in parent &&
+      parent.expr === (parents[index + 1] ?? node)
   )
 }
 

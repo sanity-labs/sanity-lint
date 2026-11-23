@@ -10,22 +10,24 @@
  * - Go to definition and find references for custom functions
  */
 
+import type {
+  CompletionParams,
+  DocumentFormattingParams,
+  InitializeParams,
+  InitializeResult,
+  Location,
+  LocationLink,
+  ReferenceParams,
+  TextDocumentPositionParams,
+} from 'vscode-languageserver/node'
 import {
   createConnection,
   ProposedFeatures,
   TextDocuments,
   TextDocumentSyncKind,
-  InitializeResult,
   DidChangeConfigurationNotification,
   DidChangeWatchedFilesNotification,
   FileChangeType,
-  type InitializeParams,
-  type TextDocumentPositionParams,
-  type DocumentFormattingParams,
-  type CompletionParams,
-  type Location,
-  type LocationLink,
-  type ReferenceParams,
 } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
@@ -33,7 +35,8 @@ import type { SchemaType } from 'groq-js'
 
 import { readFileSync } from 'node:fs'
 import { basename, extname } from 'node:path'
-import { ContentMapperConfigs, type ContentMapperConfig } from './content-mapper/config.js'
+import { ContentMapperConfigs } from './content-mapper/config.js'
+import type { ContentMapperConfig } from './content-mapper/config.js'
 import type { GroqFunction } from './content-mapper/functions.js'
 import { SchemaFileCache, SchemaLoader, SCHEMA_WATCH_GLOBS } from './schema/loader.js'
 import { extractQueries, findQueryAtOffset, offsetToQueryPosition } from './utils/groq-extractor.js'
@@ -46,9 +49,8 @@ import {
   contentMapperGroqFiles,
   getFunctionDefinition,
   getFunctionReferences,
-  type FileSpan,
-  type FunctionNavigationContext,
 } from './capabilities/function-navigation.js'
+import type { FileSpan, FunctionNavigationContext } from './capabilities/function-navigation.js'
 import type { GroqQuery, DocumentState } from './types.js'
 
 // Create connection using Node IPC
@@ -182,6 +184,7 @@ connection.onDidChangeConfiguration((change) => {
   }
 
   // Update global settings
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion, typescript/no-unsafe-member-access -- the client's `groq` settings section is not validated; every field is optional
   globalSettings = (change.settings?.groq as Settings) ?? defaultSettings
 
   // Load schema from settings if specified

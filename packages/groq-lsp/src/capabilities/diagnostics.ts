@@ -5,16 +5,18 @@
  */
 
 import type { Diagnostic, DiagnosticSeverity, Range, Position } from 'vscode-languageserver'
-import { lint, type Finding, type Severity } from '@sanity-labs/groq-lint'
+import { lint } from '@sanity-labs/groq-lint'
+import type { Finding, Severity } from '@sanity-labs/groq-lint'
 import type { SourceLocation } from '@sanity-labs/lint-core'
 import type { SchemaType } from 'groq-js'
 import {
-  type GroqFunction,
   groqFunctionStub,
   groqFunctionStubsPrelude,
   groqFunctionsPrelude,
 } from '../content-mapper/functions.js'
-import { leadingDefinitions, type ScannedDefinition } from '../content-mapper/groq-scanner.js'
+import type { GroqFunction } from '../content-mapper/functions.js'
+import { leadingDefinitions } from '../content-mapper/groq-scanner.js'
+import type { ScannedDefinition } from '../content-mapper/groq-scanner.js'
 import type { GroqQuery } from '../types.js'
 
 /**
@@ -71,7 +73,7 @@ export function computeQueryDiagnostics(
         start: { line: query.line, character: query.column },
         end: { line: query.line, character: query.column + query.query.length },
       },
-      severity: 1 as DiagnosticSeverity, // Error
+      severity: 1, // Error
       source: 'groq',
       message: `Parse error: ${result.parseError}`,
     }

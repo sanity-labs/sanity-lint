@@ -30,8 +30,8 @@ minimumReleaseAgeExclude:
   - '@turbo/windows-arm64@2.11.10'
   - turbo@2.11.10
   - vite@8.3.5
-  - '@nkzw/oxlint-config@3.0.0'
   - next-sanity@13.5.1
+  - '@cloudflare/oxlint-config@0.2.0'
 overrides:
   vitest>vite: ^8.3.8
   ws@8.19.0: ^8.23.0

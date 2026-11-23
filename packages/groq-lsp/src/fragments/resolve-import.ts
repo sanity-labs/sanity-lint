@@ -18,6 +18,38 @@ export interface PathMapping {
   paths: Record<string, Array<string>>
 }
 
+/** The path mapping a parsed tsconfig.json declares in its `compilerOptions`, if any. */
+function toPathMapping(config: unknown, dir: string): PathMapping | undefined {
+  if (typeof config !== 'object' || config === null || !('compilerOptions' in config)) {
+    return undefined
+  }
+  const options = config.compilerOptions
+  if (typeof options !== 'object' || options === null) {
+    return undefined
+  }
+  const baseUrl =
+    'baseUrl' in options && typeof options.baseUrl === 'string' && options.baseUrl !== ''
+      ? options.baseUrl
+      : undefined
+  if ('paths' in options && typeof options.paths === 'object' && options.paths !== null) {
+    const targets: Array<[string, Array<string>]> = []
+    for (const [pattern, value] of Object.entries(options.paths)) {
+      const list: unknown = value
+      if (Array.isArray(list)) {
+        targets.push([pattern, list.filter((target) => typeof target === 'string')])
+      }
+    }
+    return {
+      base: path.resolve(dir, baseUrl ?? '.'),
+      hasBaseUrl: baseUrl !== undefined,
+      paths: Object.fromEntries(targets),
+    }
+  }
+  return baseUrl === undefined
+    ? undefined
+    : { base: path.resolve(dir, baseUrl), hasBaseUrl: true, paths: {} }
+}
+
 /** Removes comments and trailing commas so a tsconfig.json parses as JSON. */
 function stripJsonc(text: string): string {
   let out = ''
@@ -57,22 +89,11 @@ export async function readPathMapping(
         continue
       }
       try {
-        const { compilerOptions } = JSON.parse(stripJsonc(text))
-        const paths = compilerOptions?.paths
-        if (paths && typeof paths === 'object') {
-          return {
-            base: path.resolve(dir, compilerOptions.baseUrl ?? '.'),
-            hasBaseUrl: Boolean(compilerOptions.baseUrl),
-            paths,
-          }
-        }
-        if (compilerOptions?.baseUrl) {
-          return { base: path.resolve(dir, compilerOptions.baseUrl), hasBaseUrl: true, paths: {} }
-        }
+        return toPathMapping(JSON.parse(stripJsonc(text)), dir)
       } catch {
         // A tsconfig that does not parse maps nothing.
+        return undefined
       }
-      return undefined
     }
     const parent = path.dirname(dir)
     if (parent === dir) {
@@ -211,12 +232,13 @@ async function resolvePackageEntry(
   manifest: string,
   host: FragmentHost
 ): Promise<string | undefined> {
-  let pkg: PackageManifest
+  let parsed: unknown
   try {
-    pkg = JSON.parse(manifest)
+    parsed = JSON.parse(manifest)
   } catch {
     return undefined
   }
+  const pkg: PackageManifest = typeof parsed === 'object' && parsed !== null ? parsed : {}
   let target = pkg.exports === undefined ? undefined : subpathTarget(pkg.exports, subpath)
   if (target === undefined && !subpath) {
     target = [pkg.source, pkg.module, pkg.main].find((field) => typeof field === 'string')

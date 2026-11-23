@@ -152,7 +152,7 @@ export const invalidTypeFilter: Rule = {
         return
       }
 
-      const typeComparison = typeComparisons(node as OpCallNode)
+      const typeComparison = typeComparisons(node)
       if (!typeComparison) {
         return
       }

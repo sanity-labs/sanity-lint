@@ -243,7 +243,7 @@ describe('packages', () => {
       '/app/node_modules/plain/lib/main.js': 'var plain = "plain";\nexport { plain };',
     }
     const host: FragmentHost = {
-      readFile: async (file) => files[file as keyof typeof files],
+      readFile: async (file) => new Map(Object.entries(files)).get(file),
       realpath: async (file) =>
         file === '/app/node_modules/@repo/queries' ? '/repo/queries' : file,
     }
