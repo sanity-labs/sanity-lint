@@ -130,6 +130,39 @@ describe('@sanity-labs/groq-wasm', () => {
       )
     })
 
+    it('keeps a pipe stage on the closing line of a multi-line projection when it fits', () => {
+      const query =
+        '*[_type=="post"]{title,"slug":slug.current,author->{name},categories[]->{title,slug}}[0...10]|order(_createdAt desc)'
+      expect(format(query, { width: 50 })).toBe(
+        [
+          '*[_type == "post"] {',
+          '  title,',
+          '  "slug": slug.current,',
+          '  author->{ name },',
+          '  categories[]->{ title, slug }',
+          '}[0...10] | order(_createdAt desc)',
+        ].join('\n')
+      )
+    })
+
+    it('keeps the first pipe stage on the line when it fits and breaks only the stage that overflows', () => {
+      const query =
+        '*[_type == $type] | score(boost(title match $q, 3), body match $q) | order(_score desc)'
+      expect(format(query, { width: 70 })).toBe(
+        [
+          '*[_type == $type] | score(boost(title match $q, 3), body match $q)',
+          '  | order(_score desc)',
+        ].join('\n')
+      )
+      expect(format(query, { width: 60 })).toBe(
+        [
+          '*[_type == $type]',
+          '  | score(boost(title match $q, 3), body match $q)',
+          '  | order(_score desc)',
+        ].join('\n')
+      )
+    })
+
     it('still rejects definitions followed by an incomplete query, or not ended with ;', () => {
       for (const query of [
         'fn a::b($x) = $x{a}; *[',
