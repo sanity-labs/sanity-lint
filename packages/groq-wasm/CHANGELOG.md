@@ -1,5 +1,15 @@
 # @sanity-labs/groq-wasm
 
+## 1.2.5
+
+### Patch Changes
+
+- ad96464: Update Rust dependencies in `Cargo.lock`:
+
+  - `clap` 4.6.8 -> 4.6.9
+  - `clap_derive` 4.6.8 -> 4.6.9
+  - `hashbrown` 0.17.1 -> 0.17.2
+
 ## 1.2.4
 
 ### Patch Changes
